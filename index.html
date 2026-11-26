@@ -2,7 +2,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="robots" content="noindex,nofollow">
-<!-- 18 Down test build: branch test-combined, commit e922067 -->
+<!-- 18 Down test build: branch test-combined, commit 7ebeed9 -->
 <title>18 Down</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&family=Shrikhand&display=swap">
@@ -3961,7 +3961,7 @@ async function askCalls(i, token){
     const v = await pickCall(`<div class="focus-ask"><p class="calls-h focus-why" title="${esc(why)}">${ico(WHY_ICON[why] || "flag", why)}<b>${hp.putt.kind === "c2" ? hp.feet : hp.parFeet || hp.feet} ft</b><span role="img" aria-label="${left} focus left" title="Focus putts left">${pips(left, FOCUS_PER_ROUND)}</span></p><div class="seg focus-btns"><button type="button" class="on" id="call-focus" data-act="call" data-call="focus" aria-label="Focus: time the stroke" title="Focus: time the stroke">${ico("focus")}<span>Focus</span></button><button type="button" id="call-just" data-act="call" data-call="just" aria-label="Just putt" title="Just putt">${ico("putt")}<span>Putt</span></button></div></div>`, token);
     if (v === null) return false;
     if (v === "focus"){
-      const q = await focusMeter(token);
+      const q = await focusMeter(token, hp.putt.kind === "c2" ? hp.feet : hp.parFeet || hp.feet);
       if (q === null) return false;
       sp.calls[n].focus = Math.round(q * 100) / 100;
     } else sp.calls[n].focus = null;
@@ -3975,21 +3975,31 @@ const WHY_ICON = {"Closing stretch": "flag", "Par save": "par", "Prize on the li
 /* Focus: three timed putts a round. A marker swings across the bar; tap Putt when it's in the middle. */
 const FOCUS_PER_ROUND = 3, BIG_FROM = 16;
 function focusLeft(){ const c = (state.round && state.round.spec && state.round.spec.calls) || {}; return FOCUS_PER_ROUND - Object.values(c).filter(x => x && typeof x.focus === "number").length; }
-function focusMeter(token){
-  const period = REDUCED ? 2200 : 1150, t0 = performance.now();
-  const pos = t => (1 - Math.cos(2 * Math.PI * ((t - t0) % period) / period)) / 2;
-  callPanel(`    <div class="focus-bar" aria-hidden="true"><i class="focus-sweet"></i><i class="focus-mark" id="focus-mark"></i></div>
+/* How hard a focus putt is, from 0 (a short putt) to 1 (60 ft and beyond): longer putts swing faster and have a narrower
+   sweet spot. band is the half-width of the green zone, as a share of the bar. */
+function focusHard(feet){
+  const f = Math.max(0, Math.min(1, ((feet || 20) - 10) / 50));
+  return {f, band: .12 - .08 * f, period: (1500 - 700 * f) * (REDUCED ? 1.7 : 1)};
+}
+function focusMeter(token, feet){
+  const H = focusHard(feet), period = H.period, t0 = performance.now();
+  const phase = t => ((t - t0) % period) / period, pos = t => (1 - Math.cos(2 * Math.PI * phase(t))) / 2;
+  callPanel(`    <div class="focus-bar" aria-hidden="true"><i class="focus-sweet" style="left:${((.5 - H.band) * 100).toFixed(1)}%;width:${(H.band * 200).toFixed(1)}%"></i><i class="focus-mark" id="focus-mark"></i></div>
     <div class="calls-row one"><button class="btn primary icon-btn" id="call-release" data-act="call" data-call="release" aria-label="Putt" title="Putt">${ico("putt")}<span>Putt</span></button></div>`);
-  let raf = 0;
-  const draw = () => { const m = document.getElementById("focus-mark"); if (!m) return; m.style.left = (pos(performance.now()) * 100).toFixed(1) + "%"; raf = requestAnimationFrame(draw); };
+  // what the player sees: the marker as last drawn. Taps are judged against this, not against where it has moved since.
+  let raf = 0, shown = {x: .5, rising: true};
+  const draw = () => { const m = document.getElementById("focus-mark"); if (!m) return; const t = performance.now(); shown = {x: pos(t), rising: phase(t) < .5}; m.style.left = (shown.x * 100).toFixed(1) + "%"; raf = requestAnimationFrame(draw); };
   draw();
   callWaiting(true);
+  // judge the moment the finger goes down, not when the click arrives (phones deliver it later)
+  const btn0 = document.getElementById("call-release");
+  if (btn0) btn0.addEventListener("pointerdown", e => { if (e.button > 0) return; e.preventDefault(); if (callWait) callWait("release"); }, {once: true});
   return new Promise(res => { callWait = v => {
     callWait = null; callWaiting(false); cancelAnimationFrame(raf);
     if (token !== playToken || v !== "release") return res(null);
-    const t = performance.now(), x = pos(t), q = 1 - Math.abs(x - 0.5) * 2;
+    const x = shown.x, off = Math.abs(x - .5), q = Math.max(0, 1 - off / (H.band * 4));
     // the marker stops where you tapped; say how far off it was, hold it for a second, then putt
-    const rising = ((t - t0) % period) / period < .5, early = rising ? x < .5 : x > .5, fb = focusFeedback(Math.abs(x - .5), early);
+    const early = shown.rising ? x < .5 : x > .5, fb = focusFeedback(off, early, H.band);
     const panel = document.getElementById("calls"), btn = document.getElementById("call-release");
     if (btn) btn.disabled = true;
     if (panel){ panel.classList.add("focus-result", fb.cls); panel.insertAdjacentHTML("afterbegin", `<p class="focus-fb ${fb.cls}" role="status">${fb.text}${fb.cls === "perfect" ? `<i class="fb-burst" aria-hidden="true">${"<b></b>".repeat(10)}</i>` : ""}</p>`); }
@@ -3997,12 +4007,13 @@ function focusMeter(token){
     setTimeout(() => { if (panel) panel.classList.remove("focus-result", fb.cls); res(token === playToken ? q : null); }, 1000);
   }; });
 }
-/* How far from the middle the tap was (0 is dead center, .5 is the end of the bar), and on which side of it. */
-function focusFeedback(off, early){
-  if (off < .04) return {text: "Perfect!", cls: "perfect"};
-  const how = off < .1 ? "A little " : off < .2 ? "" : "Very ";
+/* Feedback scales with the sweet spot: inside it is "a little" off, twice as far is plain early/late, beyond that "very". */
+function focusFeedback(off, early, band){
+  band = band || .08;
+  if (off < band * .45) return {text: "Perfect!", cls: "perfect"};
+  const how = off < band * 1.1 ? "A little " : off < band * 2.2 ? "" : "Very ";
   const word = early ? "early" : "late";
-  return {text: how + (how ? word : word[0].toUpperCase() + word.slice(1)), cls: off < .1 ? "close" : off < .2 ? "off" : "way-off"};
+  return {text: how + (how ? word : word[0].toUpperCase() + word.slice(1)), cls: off < band * 1.1 ? "close" : off < band * 2.2 ? "off" : "way-off"};
 }
 /* The last holes: say what's riding on them. */
 function bigMomentText(n){
