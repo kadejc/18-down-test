@@ -2,7 +2,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="robots" content="noindex,nofollow">
-<!-- 18 Down test build: branch graphics-3d, commit fb40a15 -->
+<!-- 18 Down test build: branch graphics-3d, commit 1ba0def -->
 <title>18 Down</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&family=Shrikhand&display=swap">
@@ -1247,6 +1247,33 @@ span.pips, .calls-h span.pips { display: inline-flex; gap: 4px; vertical-align: 
 #call-release .ico { width: 24px; height: 24px; }
 .top-actions { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; align-items: stretch; margin-bottom: 6px; }
 .top-actions .btn { flex: 1 1 140px; }
+
+/* Focus result: the marker holds for a second with a verdict */
+.focus-fb { position: relative; margin: 0; text-align: center; font-family: var(--display); font-size: 24px; line-height: 1.1; color: var(--chalk); }
+.focus-fb.close { color: var(--band); }
+.focus-fb.off { color: #ffb36b; }
+.focus-fb.way-off { color: #ff8a7a; }
+.focus-fb.perfect { color: var(--band); animation: fbPop .6s cubic-bezier(.2, 1.6, .4, 1) both, fbGlow 1s ease-in-out .3s; }
+@keyframes fbPop { 0% { transform: scale(.4) rotate(-8deg); opacity: 0; } 60% { transform: scale(1.25) rotate(2deg); opacity: 1; } 100% { transform: scale(1) rotate(-3deg); } }
+@keyframes fbGlow { 0%, 100% { text-shadow: 0 0 0 transparent; } 50% { text-shadow: 0 0 14px var(--band), 0 0 28px var(--band); } }
+.focus-result.perfect .focus-sweet { animation: fbSweet .5s ease-in-out 2; }
+@keyframes fbSweet { 50% { opacity: 1; filter: brightness(1.8); box-shadow: 0 0 12px var(--band); } }
+.focus-result.perfect .focus-mark { background: var(--band); }
+.fb-burst { position: absolute; left: 50%; top: 50%; width: 0; height: 0; pointer-events: none; }
+.fb-burst b { position: absolute; width: 8px; height: 8px; margin: -4px; border-radius: 50%; background: var(--band); animation: fbRay .8s ease-out forwards; }
+.fb-burst b:nth-child(even) { background: var(--chalk); width: 6px; height: 6px; margin: -3px; }
+.fb-burst b:nth-child(1) { --a: 0deg; }
+.fb-burst b:nth-child(2) { --a: 36deg; }
+.fb-burst b:nth-child(3) { --a: 72deg; }
+.fb-burst b:nth-child(4) { --a: 108deg; }
+.fb-burst b:nth-child(5) { --a: 144deg; }
+.fb-burst b:nth-child(6) { --a: 180deg; }
+.fb-burst b:nth-child(7) { --a: 216deg; }
+.fb-burst b:nth-child(8) { --a: 252deg; }
+.fb-burst b:nth-child(9) { --a: 288deg; }
+.fb-burst b:nth-child(10) { --a: 324deg; }
+@keyframes fbRay { 0% { transform: rotate(var(--a)) translateX(10px) scale(1); opacity: 1; } 100% { transform: rotate(var(--a)) translateX(90px) scale(.3); opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .focus-fb.perfect, .fb-burst b, .focus-result.perfect .focus-sweet { animation: none; } }
 </style>
 <main id="app"></main>
 <script type="application/json" id="edits">{}</script>
@@ -3734,9 +3761,6 @@ async function askCalls(i, token){
       const q = await focusMeter(token);
       if (q === null) return false;
       sp.calls[n].focus = Math.round(q * 100) / 100;
-      const stars = q > .85 ? 3 : q > .6 ? 2 : q > .35 ? 1 : 0;
-      callPanel(`<p class="calls-h focus-done" role="img" aria-label="${["Pulled it", "Okay", "Good stroke", "Pure"][stars]}">${pips(stars, 3)}</p>`);
-      if (!(await wait(650, token))) return false;
     } else sp.calls[n].focus = null;
     callPreview = false;
     roundRecalc(); callsSave();
@@ -3757,7 +3781,25 @@ function focusMeter(token){
   const draw = () => { const m = document.getElementById("focus-mark"); if (!m) return; m.style.left = (pos(performance.now()) * 100).toFixed(1) + "%"; raf = requestAnimationFrame(draw); };
   draw();
   callWaiting(true);
-  return new Promise(res => { callWait = v => { callWait = null; callWaiting(false); cancelAnimationFrame(raf); if (token !== playToken || v !== "release") return res(null); const x = pos(performance.now()); sfx("pick"); res(1 - Math.abs(x - 0.5) * 2); }; });
+  return new Promise(res => { callWait = v => {
+    callWait = null; callWaiting(false); cancelAnimationFrame(raf);
+    if (token !== playToken || v !== "release") return res(null);
+    const t = performance.now(), x = pos(t), q = 1 - Math.abs(x - 0.5) * 2;
+    // the marker stops where you tapped; say how far off it was, hold it for a second, then putt
+    const rising = ((t - t0) % period) / period < .5, early = rising ? x < .5 : x > .5, fb = focusFeedback(Math.abs(x - .5), early);
+    const panel = document.getElementById("calls"), btn = document.getElementById("call-release");
+    if (btn) btn.disabled = true;
+    if (panel){ panel.classList.add("focus-result", fb.cls); panel.insertAdjacentHTML("afterbegin", `<p class="focus-fb ${fb.cls}" role="status">${fb.text}${fb.cls === "perfect" ? `<i class="fb-burst" aria-hidden="true">${"<b></b>".repeat(10)}</i>` : ""}</p>`); }
+    sfx(fb.cls === "perfect" ? "chains" : "pick");
+    setTimeout(() => { if (panel) panel.classList.remove("focus-result", fb.cls); res(token === playToken ? q : null); }, 1000);
+  }; });
+}
+/* How far from the middle the tap was (0 is dead center, .5 is the end of the bar), and on which side of it. */
+function focusFeedback(off, early){
+  if (off < .04) return {text: "Perfect!", cls: "perfect"};
+  const how = off < .1 ? "A little " : off < .2 ? "" : "Very ";
+  const word = early ? "early" : "late";
+  return {text: how + (how ? word : word[0].toUpperCase() + word.slice(1)), cls: off < .1 ? "close" : off < .2 ? "off" : "way-off"};
 }
 /* The last holes: say what's riding on them. */
 function bigMomentText(n){
@@ -9656,6 +9698,10 @@ function h3Tex(uri, repeatX){
   t.colorSpace = T.SRGBColorSpace; t.wrapS = T.RepeatWrapping; t.repeat.x = repeatX || 1; t.offset.x = .5; t.anisotropy = 4;
   H3_TEX.set(key, t); return t;
 }
+/* Putting stance (right-handed, staggered): right foot forward toward the basket, left foot back, knees soft, hips back,
+   chest leaning over the putt, head up to the chains. The putting arm holds the disc out in front at waist height and the
+   other arm hangs out to the side for balance. The figure faces +z; its right side is -x. */
+const H3_POSE = {lean: .32, turn: .16, rightLeg: -.3, leftLeg: .26, armAddress: -.55, armBack: .1, armFollow: -1.35, offArm: {x: -.25, z: .5}};
 function h3Person(){
   const T = H3.THREE, me = typeof meLoad === "function" ? meLoad() : null;
   const L = typeof lookFull === "function" ? lookFull(me && me.look) : {cap: "#ff6a2b", shirt: "#19a7a1", pants: "#10272a", skin: "#c98b5e", disc: "#ffd23f"};
@@ -9665,35 +9711,54 @@ function h3Person(){
   try { if (L.shirtS && typeof clShirtURI === "function") shirtMat = new T.MeshStandardMaterial({map: h3Tex(clShirtURI(L.shirtS, L.shirt, L.skin, true), 2), roughness: .8}); } catch (e) {}
   try { if (L.pantsS && typeof clShortsURI === "function") shortsMat = new T.MeshStandardMaterial({map: h3Tex(clShortsURI(L.pantsS, L.pants), 2), roughness: .8}); } catch (e) {}
   const full = typeof clFull === "function" && L.pantsS && clFull(L.pantsS);
-  const part = (geo, mat, x, y, z) => { const o = new T.Mesh(geo, mat); o.position.set(x, y, z); o.castShadow = true; g.add(o); return o; };
-  for (const sx of [-.1, .1]){
-    part(new T.BoxGeometry(.11, .07, .25), shoe, sx * 1.1, .035, .03);
-    part(new T.CylinderGeometry(.052, .05, .14, 10), sock, sx, .14, 0);
-    part(new T.CylinderGeometry(.062, .052, .3, 10), full ? shortsMat : skin, sx, .36, 0);
-  }
-  // shorts (or long pants down to the shoes)
-  part(new T.CylinderGeometry(.19, .17, full ? .22 : .3, 16), shortsMat, 0, full ? .9 : .82, 0);
-  if (full) for (const sx of [-.1, .1]) part(new T.CylinderGeometry(.075, .065, .52, 10), shortsMat, sx, .58, 0);
-  else for (const sx of [-.095, .095]) part(new T.CylinderGeometry(.085, .08, .16, 10), shortsMat, sx, .62, 0);
-  // jersey: the shop art wrapped around, front and back
-  const torso = part(new T.CylinderGeometry(.18, .19, .58, 20, 1, false), shirtMat, 0, 1.24, 0);
-  part(new T.SphereGeometry(.18, 16, 8, 0, Math.PI * 2, 0, Math.PI / 2), shirtMat, 0, 1.52, 0).scale.y = .4;
-  part(new T.CylinderGeometry(.05, .055, .08, 10), skin, 0, 1.6, 0);
-  const head = part(new T.SphereGeometry(.115, 20, 14), skin, 0, 1.72, 0);
-  for (const ex of [-.04, .04]) part(new T.SphereGeometry(.012, 8, 6), m(0x10272a), ex, 1.73, .105);
-  h3Hat(g, L, m);
-  // arms: short sleeve, then skin. The figure faces +z, so the right (putting) arm is on the -x side.
-  const arm = new T.Group(); arm.position.set(-.22, 1.48, 0); g.add(arm);
-  const off = new T.Group(); off.position.set(.22, 1.48, 0); g.add(off);
+  const part = (parent, geo, mat, x, y, z) => { const o = new T.Mesh(geo, mat); o.position.set(x, y, z); o.castShadow = true; parent.add(o); return o; };
+  const HIP = .86;
+  // legs hang from the hips, each on its own joint so the stance can stagger them
+  const legs = [-.11, .11].map(sx => {
+    const leg = new T.Group(); leg.position.set(sx, HIP, 0); g.add(leg);
+    part(leg, new T.BoxGeometry(.11, .07, .25), shoe, sx * .1, .035 - HIP, .03);
+    part(leg, new T.CylinderGeometry(.052, .05, .14, 10), sock, 0, .14 - HIP, 0);
+    part(leg, new T.CylinderGeometry(.062, .052, .3, 10), full ? shortsMat : skin, 0, .36 - HIP, 0);
+    if (full) part(leg, new T.CylinderGeometry(.075, .065, .52, 10), shortsMat, 0, .58 - HIP, 0);
+    else part(leg, new T.CylinderGeometry(.085, .08, .16, 10), shortsMat, sx * -.14, .62 - HIP, 0);
+    return leg;
+  });
+  // everything above the hips leans as one piece
+  const upper = new T.Group(); upper.position.set(0, HIP, 0); g.add(upper);
+  part(upper, new T.CylinderGeometry(.19, .17, full ? .22 : .3, 16), shortsMat, 0, (full ? .9 : .82) - HIP, 0);
+  const torso = part(upper, new T.CylinderGeometry(.18, .19, .58, 20, 1, false), shirtMat, 0, 1.24 - HIP, 0);
+  part(upper, new T.SphereGeometry(.18, 16, 8, 0, Math.PI * 2, 0, Math.PI / 2), shirtMat, 0, 1.52 - HIP, 0).scale.y = .4;
+  // the head sits on its own joint so it can look up at the basket while the chest leans
+  const neck = new T.Group(); neck.position.set(0, 1.6 - HIP, 0); upper.add(neck);
+  part(neck, new T.CylinderGeometry(.05, .055, .08, 10), skin, 0, 0, 0);
+  const head = part(neck, new T.SphereGeometry(.115, 20, 14), skin, 0, .12, 0);
+  for (const ex of [-.04, .04]) part(neck, new T.SphereGeometry(.012, 8, 6), m(0x10272a), ex, .13, .105);
+  const hat = new T.Group(); h3Hat(hat, L, m); hat.position.y = -1.6; neck.add(hat);
+  // arms: short sleeve, then skin. The right (putting) arm is on the -x side.
+  const arm = new T.Group(); arm.position.set(-.22, 1.48 - HIP, 0); upper.add(arm);
+  const off = new T.Group(); off.position.set(.22, 1.48 - HIP, 0); upper.add(off);
   for (const a of [arm, off]){
     const sl = new T.Mesh(new T.CylinderGeometry(.06, .055, .16, 10), shirtMat); sl.position.y = -.07; sl.castShadow = true; a.add(sl);
     const fa = new T.Mesh(new T.CylinderGeometry(.045, .04, .5, 10), skin); fa.position.y = -.38; fa.castShadow = true; a.add(fa);
     const hand = new T.Mesh(new T.SphereGeometry(.045, 10, 8), skin); hand.position.y = -.65; a.add(hand);
   }
-  g.userData = {arm, off, torso, head, disc: L.disc};
+  g.userData = {arm, off, torso, head, neck, upper, legs, disc: L.disc};
+  h3Address(g);
   return g;
 }
-/* Hats by style, in your cap color. */
+/* Set the putting stance. */
+function h3Address(player){
+  const P = H3_POSE, u = player.userData;
+  u.legs[0].rotation.set(P.rightLeg, 0, .04); u.legs[1].rotation.set(P.leftLeg, 0, -.05);
+  // the stagger and the lean lower the hips a little
+  const drop = .86 * (1 - Math.cos((Math.abs(P.rightLeg) + P.leftLeg) / 2));
+  u.legs.forEach(l => { l.position.y = .86 - drop; });
+  u.upper.position.y = .86 - drop; u.upper.position.z = -.04;
+  u.upper.rotation.set(P.lean, P.turn, 0);
+  u.neck.rotation.set(-P.lean * .85, 0, 0);
+  u.arm.rotation.set(P.armAddress, 0, 0);
+  u.off.rotation.set(P.offArm.x, 0, P.offArm.z);
+}
 function h3Hat(g, L, m){
   const T = H3.THREE, c = m(L.cap), t = L.capS || "cap", y = 1.75;
   const add = (geo, mat, x, yy, z, rx) => { const o = new T.Mesh(geo, mat); o.position.set(x, yy, z); if (rx) o.rotation.x = rx; o.castShadow = true; g.add(o); return o; };
@@ -9776,7 +9841,7 @@ async function h3Fly(hole, from, to, peak, fade, ms, token, follow){
   }, token);
 }
 /* Walk the player to a spot, facing the basket. */
-function h3Stand(hole, at){ const {player, end} = hole; player.position.set(at.x, hole.ht(at.x, at.z), at.z); player.lookAt(end.x, player.position.y, end.z); player.userData.arm.rotation.set(0, 0, 0); player.userData.off.rotation.set(0, 0, 0); }
+function h3Stand(hole, at){ const {player, end} = hole; player.position.set(at.x, hole.ht(at.x, at.z), at.z); player.lookAt(end.x, player.position.y, end.z); h3Address(player); }
 /* The TV putting shot: over the putter's left shoulder at the basket, zoomed in a little on longer putts. The more it
    zooms, the further back it stands, so the putter stays in frame. */
 function h3ShoulderCam(hole, from){
@@ -9800,12 +9865,13 @@ async function h3Putt(hole, from, made, token, why){
   const arm = player.userData.arm, handAt = new H3.THREE.Vector3();
   const hand = () => { arm.rotation.z = -.12; player.updateMatrixWorld(true); return arm.localToWorld(handAt.set(.03, -.64, .06)); };
   arm.rotation.x = 0; disc.position.copy(hand()); disc.rotation.set(0, 0, 0);
-  if (!(await h3Tween(260, k => { arm.rotation.x = .9 * k; disc.position.copy(hand()); }, token))) return false;   // the putter draws back
+  const P = H3_POSE;
+  if (!(await h3Tween(260, k => { arm.rotation.x = P.armAddress + (P.armBack - P.armAddress) * k; disc.position.copy(hand()); }, token))) return false;   // the putter draws the disc back toward the body
   if (why) H3.timeScale = .45;   // clutch putts in slow motion
   h3TrailReset(hole);
   const REL = .2, start = new H3.THREE.Vector3();
   const ok = await h3Tween(Math.max(450, Math.min(1100, dist * 150)), k => {
-    arm.rotation.x = .9 - 1.8 * Math.min(1, k * 3);   // the arm swings through and follows through toward the basket
+    arm.rotation.x = P.armBack + (P.armFollow - P.armBack) * Math.min(1, k * 3);   // the arm pushes out and follows through toward the basket
     if (k < REL){ disc.position.copy(hand()); start.copy(disc.position); return; }
     const e = h3Ease((k - REL) / (1 - REL));
     disc.position.set(start.x + (to.x - start.x) * e, start.y + (to.y - start.y) * e + Math.sin(Math.PI * e) * Math.min(1.1, dist * .11), start.z + (to.z - start.z) * e);
