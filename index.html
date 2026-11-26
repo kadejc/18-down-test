@@ -2,7 +2,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="robots" content="noindex,nofollow">
-<!-- 18 Down test build: branch test-combined, commit d92f816 -->
+<!-- 18 Down test build: branch test-combined, commit 3ce9945 -->
 <title>18 Down</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&family=Shrikhand&display=swap">
@@ -1287,6 +1287,16 @@ span.pips, .calls-h span.pips { display: inline-flex; gap: 4px; vertical-align: 
 .fb-burst b:nth-child(10) { --a: 324deg; }
 @keyframes fbRay { 0% { transform: rotate(var(--a)) translateX(10px) scale(1); opacity: 1; } 100% { transform: rotate(var(--a)) translateX(90px) scale(.3); opacity: 0; } }
 @media (prefers-reduced-motion: reduce) { .focus-fb.perfect, .fb-burst b, .focus-result.perfect .focus-sweet { animation: none; } }
+
+/* Draft grade: collapsed by default */
+.grade-box { margin-bottom: 14px; }
+.grade-box > summary { display: flex; align-items: center; gap: 10px; cursor: pointer; list-style: none; }
+.grade-box > summary::-webkit-details-marker { display: none; }
+.grade-box > summary::after { content: "▾"; margin-left: auto; color: var(--mute); transition: transform .2s; }
+.grade-box[open] > summary::after { transform: rotate(180deg); }
+.grade-box > summary .section-h { margin: 0; }
+.grade-letter.small { width: 36px; height: 36px; border-radius: 9px; font-size: 20px; }
+.grade-box .grade { margin: 8px 0 0; }
 </style>
 <main id="app"></main>
 <script type="application/json" id="edits">{}</script>
@@ -4107,9 +4117,10 @@ function breakdownHTML(){
   const luck = bd.avg - state.round.total;
   const luckText = Math.abs(luck) < 0.5 ? "right about average" : Math.abs(luck).toFixed(1) + (luck > 0 ? " strokes better than average" : " strokes worse than average");
   const g = bd.grade;
-  const gradeHTML = g ? `<div class="grade"><b class="grade-letter g-${g.letter[0]}">${g.letter}</b><div><h2 class="section-h">Draft grade</h2>
+  // the draft grade starts collapsed: just the letter, tap to see the best team from the same spins
+  const gradeHTML = g ? `<details class="grade-box"><summary><b class="grade-letter small g-${g.letter[0]}">${g.letter}</b><span class="section-h">Draft grade</span></summary><div class="grade"><div>
       <p class="fine">${g.left < 0.25 ? "You got about everything out of your spins." : `The best team from the same spins, with each spin in its best spot, averages <b class="tnum">${fmtAvg(g.bestAvg)}</b>: ${g.left.toFixed(1)} stroke${g.left >= 0.95 && g.left < 1.05 ? "" : "s"} better than yours.`}</p>
-      ${g.left >= 0.25 ? `<p class="grade-team">${SLOTS.map(k => `<span class="s-${k}"><small>${SLOT_LABEL[k]}</small>${esc(g.team[k].short || g.team[k].name)}</span>`).join("")}</p>` : ""}</div></div>` : "";
+      ${g.left >= 0.25 ? `<p class="grade-team">${SLOTS.map(k => `<span class="s-${k}"><small>${SLOT_LABEL[k]}</small>${esc(g.team[k].short || g.team[k].name)}</span>`).join("")}</p>` : ""}</div></div></details>` : "";
   return `${gradeHTML}<h2 class="section-h">What each pick was worth</h2>
     <p class="fine">Strokes gained over a field-level pro in that slot, averaged across ${bd.rounds} simulated rounds on this course.</p>
     <div class="bd-rows">${SLOTS.map(k => {
@@ -9912,50 +9923,76 @@ function h3Person(){
   const T = H3.THREE, me = typeof meLoad === "function" ? meLoad() : null;
   const L = typeof lookFull === "function" ? lookFull(me && me.look) : {cap: "#ff6a2b", shirt: "#19a7a1", pants: "#10272a", skin: "#c98b5e", disc: "#ffd23f"};
   const g = new T.Group(), m = (c, extra) => h3Mat(c, Object.assign({roughness: .8}, extra || {}));
-  const skin = m(L.skin), sock = m(0x1d1d1f), shoe = m(0x9aa0a6, {roughness: .6});
+  const skin = m(L.skin, {roughness: .62}), sock = m(0x1d1d1f), shoe = m(0x9aa0a6, {roughness: .55}), sole = m(0xf2f0ea, {roughness: .7});
+  const dark = m(0x1b1410), hairMat = m(0x2b1d14, {roughness: .9}), lips = m(new T.Color(L.skin).multiplyScalar(.78));
   let shirtMat = m(L.shirt), shortsMat = m(L.pants);
   try { if (L.shirtS && typeof clShirtURI === "function") shirtMat = new T.MeshStandardMaterial({map: h3Tex(clShirtURI(L.shirtS, L.shirt, L.skin, true), 2), roughness: .8}); } catch (e) {}
   try { if (L.pantsS && typeof clShortsURI === "function") shortsMat = new T.MeshStandardMaterial({map: h3Tex(clShortsURI(L.pantsS, L.pants), 2), roughness: .8}); } catch (e) {}
   const full = typeof clFull === "function" && L.pantsS && clFull(L.pantsS);
-  const part = (parent, geo, mat, x, y, z) => { const o = new T.Mesh(geo, mat); o.position.set(x, y, z); o.castShadow = true; parent.add(o); return o; };
+  const add = (parent, geo, mat, x, y, z, sx, sy, sz) => { const o = new T.Mesh(geo, mat); o.position.set(x, y, z); if (sx) o.scale.set(sx, sy, sz); o.castShadow = true; parent.add(o); return o; };
+  // a turned shape from a side profile: [[radius, height], ...], bottom to top
+  const lathe = (pts, segs) => new T.LatheGeometry(pts.map(([r, y]) => new T.Vector2(r, y)), segs || 20);
+  const cap = (r, len) => new T.CapsuleGeometry(r, len, 6, 14);
   const HIP = .86, KNEE = .44;
-  // legs: hip joint, thigh, knee joint, shin and foot
-  const legs = [-.11, .11].map(sx => {
+
+  // legs: hip joint, a thigh that tapers to the knee, a knee joint, a shin with a calf, sock and shoe
+  const legs = [-.1, .1].map(sx => {
     const hip = new T.Group(); hip.position.set(sx, HIP, 0); g.add(hip);
-    part(hip, new T.CylinderGeometry(.078, .066, HIP - KNEE, 10), full ? shortsMat : skin, 0, -(HIP - KNEE) / 2, 0);
-    if (!full) part(hip, new T.CylinderGeometry(.09, .085, .2, 10), shortsMat, 0, -.1, 0);
+    add(hip, lathe([[.054, -(HIP - KNEE)], [.06, -.32], [.07, -.2], [.078, -.08], [.08, 0]]), full ? shortsMat : skin, 0, 0, 0);
+    if (!full) add(hip, lathe([[.086, -.2], [.09, -.1], [.092, .02]]), shortsMat, 0, 0, 0);
     const knee = new T.Group(); knee.position.set(0, -(HIP - KNEE), 0); hip.add(knee);
-    part(knee, new T.SphereGeometry(.066, 10, 8), full ? shortsMat : skin, 0, 0, 0);
-    part(knee, new T.CylinderGeometry(.062, .05, .3, 10), full ? shortsMat : skin, 0, -.16, 0);
-    part(knee, new T.CylinderGeometry(.052, .05, .12, 10), sock, 0, -.35, 0);
-    part(knee, new T.BoxGeometry(.11, .07, .25), shoe, 0, -KNEE + .035, .03);
+    add(knee, new T.SphereGeometry(.055, 14, 10), full ? shortsMat : skin, 0, 0, 0);
+    add(knee, lathe([[.036, -.33], [.04, -.28], [.052, -.17], [.057, -.1], [.052, -.02], [.05, 0]]), full ? shortsMat : skin, 0, 0, 0);
+    add(knee, lathe([[.041, -.4], [.042, -.3], [.04, -.27]]), sock, 0, 0, 0);
+    // shoe: a rounded upper on a flat sole, toe pointing forward
+    add(knee, cap(.045, .15), shoe, 0, -KNEE + .05, .035, 1, .72, 1).rotation.x = Math.PI / 2;
+    add(knee, new T.BoxGeometry(.095, .022, .25), sole, 0, -KNEE + .011, .035);
     hip.userData.knee = knee;
     return hip;
   });
+
   // everything above the hips turns and leans as one piece
   const upper = new T.Group(); upper.position.set(0, HIP, 0); g.add(upper);
-  part(upper, new T.CylinderGeometry(.19, .17, full ? .22 : .3, 16), shortsMat, 0, (full ? .9 : .82) - HIP, 0);
-  const torso = part(upper, new T.CylinderGeometry(.18, .19, .58, 20, 1, false), shirtMat, 0, 1.24 - HIP, 0);
-  part(upper, new T.SphereGeometry(.18, 16, 8, 0, Math.PI * 2, 0, Math.PI / 2), shirtMat, 0, 1.52 - HIP, 0).scale.y = .4;
+  // pelvis and the top of the shorts
+  add(upper, new T.SphereGeometry(.175, 20, 12), shortsMat, 0, -.02, 0, 1, .62, .8);
+  add(upper, lathe([[.17, -.06], [.168, .04], [.158, .12]]), shortsMat, 0, 0, 0, 1, 1, .8);
+  // torso: waist, belly, chest, then the shoulders rounding in; a little flatter front to back than side to side
+  add(upper, lathe([[.155, .1], [.15, .2], [.158, .3], [.175, .42], [.18, .52], [.165, .6], [.11, .66], [.06, .68], [0, .69]], 24), shirtMat, 0, 0, 0, 1, 1, .74);
+  // shoulder caps, in the shirt
+  for (const sx of [-.205, .205]) add(upper, new T.SphereGeometry(.062, 14, 10), shirtMat, sx, .6, 0, 1, .82, .85);
+
+  // neck and head: an oval skull, jaw, nose, ears, eyes, brows and hair at the back
   const neck = new T.Group(); neck.position.set(0, 1.6 - HIP, 0); upper.add(neck);
-  part(neck, new T.CylinderGeometry(.05, .055, .08, 10), skin, 0, 0, 0);
-  const head = part(neck, new T.SphereGeometry(.115, 20, 14), skin, 0, .12, 0);
-  for (const ex of [-.04, .04]) part(neck, new T.SphereGeometry(.012, 8, 6), m(0x10272a), ex, .13, .105);
+  add(neck, cap(.05, .06), skin, 0, .02, -.005);
+  const head = add(neck, new T.SphereGeometry(.105, 24, 18), skin, 0, .125, 0, .9, 1.06, .98);
+  add(neck, new T.SphereGeometry(.07, 18, 12), skin, 0, .078, .02, .95, .72, .95);   // jaw and chin, tucked into the skull
+  add(neck, new T.ConeGeometry(.017, .05, 10), skin, 0, .098, .11).rotation.x = Math.PI / 2 - .25;   // nose
+  for (const ex of [-.093, .093]) add(neck, new T.SphereGeometry(.022, 10, 8), skin, ex, .12, 0, .5, 1, .8);   // ears
+  for (const ex of [-.035, .035]){
+    add(neck, new T.SphereGeometry(.014, 10, 8), m(0xf4f1ea, {roughness: .4}), ex, .12, .095, 1, .8, .6);   // eyes: whites
+    add(neck, new T.SphereGeometry(.008, 10, 8), dark, ex, .12, .103);          // and pupils
+    add(neck, new T.BoxGeometry(.032, .008, .012), hairMat, ex, .14, .101).rotation.z = ex < 0 ? .08 : -.08;   // brows
+  }
+  add(neck, new T.BoxGeometry(.036, .007, .01), lips, 0, .066, .096);            // mouth
+  add(neck, new T.SphereGeometry(.108, 20, 14, 0, Math.PI * 2, 0, Math.PI * .52), hairMat, 0, .132, -.014, .93, 1.02, 1).rotation.x = -.75;   // hair: from the hairline over the top and down the back
   const hat = new T.Group(); h3Hat(hat, L, m); hat.position.y = -1.6; neck.add(hat);
-  // arms: shoulder joint, sleeve and upper arm, elbow joint, forearm and hand. The right (putting) arm is on the -x side.
+
+  // arms: shoulder joint, sleeve and upper arm, elbow joint, forearm, then a hand with a thumb.
+  // The right (putting) arm is on the -x side.
   const mkArm = x => {
     const sh = new T.Group(); sh.position.set(x, 1.48 - HIP, 0); upper.add(sh);
-    part(sh, new T.CylinderGeometry(.06, .055, .16, 10), shirtMat, 0, -.07, 0);
-    part(sh, new T.CylinderGeometry(.047, .043, .22, 10), skin, 0, -.2, 0);
+    add(sh, lathe([[.05, -.2], [.058, -.12], [.064, -.02], [.06, .03]]), shirtMat, 0, 0, 0);   // short sleeve
+    add(sh, lathe([[.036, -.31], [.042, -.24], [.048, -.12], [.047, -.05]]), skin, 0, 0, 0);    // upper arm
     const el = new T.Group(); el.position.set(0, -.31, 0); sh.add(el);
-    part(el, new T.SphereGeometry(.044, 10, 8), skin, 0, 0, 0);
-    part(el, new T.CylinderGeometry(.043, .038, .26, 10), skin, 0, -.14, 0);
-    part(el, new T.SphereGeometry(.046, 10, 8), skin, 0, -.31, 0);
+    add(el, new T.SphereGeometry(.038, 12, 10), skin, 0, 0, 0);
+    add(el, lathe([[.026, -.27], [.03, -.2], [.04, -.08], [.037, 0]]), skin, 0, 0, 0);        // forearm
+    add(el, new T.SphereGeometry(.034, 12, 10), skin, 0, -.31, .005, .75, 1.25, .5);          // palm and fingers
+    add(el, cap(.011, .035), skin, x < 0 ? .024 : -.024, -.29, .022).rotation.z = x < 0 ? -.5 : .5;   // thumb
     sh.userData.elbow = el;
     return sh;
   };
   const arm = mkArm(-.25), off = mkArm(.25);   // shoulders wide enough for the arm to cross the body cleanly
-  g.userData = {arm, off, torso, head, neck, upper, legs, disc: L.disc};
+  g.userData = {arm, off, torso: head, head, neck, upper, legs, disc: L.disc};
   h3Address(g);
   return g;
 }
