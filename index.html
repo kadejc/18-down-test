@@ -2,7 +2,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="robots" content="noindex,nofollow">
-<!-- 18 Down test build: branch test-combined, commit f664c84 -->
+<!-- 18 Down test build: branch test-combined, commit d92f816 -->
 <title>18 Down</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&family=Shrikhand&display=swap">
@@ -9897,14 +9897,14 @@ function h3Tex(uri, repeatX){
    Angles in radians. Shoulders: x below 0 swings the arm forward and up. Elbows: below 0 folds the forearm forward.
    Hips: below 0 swings the thigh forward; spread opens the legs sideways. Knees: above 0 bends the shin back.
    The putter stands 45 degrees open, right side toward the basket (the chest faces 45 degrees left of the line). The putting
-   arm starts pointed at the basket, swings down and across to the left side of the body (shoulder z above 0), then back
-   out toward the basket. The figure's right side is -x. */
+   arm starts pointed at the basket, swings down and across to the left side of the stomach (shoulder z above 0, elbow out in
+   front and the forearm wrapped across so it clears the body), then back out toward the basket. The figure's right side is -x. */
 const H3_HAND_ON_HIP = {offX: .25, offZ: .55, offElbow: -.35, offElbowZ: -1.35};
 const H3_POSES = {
   aim:    Object.assign({lean: .08, turn: 0, drop: .05, neck: -.06, look: -.75, spread: .2, armX: -1.45, armZ: -.75, elbow: -.06, rHip: -.18, rKnee: .32, lHip: -.18, lKnee: .32}, H3_HAND_ON_HIP),
-  drop:   Object.assign({lean: .3, turn: 0, drop: .1, neck: -.25, look: -.6, spread: .22, armX: -.6, armZ: .1, elbow: -.15, rHip: -.42, rKnee: .8, lHip: -.42, lKnee: .8}, H3_HAND_ON_HIP),
-  load:   Object.assign({lean: .55, turn: 0, drop: .19, neck: -.45, look: -.5, spread: .3, armX: -.4, armZ: .75, elbow: -.3, rHip: -.8, rKnee: 1.45, lHip: -.8, lKnee: 1.45}, H3_HAND_ON_HIP),
-  back:   Object.assign({lean: .48, turn: .1, drop: .14, neck: -.4, look: -.55, spread: .28, armX: -.35, armZ: 1.0, elbow: -.4, rHip: -.6, rKnee: 1.1, lHip: -.6, lKnee: 1.1}, H3_HAND_ON_HIP),
+  drop:   Object.assign({lean: .3, turn: 0, drop: .1, neck: -.25, look: -.6, spread: .22, armX: -.6, armZ: -.1, elbow: 0, elbowZ: .6, rHip: -.42, rKnee: .8, lHip: -.42, lKnee: .8}, H3_HAND_ON_HIP),
+  load:   Object.assign({lean: .55, turn: 0, drop: .19, neck: -.45, look: -.5, spread: .3, armX: -.9, armZ: .3, elbow: -.3, elbowZ: 1.2, rHip: -.8, rKnee: 1.45, lHip: -.8, lKnee: 1.45}, H3_HAND_ON_HIP),
+  back:   Object.assign({lean: .48, turn: .1, drop: .14, neck: -.4, look: -.55, spread: .28, armX: -1.05, armZ: .42, elbow: -.25, elbowZ: 1.0, rHip: -.6, rKnee: 1.1, lHip: -.6, lKnee: 1.1}, H3_HAND_ON_HIP),
   finish: Object.assign({lean: -.02, turn: -.05, drop: .01, neck: .04, look: -.75, spread: .18, armX: -1.75, armZ: -.75, elbow: -.04, rHip: -.02, rKnee: .06, lHip: -.02, lKnee: .06}, H3_HAND_ON_HIP),
 };
 H3_POSES.set = H3_POSES.aim;   // the stance the putter holds while you decide
@@ -9954,17 +9954,17 @@ function h3Person(){
     sh.userData.elbow = el;
     return sh;
   };
-  const arm = mkArm(-.22), off = mkArm(.22);
+  const arm = mkArm(-.25), off = mkArm(.25);   // shoulders wide enough for the arm to cross the body cleanly
   g.userData = {arm, off, torso, head, neck, upper, legs, disc: L.disc};
   h3Address(g);
   return g;
 }
 /* Put the body in a pose, or partway between two poses (k from 0 to 1). */
 function h3Pose(player, A, B, k){
-  const u = player.userData, v = key => B ? A[key] + (B[key] - A[key]) * k : A[key];
+  const u = player.userData, v = key => { const a = A[key] || 0; return B ? a + ((B[key] || 0) - a) * k : a; };
   u.upper.rotation.set(v("lean"), v("turn"), 0);
   u.neck.rotation.set(v("neck"), v("look") - v("turn") * .6, 0);   // the head turns to watch the basket off the left shoulder
-  u.arm.rotation.set(v("armX"), 0, v("armZ")); u.arm.userData.elbow.rotation.set(v("elbow"), 0, 0);
+  u.arm.rotation.set(v("armX"), 0, v("armZ")); u.arm.userData.elbow.rotation.set(v("elbow"), 0, v("elbowZ"));   // elbowZ wraps the forearm around the front of the body
   u.off.rotation.set(v("offX"), 0, v("offZ")); u.off.userData.elbow.rotation.set(v("offElbow"), 0, A.offElbowZ || 0);
   u.legs[0].rotation.set(v("rHip"), 0, -v("spread")); u.legs[0].userData.knee.rotation.set(v("rKnee"), 0, 0);
   u.legs[1].rotation.set(v("lHip"), 0, v("spread")); u.legs[1].userData.knee.rotation.set(v("lKnee"), 0, 0);
