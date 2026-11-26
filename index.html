@@ -2,7 +2,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="robots" content="noindex,nofollow">
-<!-- 18 Down test build: branch graphics-3d, commit 1ba0def -->
+<!-- 18 Down test build: branch graphics-3d, commit e7f3121 -->
 <title>18 Down</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&family=Shrikhand&display=swap">
@@ -2934,7 +2934,7 @@ function buildPanel(c, b, spinning){
   return `<section class="build" aria-label="Your build">
     ${discHTML(hashStr(c.id) % 97, `<div class="stamp">${Object.keys(b).length} of 4</div>${flightHTML(b)}`, spinning ? "spinning" : "")}
     <div class="slots">${SLOTS.map(k => b[k]
-      ? `<div class="slot s-${k}"><span class="k">${SLOT_LABEL[k]}</span><span class="who">${esc(b[k].short)}</span><span class="val">${hidden() ? tierOf(b[k], k) : fmtSlot(k, b[k][k])}</span></div>`
+      ? `<div class="slot s-${k}"><span class="k">${SLOT_LABEL[k]}</span><span class="who">${esc(b[k].short)}</span><span class="val">${hidden() ? "" : fmtSlot(k, b[k][k])}</span></div>`
       : `<div class="slot open s-${k}${state.mode !== "picker" && !done0() && k === currentSlot() ? " now" : ""}"><span class="k">${SLOT_LABEL[k]}</span><span class="who">${slotHint(k, c)}</span><span></span></div>`).join("")}</div>
   </section>`;
 }
@@ -3009,7 +3009,7 @@ function tierCuts(){
   return (TIER_CUTS = cuts);
 }
 function tierOf(s, k){ const c = tierCuts()[k], v = s && s[k]; if (typeof v !== "number") return "?"; return v >= c[1] ? "A" : v >= c[0] ? "B" : "C"; }
-function tierBadge(s, k){ const t = tierOf(s, k); return `<b class="tier t-${t}" title="${esc(SLOT_FULL[k] + ": tier " + t)}">${t}</b>`; }
+function tierBadge(s, k){ return ""; }   // letter grades are off: hard mode shows names and what each pro is known for
 function knownFor(s){ let best = null, bz = -Infinity; for (const k of SLOTS){ if (typeof s[k] !== "number") continue; const z = (s[k] - MED[k]) / SPREAD[k]; if (z > bz){ bz = z; best = k; } } return best ? "★ " + SLOT_LABEL[best] : ""; }
 function pickerPoolHTML(){
   const open = SLOTS.filter(k => !state.picks[k]);
@@ -3029,7 +3029,7 @@ function pickerPoolHTML(){
 }
 /* Each slot has its own color and plain-English name so it's always clear what you're drafting for. */
 const SLOT_FULL = {bh: "Backhand", fh: "Forehand", c1: "Circle 1 putting", c2: "Circle 2 putting"};
-function hardKey(){ return `<span class="tier-key" title="Ratings hidden until the round ends. A: top 20% at this spot, B: next 30%, C: the rest">${ico("hidden", "Ratings hidden")}<b class="tier t-A">A</b>20%<b class="tier t-B">B</b>30%<b class="tier t-C">C</b>50%</span>`; }
+function hardKey(){ return `<span class="tier-key" title="Ratings hidden until the round ends">${ico("hidden", "Ratings hidden")}</span>`; }
 const SLOT_WHAT = {bh: "Throws your tee shots on backhand holes", fh: "Throws your tee shots on forehand holes", c1: "Makes your putts inside 33 ft", c2: "Makes your putts from 33 to 66 ft"};
 const SLOT_CELL = {bh: "Backhand", fh: "Forehand", c1: "C1 putt", c2: "C2 putt"};
 function done0(){ return SLOTS.every(k => state.picks[k]); }
