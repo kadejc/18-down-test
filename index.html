@@ -2,7 +2,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="robots" content="noindex,nofollow">
-<!-- 18 Down test build: branch test-combined, commit 05866a6 -->
+<!-- 18 Down test build: branch test-combined, commit ae1992b -->
 <title>18 Down</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&family=Shrikhand&display=swap">
@@ -2032,7 +2032,18 @@ function slug(name){ return name.normalize("NFD").replace(/[^A-Za-z]/g, "").toLo
 const REEL_SPONSORS = ["Innova","Discraft","Discmania","Prodigy","MVP","Trilogy","DGA","Lone Star","Meridian"];
 const BRAND_REEL = {"Lone Star Disc": "Lone Star", "Meridian Discs": "Meridian"};
 const TRILOGY = ["Latitude 64","Dynamic Discs","Westside"];
+/* Who gets a tag (Kade, 2026-11-26): Ken Climo and old-school McBeth (through 2019, his Innova years and all five of
+   those world titles) are GOATs. Any other MPO world champion who doesn't play anymore is a Legend. Champions still on
+   tour (a season in the last two years of data), and McBeth from 2020 on, get no tag. */
+const GOAT_SEASONS = {"Ken Climo": [0, 9999], "Paul McBeth": [0, 2019]};
+function legendTier(name, year, active){
+  const g = GOAT_SEASONS[name];
+  if (g) return year >= g[0] && year <= g[1] ? "goat" : null;
+  if (typeof LEGENDS === "undefined" || !LEGENDS[name]) return null;
+  return active.has(name) ? null : "legend";
+}
 function makeSeasons(rows, edits){
+  const lastYear = Math.max(...rows.map(r => r[1])), active = new Set(rows.filter(r => r[1] >= lastYear - 1).map(r => r[0]));
   return rows.map(r => {
     const [name, year, brand0, bh, fh, c1r, c2r, c1Att0, c2Att0, sponsorOk0, pdga] = r;
     // a sponsor found in a source replaces an unconfirmed one (history.js)
@@ -2066,7 +2077,7 @@ function makeSeasons(rows, edits){
       stats: (typeof PLAYER_STATS !== "undefined" && PLAYER_STATS[id]) || null,
       tee: teeReal(typeof PLAYER_STATS !== "undefined" && PLAYER_STATS[id]),
       teeBase: teeBase(teeReal(typeof PLAYER_STATS !== "undefined" && PLAYER_STATS[id])),
-      legend: leg ? leg.tier : null,
+      legend: legendTier(name, year, active),
       titles: leg ? leg.titles : null,
     };
   });
