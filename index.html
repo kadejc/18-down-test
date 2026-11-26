@@ -2,7 +2,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="robots" content="noindex,nofollow">
-<!-- 18 Down test build: branch graphics-3d, commit 835ebdf -->
+<!-- 18 Down test build: branch graphics-3d, commit 372bbe4 -->
 <title>18 Down</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&family=Shrikhand&display=swap">
@@ -1178,6 +1178,7 @@ summary { cursor: pointer; font-family: var(--label); font-weight: 700; font-siz
 .h3-stamp.bad { color: #ff8a7a; }
 .h3-stamp.on { animation: h3stamp 1.4s ease-out forwards; }
 @keyframes h3stamp { 0% { opacity: 0; transform: translate(-50%, -50%) scale(1.8) rotate(-6deg); } 15% { opacity: 1; transform: translate(-50%, -50%) scale(1) rotate(-6deg); } 75% { opacity: 1; } 100% { opacity: 0; transform: translate(-50%, -60%) scale(1) rotate(-6deg); } }
+.h3-cap { position: absolute; left: 8px; top: 8px; padding: 4px 10px; border-radius: 6px; background: rgba(4,24,27,.72); color: var(--chalk); font-family: var(--label); font-weight: 700; font-size: 14px; z-index: 3; }
 </style>
 <main id="app"></main>
 <script type="application/json" id="edits">{}</script>
@@ -9075,7 +9076,7 @@ function h3BuildHole(h, c){
   const T = H3.THREE;
   h3Clear();
   const W = H3.world, rng = mulberry32(hashStr(c.id + "|h3|" + h.n)), look = h3Look(c, h.n), S = look.S, Tm = look.Tm;
-  const len = Math.min(72, Math.max(18, (h.ft || 300) * H3FT * 0.9));
+  const len = 16;   // putts only: just the approach and the green, not the whole hole
   const bend = (rng() - .5) * len * 0.35 + (h.shot === "FH" ? 2 : -2);
   const P = h3Path(len, bend), end = P(1);
   const fwHalf = h.ob ? 4.2 : 5.5 + (5 - c.diff) * 0.5;
@@ -9097,7 +9098,7 @@ function h3BuildHole(h, c){
   H3.sun.position.set(end.x * .5 + Tm.pos[0], Tm.pos[1], -len * .5 + Tm.pos[2]); H3.sun.target.position.set(end.x * .5, 0, -len * .5);
 
   // Ground with color variation
-  const GS = 140, gsize = 260, gg = new T.PlaneGeometry(gsize, gsize, GS, GS); gg.rotateX(-Math.PI / 2); gg.translate(end.x * .5, 0, -len * .5);
+  const GS = 70, gsize = 140, gg = new T.PlaneGeometry(gsize, gsize, GS, GS); gg.rotateX(-Math.PI / 2); gg.translate(end.x * .5, 0, -len * .5);
   const gp = gg.attributes.position, gcol = [], cA = new T.Color(S.grass[0]), cB = new T.Color(S.grass[1]), cC = new T.Color(S.grass[2]), tmp = new T.Color();
   for (let i = 0; i < gp.count; i++){ const x = gp.getX(i), z = gp.getZ(i); gp.setY(i, ht(x, z)); const n = (Math.sin(x * .3 + z * .21) + Math.sin(x * .07 - z * .13)) * .25 + .5; tmp.copy(cA).lerp(n > .5 ? cB : cC, Math.abs(n - .5) * 1.6); gcol.push(tmp.r, tmp.g, tmp.b); }
   gg.setAttribute("color", new T.Float32BufferAttribute(gcol, 3)); gg.computeVertexNormals();
@@ -9132,17 +9133,15 @@ function h3BuildHole(h, c){
   // OB stakes on OB holes
   if (h.ob === 1){
     const stake = new T.CylinderGeometry(.05, .05, 1.1, 6), white = h3Mat(0xffffff);
-    for (let i = 1; i < 14; i++){ const a = P(i / 14); for (const s of [-1, 1]){ const x = a.x + s * (fwHalf + 1.4); const m = new T.Mesh(stake, white); m.position.set(x, ht(x, a.z) + .55, a.z); m.castShadow = true; W.add(m); } }
+    for (let i = 6; i < 14; i++){ const a = P(i / 14); for (const s of [-1, 1]){ const x = a.x + s * (fwHalf + 1.4); const m = new T.Mesh(stake, white); m.position.set(x, ht(x, a.z) + .55, a.z); m.castShadow = true; W.add(m); } }
   }
 
   // Tee pad and a tee sign
-  const pad = new T.Mesh(new T.BoxGeometry(2.2, .15, 4.2), h3Mat(0xb9b2a0)); pad.position.set(0, .07, 1); pad.receiveShadow = true; W.add(pad);
-  W.add(h3Sign(h, -2.6, ht(-2.6, 2.5), 2.5));
 
   // Trees: three kinds, colors from the season, thicker on harder courses
-  h3Trees(W, P, end, fwHalf, ht, water, S, rng, 160 + c.diff * 35);
+  h3Trees(W, P, end, fwHalf, ht, water, S, rng, 90 + c.diff * 15);
   // Bushes along the fairway edge
-  const nB = 40, bush = new T.InstancedMesh(new T.IcosahedronGeometry(.7, 0), h3Mat(S.trees[0], {flatShading: true}), nB), d = new T.Object3D();
+  const nB = 18, bush = new T.InstancedMesh(new T.IcosahedronGeometry(.7, 0), h3Mat(S.trees[0], {flatShading: true}), nB), d = new T.Object3D();
   for (let i = 0; i < nB; i++){ const t = rng(), a = P(t), side = rng() < .5 ? -1 : 1, x = a.x + side * (fwHalf + 1 + rng() * 2.5), z = a.z + (rng() - .5) * 2, s = .6 + rng() * .7; d.position.set(x, ht(x, z) + .3 * s, z); d.scale.set(s, s * .8, s); d.rotation.y = rng() * 6; d.updateMatrix(); bush.setMatrixAt(i, d.matrix); }
   bush.castShadow = true; W.add(bush);
 
@@ -9273,7 +9272,8 @@ function h3Stamp(text, cls){
 
 /* ----- Camera helpers ----- */
 const H3V = () => new H3.THREE.Vector3();
-function h3CamTo(pos, look){ H3.camera.position.copy(pos); H3.camera.lookAt(look); }
+function h3CamTo(pos, look){ H3.camera.position.copy(pos); H3.camera.lookAt(look); H3.look = (H3.look || new H3.THREE.Vector3()).copy(look); }
+function h3LookNow(){ return H3.look ? H3.look.clone() : H3.camera.position.clone().add(new H3.THREE.Vector3(0, 0, -5)); }
 function h3CamMove(from, to, lookFrom, lookTo, ms, token, ease){
   const p = H3V(), l = H3V();
   return h3Tween(ms, k => { const e = (ease || h3Ease)(k); p.lerpVectors(from, to, e); l.lerpVectors(lookFrom, lookTo, e); h3CamTo(p, l); }, token);
@@ -9321,7 +9321,7 @@ async function h3Putt(hole, from, made, token, why){
   // camera off to the side, looking across the putt
   const mid = h3V((from.x + end.x) / 2, gy + .8, (from.z + end.z) / 2), sx = -(end.z - from.z) / (dist || 1), sz = (end.x - from.x) / (dist || 1);
   const camPos = h3V(mid.x + sx * Math.max(3.5, dist * .7), gy + 1.8 + dist * .05, mid.z + sz * Math.max(3.5, dist * .7));
-  await h3CamMove(H3.camera.position.clone(), camPos, H3.camera.position.clone().add(h3V(0, -1, -3)), mid, 380, token);
+  await h3CamMove(H3.camera.position.clone(), camPos, h3LookNow(), mid, 380, token);
   disc.position.set(from.x, hole.ht(from.x, from.z) + 1, from.z); disc.rotation.z = 0;
   const arm = player.userData.arm;
   if (!(await h3Tween(260, k => { arm.rotation.x = .9 * k; }, token))) return false;   // the putter draws back
@@ -9339,80 +9339,53 @@ async function h3Putt(hole, from, made, token, why){
   else { sfx("clank"); h3Puff(to, 0xd9cfb0, 5, .3, 500); await h3Tween(350, () => {}, token); }
   return true;
 }
-/* Play hole h of the round. Resolves when the animation is done (or skipped). */
+/* The putts on a hole, in order: [{feet, made, what}]. Holes with no putt (aces, tap-ins, throw-ins, misses from
+   outside) show nothing in 3D; the scorecard tells those. */
+function h3PuttsFor(h){
+  const out = [];
+  if (h.putt && (h.lie === "c1" || h.lie === "c2")){
+    out.push({feet: h.feet, made: h.putt.made, what: "for birdie"});
+    if (!h.putt.made && h.comeback) out.push({feet: 10 + (h.n * 7) % 14, made: h.comeback.made, what: "for par"});
+  } else if (h.putt && h.putt.forPar) out.push({feet: h.parFeet || h.feet || 20, made: h.putt.made, what: "for par"});
+  return out;
+}
+function h3Caption(text){ const el = document.getElementById("h3-cap"); if (el){ el.textContent = text; el.hidden = !text; } }
+/* Play hole h of the round: only its putts. Resolves when done (or skipped). */
 async function h3PlayHole(h, token){
+  const putts = h3PuttsFor(h);
+  if (!putts.length) return true;
   if (!h3Mount()) return false;
   h3Start();
-  const c = course(), hole = h3BuildHole(h, c), {disc, end, gy, rng, player} = hole;
-  disc.material.color.set((typeof lookFull === "function" ? lookFull(proLook(h.thrower)).disc : null) || "#ffd23f");
+  const c = course(), hole = h3BuildHole(h, c), {disc, end, gy, rng} = hole;
+  const putter = h.putt && h.putt.by ? h.putt.by : h.thrower;
+  disc.material.color.set((typeof lookFull === "function" ? lookFull(proLook(putter)).disc : null) || "#ffd23f");
+  if (typeof lookFull === "function"){ hole.player.parent.remove(hole.player); hole.player = h3Person(putter); H3.world.add(hole.player); }
   const stamp = document.getElementById("h3-stamp"); if (stamp) stamp.className = "h3-stamp";
-  const tee = {x: .15, y: 1.35, z: .4};
-  h3Stand(hole, {x: 0, z: .8}); player.lookAt(end.x * .3, player.position.y, -hole.len * .3);
-  disc.position.set(tee.x, tee.y, tee.z);
-
-  // Flyover: from above the basket back to behind the tee
-  await h3CamMove(h3V(end.x + 6, gy + 14, end.z - 8), h3V(-1.5, 3, 7.5), h3V(end.x, gy, end.z), h3V(end.x * .35, 1, -hole.len * .4), 1000, token);
-  if (H3.skip || token !== playToken) return false;
-
-  // Wind-up and release
-  const fade = h.shot === "FH" ? 1 : -1, {arm, torso} = player.userData;
-  if (!(await h3Tween(420, k => { const e = h3Ease(k); torso.rotation.y = fade * -.8 * e; arm.rotation.set(0, 0, fade * -1.4 * e); disc.position.set(tee.x - fade * .4 * e, tee.y - .1 * e, tee.z + .3 * e); }, token))) return false;
-  let land;
-  if (h.flair === "ace") land = {x: end.x, y: gy + 1.2, z: end.z};
-  else if (h.lie === "ob"){
-    if (H3.water){ const wv = H3.water; land = wv.island ? h3Spot(hole, 70 + rng() * 40, rng) : {x: wv.x + (rng() - .5) * wv.r, y: wv.y, z: wv.z + (rng() - .5) * wv.r}; land.y = wv.y; }
-    else { const p = hole.P(.55 + rng() * .35), x = p.x + (rng() < .5 ? -1 : 1) * (hole.fwHalf + 5 + rng() * 4); land = {x, y: hole.ht(x, p.z) + .04, z: p.z}; }
-  }
-  else land = h3Spot(hole, Math.max(3, h.feet), rng);
-  sfx("throw");
-  h3Tween(380, k => { torso.rotation.y = fade * (-.8 + 1.4 * h3Ease(k)); arm.rotation.z = fade * (-1.4 + 2.6 * h3Ease(k)); }, token);   // follow-through
-  const big = h.flair === "ace" || h.rel <= -2;
-  if (big) H3.timeScale = .75;
-  const ok = await h3Fly(hole, tee, land, 3.2 + hole.len * .075, fade, 1700 + hole.len * 13, token, true);
-  H3.timeScale = 1;
-  if (!ok) return false;
-
-  if (h.flair === "ace"){ sfx("ace"); disc.position.set(end.x, gy + .72, end.z); h3Confetti({x: end.x, y: gy, z: end.z}); h3Stamp("ACE!", "good"); await h3Shake(hole.chains, 1200, .45, token); await h3Tween(900, () => {}, token); return true; }
-  if (h.lie === "ob"){
-    if (H3.water){ sfx("ob"); h3Puff(land, 0xffffff, 14, 3, 700); disc.visible = false; }
-    else { sfx("tree"); h3Puff(land, 0xd9cfb0, 8, .6, 600); }
-    h3Stamp("OB", "bad");
-    if (!(await h3Tween(800, () => {}, token))) return false;
-    disc.visible = true; land = h3Spot(hole, 25 + rng() * 25, rng); disc.position.set(land.x, land.y, land.z);
-  } else h3Puff(land, 0xd9cfb0, 6, .5, 500);
-
   const why = typeof criticalWhy === "function" && state.round && state.round.holes ? criticalWhy(h.n, h) : "";
-  if (h.lie === "parked"){ if (!(await h3Putt(hole, land, true, token, why))) return false; }
-  else if (h.putt && (h.lie === "c1" || h.lie === "c2")){
-    if (!(await h3Putt(hole, land, h.putt.made, token, why))) return false;
-    if (!h.putt.made && !(await h3Putt(hole, h3Spot(hole, 8 + rng() * 14, rng), h.comeback ? h.comeback.made : true, token))) return false;
-  } else if (h.lie === "outside" || h.lie === "ob"){
-    if (h.save === "throwin"){ if (!(await h3Putt(hole, land, true, token, why))) return false; }
-    else {
-      const near = h3Spot(hole, h.save === "putt" ? (h.parFeet || 20) : h.save === "miss" ? 40 : 6, rng);
-      h3Stand(hole, land);
-      await h3CamMove(H3.camera.position.clone(), h3V(land.x - (end.x - land.x) * .3, land.y + 3, land.z - (end.z - land.z) * .3 + 3), h3V(land.x, land.y, land.z), h3V(end.x, gy + .5, end.z), 400, token);
-      if (!(await h3Fly(hole, {x: land.x, y: land.y + 1, z: land.z}, near, 1.4, fade * .4, 900, token, false))) return false;
-      const made = h.save === "putt" ? !!(h.putt && h.putt.made) : h.save !== "miss";
-      if (!(await h3Putt(hole, near, made, token, h.save === "putt" ? why : ""))) return false;
-      if (!made && !(await h3Putt(hole, h3Spot(hole, 5, rng), true, token))) return false;
-    }
+  for (let i = 0; i < putts.length; i++){
+    const p = putts[i], from = h3Spot(hole, Math.max(4, p.feet), rng);
+    h3Caption(`Hole ${h.n} · ${p.feet} ft ${p.what}${why && i === 0 ? " · " + why : ""}`);
+    // start low behind the putter, looking down the line, then drift to the side for the stroke
+    const bx = from.x - end.x, bz = from.z - end.z, bl = Math.hypot(bx, bz) || 1;
+    h3Stand(hole, {x: from.x + bx / bl * .3, z: from.z + bz / bl * .3});
+    disc.position.set(from.x, hole.ht(from.x, from.z) + 1, from.z);
+    h3CamTo(h3V(from.x + bx / bl * 3, gy + 1.6, from.z + bz / bl * 3), h3V(end.x, gy + .9, end.z));
+    if (!(await h3Tween(i === 0 ? 700 : 400, () => {}, token))) return false;
+    if (!(await h3Putt(hole, from, p.made, token, i === 0 ? why : ""))) return false;
   }
+  h3Caption("");
   const label = h.rel <= -2 ? "EAGLE!" : h.rel === -1 ? "BIRDIE!" : h.rel === 0 ? "PAR" : h.rel === 1 ? "BOGEY" : "DOUBLE";
   h3Stamp(label, h.rel < 0 ? "good" : h.rel === 0 ? "par" : "bad");
-  if (h.rel <= -2) h3Confetti({x: end.x, y: gy, z: end.z});
-  // Closing shot from the far side of the basket, looking back at the player
-  const px = player.position.x - end.x, pz = player.position.z - end.z, pl = Math.hypot(px, pz) || 1;
-  const camEnd = h3V(end.x - px / pl * 4 + pz / pl * 1.5, gy + 2.1, end.z - pz / pl * 4 - px / pl * 1.5);
-  await h3CamMove(H3.camera.position.clone(), camEnd, h3V(end.x, gy + 1, end.z), h3V(end.x + px / pl * 1.5, gy + .9, end.z + pz / pl * 1.5), 500, token);
-  await h3Tween(h.rel < 0 ? 900 : 500, () => {}, token);
+  const pl = hole.player, px = pl.position.x - end.x, pz = pl.position.z - end.z, pd = Math.hypot(px, pz) || 1;
+  await h3CamMove(H3.camera.position.clone(), h3V(end.x - px / pd * 4 + pz / pd * 1.5, gy + 2.1, end.z - pz / pd * 4 - px / pd * 1.5), h3LookNow(), h3V(end.x + px / pd * 1.5, gy + .9, end.z + pz / pd * 1.5), 450, token);
+  await h3Tween(h.rel < 0 ? 700 : 400, () => {}, token);
   return true;
 }
 
 /* ----- Hooks the round screen uses ----- */
 function h3BoxHTML(){
   if (!h3Wanted() || H3.status === "failed") return "";
-  return `<div class="hole3d" id="hole3d"><div class="h3-stamp" id="h3-stamp" aria-hidden="true"></div><div class="h3-ctrls"><button class="btn small" id="h3-speed" data-act="h3Speed" aria-label="Playback speed">${h3Speed()}×</button><button class="btn small" id="h3-skip" data-act="h3Skip">Skip to the scorecard</button></div></div>`;
+  return `<div class="hole3d" id="hole3d"><div class="h3-stamp" id="h3-stamp" aria-hidden="true"></div><div class="h3-cap" id="h3-cap" hidden></div><div class="h3-ctrls"><button class="btn small" id="h3-speed" data-act="h3Speed" aria-label="Playback speed">${h3Speed()}×</button><button class="btn small" id="h3-skip" data-act="h3Skip">Skip to the scorecard</button></div></div>`;
 }
 /* Called once per hole by playFrom. Returns false if the round was abandoned. */
 async function h3Hole(h, token){
