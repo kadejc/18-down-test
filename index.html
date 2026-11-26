@@ -2,7 +2,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="robots" content="noindex,nofollow">
-<!-- 18 Down test build: branch graphics-3d, commit 7b64e47 -->
+<!-- 18 Down test build: branch graphics-3d, commit d2b15a4 -->
 <title>18 Down</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&family=Shrikhand&display=swap">
@@ -1245,6 +1245,8 @@ span.pips, .calls-h span.pips { display: inline-flex; gap: 4px; vertical-align: 
 .seg.focus-btns .ico { width: 26px; height: 26px; }
 #call-release { min-height: 52px; font-size: 17px; }
 #call-release .ico { width: 24px; height: 24px; }
+.top-actions { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; align-items: stretch; margin-bottom: 6px; }
+.top-actions .btn { flex: 1 1 140px; }
 </style>
 <main id="app"></main>
 <script type="application/json" id="edits">{}</script>
@@ -3939,6 +3941,7 @@ function viewResult(){
     <section class="loader recap" aria-label="Round recap">
       <p class="ld-title">${esc(title)}</p>
       <div class="ld-total"><b class="total tnum ${r.total < 0 ? "under" : r.total > 0 ? "over" : ""}">${fmtTotal(r.total)}</b><span class="thru">Final${best !== null ? " · Best " + fmtTotal(+best) : ""}</span></div>
+      <div class="row top-actions">${daily ? `<button class="btn small primary" id="classic-again" data-act="classicAgain">Play Classic again</button>` : ""}<button class="btn small" id="again" data-act="go" data-screen="bulletin">Back to Tournaments</button></div>
       <div class="rc-verdict"><h1 class="verdict">${esc(v.name)}</h1><p class="verdict-line">${esc(v.line)}</p></div>
       ${typeof habitNewsHTML === "function" ? habitNewsHTML() : ""}
       ${pay ? `<div class="rc-pay"><span>${pay.label}</span><b class="tnum">${fmtMoney(pay.amt)}</b><small>${pay.note} Balance ${fmtMoney(meBalance(meLoad()))}.</small></div>` : ""}
@@ -3959,9 +3962,6 @@ function viewResult(){
         <button class="btn primary full" id="copy" data-act="copy">${ui.copied ? "Copied" : "Copy result"}</button>
         ${daily ? `<p class="fine">The Classic result leaves out your picks, so it won’t spoil the round for your group.</p>` : ""}
         ${ui.shareFail ? `<label class="fine" for="share-text">Select the text below and copy it.</label><textarea class="share-fallback" id="share-text" readonly>${esc(shareText())}</textarea>` : ""}
-        <div class="row">
-          ${daily ? `<button class="btn small primary" id="classic-again" data-act="classicAgain">Play Classic again</button>` : ""}<button class="btn small" id="again" data-act="go" data-screen="bulletin">Back to Tournaments</button>
-        </div>
       </div>
     </section>
   </div>`;
@@ -4227,6 +4227,7 @@ function viewTFinal(){
       <section style="display:grid;gap:16px">
         <div><p class="eyebrow">Final</p><h1 class="verdict">${fmtPlace(T.place, T.tied)} of ${t.field + 1}</h1>
           <p class="verdict-line">${fmtTotal(me.total)} over ${t.rounds} rounds (${me.scores.map(fmtTotal).join(", ")}).${T.playoff ? (T.playoff.result === "won" ? " Won in a playoff." : " Lost in a playoff.") : ""}</p>${typeof habitNewsHTML === "function" ? habitNewsHTML() : ""}</div>
+        <div class="row top-actions"><button class="btn small primary" id="again" data-act="go" data-screen="bulletin">Back to Tournaments</button></div>
         <div class="payout"><span>Payout</span><b class="tnum">${fmtMoney(T.pay)}</b><small>Balance ${fmtMoney(meBalance(meLoad()))}</small></div>
         <div><h2 class="section-h">Your team</h2>
           <div class="reveal">${SLOTS.map(k => `<div><small>${SLOT_LABEL[k]}</small><b>${esc(b[k].short)}</b><span class="tnum">${fmtSlot(k, b[k][k])}</span></div>`).join("")}</div>
@@ -4234,7 +4235,7 @@ function viewTFinal(){
         <div class="actions">
           <button class="btn primary full" id="copy" data-act="copy">${ui.copied ? "Copied" : "Copy result"}</button>
           ${ui.shareFail ? `<label class="fine" for="share-text">Select the text below and copy it.</label><textarea class="share-fallback" id="share-text" readonly>${esc(shareText())}</textarea>` : ""}
-          <div class="row"><button class="btn small" id="earnings" data-act="earnings">History</button><button class="btn small" id="again" data-act="go" data-screen="bulletin">Back to Tournaments</button></div>
+          <div class="row"><button class="btn small" id="earnings" data-act="earnings">History</button></div>
         </div>
       </section>
       <section style="display:grid;gap:8px"><h2 class="section-h">Final leaderboard</h2><p class="fine">Winner: ${esc(winner || "")}${winner === "You" ? "" : ""}</p>${lbHTML(rows, t.rounds, t.rounds, "Final leaderboard")}</section>
