@@ -2,7 +2,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="robots" content="noindex,nofollow">
-<!-- 18 Down test build: branch test-combined, commit 5bbdb67 -->
+<!-- 18 Down test build: branch test-combined, commit aca1dd0 -->
 <title>18 Down</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&family=Shrikhand&display=swap">
@@ -1301,6 +1301,19 @@ span.pips, .calls-h span.pips { display: inline-flex; gap: 4px; vertical-align: 
 /* GOAT and Legend tags */
 .lg-tag { display: inline-block; margin-left: 6px; padding: 1px 6px; border-radius: 4px; font-style: normal; font-family: var(--label); font-weight: 700; font-size: 10px; letter-spacing: .05em; text-transform: uppercase; vertical-align: 2px; background: var(--band); color: var(--ink); white-space: nowrap; }
 .lg-tag.goat { background: #ffd23f; box-shadow: 0 0 0 1px var(--ink), 0 0 8px rgba(255,210,63,.6); }
+
+/* Finish screens: tabs for the details */
+.rtabs { display: flex; gap: 4px; padding: 3px; border-radius: 10px; background: rgba(0,0,0,.22); margin-top: 6px; }
+.rtab { flex: 1; font: inherit; font-family: var(--label); font-weight: 700; font-size: 13px; letter-spacing: .03em; text-transform: uppercase; padding: 8px 4px; border: 0; border-radius: 8px; background: transparent; color: var(--mute); cursor: pointer; touch-action: manipulation; }
+.rtab.on { background: var(--band); color: var(--ink); }
+.rtab:focus-visible { outline: 2px solid var(--band); outline-offset: 2px; }
+.rpanel { display: grid; gap: 8px; padding-top: 6px; }
+.rpanel[hidden] { display: none; }
+.rpanel .rc-bd { margin: 0; }
+.rc-pay.compact { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; padding: 8px 14px; }
+.rc-pay.compact b { font-size: 26px; }
+.lb-more { margin: 4px 0 0; }
+.lb-more > summary .section-h { font-size: 15px; }
 </style>
 <main id="app"></main>
 <script type="application/json" id="edits">{}</script>
@@ -4301,6 +4314,15 @@ function shareText(){
 }
 function fmtStrokes(v){ const r = Math.round(Math.abs(v) * 10) / 10; return r === 0 ? "0.0" : (v > 0 ? "+" : "−") + r.toFixed(1); }
 function fmtAvg(v){ const r = Math.round(Math.abs(v) * 10) / 10; return r === 0 ? "even" : (v < 0 ? "−" : "+") + r.toFixed(1); }
+/* Tabs for the finish screens: one panel shows at a time, the first by default. tabs: [[key, label, html], ...];
+   a null entry is skipped. Switching tabs only shows and hides panels, so live parts (the friends board, the
+   draft breakdown) keep updating in place. */
+function resTabs(id, tabs){
+  tabs = tabs.filter(Boolean);
+  const cur = (ui.tabs && ui.tabs[id] && tabs.some(t => t[0] === ui.tabs[id])) ? ui.tabs[id] : tabs[0][0];
+  return `<div class="rtabs" role="tablist">${tabs.map(([k, label]) => `<button type="button" role="tab" class="rtab${k === cur ? " on" : ""}" data-act="rtab" data-tabs="${id}" data-k="${k}" aria-selected="${k === cur}">${label}</button>`).join("")}</div>
+    ${tabs.map(([k, , html]) => `<div class="rpanel" role="tabpanel" data-tabs="${id}" data-k="${k}" ${k === cur ? "" : "hidden"}>${html}</div>`).join("")}`;
+}
 function breakdownHTML(){
   const bd = state.breakdown;
   if (!bd) return `<details class="grade-box"><summary><span class="section-h">Draft grade</span></summary><p class="fine">Working it out.</p></details>`;
@@ -4350,25 +4372,26 @@ function viewResult(){
       <p class="ld-title">${esc(title)}</p>
       <div class="ld-total"><b class="total tnum ${r.total < 0 ? "under" : r.total > 0 ? "over" : ""}">${fmtTotal(r.total)}</b><span class="thru">Final${best !== null ? " · Best " + fmtTotal(+best) : ""}</span></div>
       <div class="row top-actions">${daily ? `<button class="btn small primary" id="classic-again" data-act="classicAgain">Play Classic again</button>` : ""}<button class="btn small" id="again" data-act="go" data-screen="bulletin">Back to Tournaments</button></div>
-      <div class="rc-verdict"><h1 class="verdict">${esc(v.name)}</h1><p class="verdict-line">${esc(v.line)}</p></div>
+      <div class="rc-verdict"><h1 class="verdict">${esc(v.name)}</h1></div>
+      ${pay ? `<div class="rc-pay compact"><span>${pay.label}</span><b class="tnum">${fmtMoney(pay.amt)}</b></div>` : ""}
       ${typeof habitNewsHTML === "function" ? habitNewsHTML() : ""}
-      ${pay ? `<div class="rc-pay"><span>${pay.label}</span><b class="tnum">${fmtMoney(pay.amt)}</b><small>${pay.note} Balance ${fmtMoney(meBalance(meLoad()))}.</small></div>` : ""}
-      <div class="ld-prog" aria-hidden="true"><i style="width:100%"></i></div>
-      <p class="ld-nine">Front 9</p><div class="ld-grid">${r.holes.slice(0, 9).map(cell).join("")}</div>
-      <p class="ld-nine">Back 9</p><div class="ld-grid">${r.holes.slice(9).map(cell).join("")}</div>
-      <p class="ld-nine">Your team</p>
-      ${teamRowsHTML(r.holes, false)}
-      <div class="rc-stats">
-        <div><b>${s.parked}</b><span>Parked</span></div>
-        <div><b>${s.c1Made}/${s.c1Att}</b><span>C1X</span></div>
-        <div><b>${s.c2Made}/${s.c2Att}</b><span>C2</span></div>
-        <div><b>${s.ob}</b><span>OB</span></div>
-      </div>
-      ${daily && !state.replay ? `<section class="bd rc-bd" id="daily-lb" aria-label="Friends today">${typeof dlHTML === "function" ? dlHTML() : ""}</section>` : ""}
+      ${resTabs("res", [
+        ["card", "Card", `<p class="ld-nine">Front 9</p><div class="ld-grid">${r.holes.slice(0, 9).map(cell).join("")}</div>
+          <p class="ld-nine">Back 9</p><div class="ld-grid">${r.holes.slice(9).map(cell).join("")}</div>`],
+        ["team", "Team", teamRowsHTML(r.holes, false)],
+        ["stats", "Stats", `<div class="rc-stats">
+          <div><b>${s.parked}</b><span>Parked</span></div>
+          <div><b>${s.c1Made}/${s.c1Att}</b><span>C1X</span></div>
+          <div><b>${s.c2Made}/${s.c2Att}</b><span>C2</span></div>
+          <div><b>${s.ob}</b><span>OB</span></div>
+        </div>
+        <p class="fine verdict-line">${esc(v.line)}</p>
+        ${pay ? `<p class="fine">${pay.note} Balance ${fmtMoney(meBalance(meLoad()))}.</p>` : ""}`],
+        daily && !state.replay ? ["friends", "Friends", `<section class="bd rc-bd" id="daily-lb" aria-label="Friends today">${typeof dlHTML === "function" ? dlHTML() : ""}</section>`] : null,
+      ])}
       <section class="bd rc-bd" id="breakdown" aria-label="What each pick was worth">${breakdownHTML()}</section>
       <div class="actions">
-        <button class="btn primary full" id="copy" data-act="copy">${ui.copied ? "Copied" : "Copy result"}</button>
-        ${daily ? `<p class="fine">The Classic result leaves out your picks, so it won’t spoil the round for your group.</p>` : ""}
+        <button class="btn primary full" id="copy" data-act="copy" ${daily ? `title="The Classic result leaves out your picks, so it won’t spoil the round for your group."` : ""}>${ui.copied ? "Copied" : "Copy result"}</button>
         ${ui.shareFail ? `<label class="fine" for="share-text">Select the text below and copy it.</label><textarea class="share-fallback" id="share-text" readonly>${esc(shareText())}</textarea>` : ""}
       </div>
     </section>
@@ -4636,17 +4659,21 @@ function viewTFinal(){
         <div><p class="eyebrow">Final</p><h1 class="verdict">${fmtPlace(T.place, T.tied)} of ${t.field + 1}</h1>
           <p class="verdict-line">${fmtTotal(me.total)} over ${t.rounds} rounds (${me.scores.map(fmtTotal).join(", ")}).${T.playoff ? (T.playoff.result === "won" ? " Won in a playoff." : " Lost in a playoff.") : ""}</p>${typeof habitNewsHTML === "function" ? habitNewsHTML() : ""}</div>
         <div class="row top-actions"><button class="btn small primary" id="again" data-act="go" data-screen="bulletin">Back to Tournaments</button></div>
-        <div class="payout"><span>Payout</span><b class="tnum">${fmtMoney(T.pay)}</b><small>Balance ${fmtMoney(meBalance(meLoad()))}</small></div>
-        <div><h2 class="section-h">Your team</h2>
-          <div class="reveal">${SLOTS.map(k => `<div><small>${SLOT_LABEL[k]}</small><b>${esc(b[k].short)}</b><span class="tnum">${fmtSlot(k, b[k][k])}</span></div>`).join("")}</div>
-          <p class="fine">Ratings are revealed now that the event is over.</p></div>
+        <div class="rc-pay compact"><span>Payout</span><b class="tnum">${fmtMoney(T.pay)}</b></div>
+        ${resTabs("tfin", [
+          ["board", "Leaderboard", (() => {   // top 10 and your own row; the rest folds away
+            const top = rows.slice(0, 10), mine = rows.find(r => r.you), short = top.includes(mine) || !mine ? top : top.concat(mine);
+            return `${lbHTML(short, t.rounds, t.rounds, "Top of the leaderboard")}${rows.length > short.length ? `<details class="grade-box lb-more"><summary><span class="section-h">Full leaderboard (${rows.length})</span></summary>${lbHTML(rows, t.rounds, t.rounds, "Final leaderboard")}</details>` : ""}`;
+          })()],
+          ["team", "Team", `<div class="reveal">${SLOTS.map(k => `<div><small>${SLOT_LABEL[k]}</small><b>${esc(b[k].short)}</b><span class="tnum">${fmtSlot(k, b[k][k])}</span></div>`).join("")}</div>
+            <p class="fine">Ratings are revealed now that the event is over. Balance ${fmtMoney(meBalance(meLoad()))}.</p>`],
+        ])}
         <div class="actions">
           <button class="btn primary full" id="copy" data-act="copy">${ui.copied ? "Copied" : "Copy result"}</button>
           ${ui.shareFail ? `<label class="fine" for="share-text">Select the text below and copy it.</label><textarea class="share-fallback" id="share-text" readonly>${esc(shareText())}</textarea>` : ""}
           <div class="row"><button class="btn small" id="earnings" data-act="earnings">History</button></div>
         </div>
       </section>
-      <section style="display:grid;gap:8px"><h2 class="section-h">Final leaderboard</h2><p class="fine">Winner: ${esc(winner || "")}${winner === "You" ? "" : ""}</p>${lbHTML(rows, t.rounds, t.rounds, "Final leaderboard")}</section>
     </div>
   </div>`;
 }
@@ -5410,6 +5437,11 @@ app.addEventListener("click", ev => {
     state = fresh();
     render("teeoff");
     window.scrollTo(0, 0);
+  } else if (act === "rtab"){
+    const id = el.dataset.tabs, k = el.dataset.k;
+    ui.tabs = Object.assign({}, ui.tabs, {[id]: k});
+    document.querySelectorAll(`.rtab[data-tabs="${id}"]`).forEach(b => { const on = b.dataset.k === k; b.classList.toggle("on", on); b.setAttribute("aria-selected", on); });
+    document.querySelectorAll(`.rpanel[data-tabs="${id}"]`).forEach(p => { p.hidden = p.dataset.k !== k; });
   } else if (act === "copy"){
     const text = shareText();
     const done = () => { ui.copied = true; ui.shareFail = false; render("copy"); };
