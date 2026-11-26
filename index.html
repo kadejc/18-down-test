@@ -2,7 +2,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="robots" content="noindex,nofollow">
-<!-- 18 Down test build: branch graphics-3d, commit 3ba059f -->
+<!-- 18 Down test build: branch graphics-3d, commit add9f8c -->
 <title>18 Down</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&family=Shrikhand&display=swap">
@@ -8970,8 +8970,70 @@ const GREENS = {
     17: {note: "Basket 54 ft above the tee", slope: .11, f: [["woods", "around", 0]]},
     18: {note: "Basket 64 ft below the tee", slope: -.14, f: [["woods", "around", 0]]},
   },
+
+  /* The other courses: what the game's own hole notes say about the green (those notes come from each course's
+     linked map or UDisc layout). Where a note gives no side, the position is a reasonable guess. */
+  maple: {1: {f: [["peninsula", "around", 0]]}},
+  brewster: {
+    1: {f: [["road", "long", 34]]},
+    2: {f: [["wall", "right", 32]]},
+    5: {f: [["wall", "left", 30]]},
+    12: {f: [["line", "long", 30], ["line", "left", 32]]},
+  },
+  foxrun: {
+    2: {f: [["line", "right", 30], ["line", "long", 32]]}, 3: {f: [["line", "right", 30], ["line", "long", 32]]},
+    4: {f: [["line", "left", 34]]}, 5: {f: [["line", "right", 34]]}, 9: {f: [["line", "long", 34]]}, 10: {f: [["line", "left", 32]]},
+    11: {f: [["line", "right", 34]]}, 12: {f: [["line", "left", 36]]}, 13: {f: [["line", "long", 32]]}, 18: {f: [["line", "right", 36]]},
+  },
+  hornets: {18: {f: [["spare", "right", 30]]}},
+  heaven: {14: {f: [["pond", "right", 60]]}, 16: {f: [["fencering", "around", 34]]}},
+  idlewild: {
+    2: {f: [["pond", "left", 50]]}, 4: {f: [["pond", "left", 50], ["pond", "right", 70]]},
+    5: {f: [["pond", "shortleft", 50], ["road", "long", 40], ["path", "right", 28]]},
+    6: {f: [["creek", "short", 60]]}, 7: {f: [["creek", "short", 60]]}, 17: {f: [["creek", "short", 45]]},
+    18: {f: [["fence", "long", 28]]},
+  },
+  ale: {18: {f: [["hazard", "around", 32]]}},
+  kippa: {
+    2: {f: [["road", "long", 32]]}, 3: {f: [["road", "left", 32], ["fence", "right", 30]]}, 4: {f: [["fence", "long", 30]]},
+    5: {f: [["line", "left", 30]]}, 8: {f: [["line", "long", 30]]}, 10: {f: [["pit", "right", 36], ["line", "long", 30]]},
+    12: {f: [["line", "left", 34]]}, 13: {f: [["line", "right", 34]]}, 14: {f: [["line", "left", 32]]},
+    15: {f: [["haybale", "around", 0], ["line", "left", 36], ["line", "right", 36]]},
+    16: {f: [["line", "left", 32], ["line", "right", 32], ["line", "long", 30]]},
+    18: {f: [["line", "left", 32], ["line", "right", 32], ["line", "long", 30], ["sand", "short", 18]]},
+  },
+  beast: {17: {f: [["pond", "left", 45]]}, 18: {f: [["pond", "right", 50]]}},
+  champions: {16: {note: "The island green", f: [["island", "around", 0]]}},
+  winthrop: Object.assign(Object.fromEntries([1, 2, 6, 7, 8, 9, 10, 11, 12, 13, 14, 16].map(n => [n, {f: [["line", "left", 34], ["line", "right", 34]]}])),
+    {17: {f: [["island", "around", 0]]}, 18: {f: [["pond", "left", 50]]}}),
 };
-function greenFor(courseId, n){ const c = GREENS[courseId]; return (c && c[n]) || null; }
+/* Course terrain and cover, from each course's UDisc page (elevation rating: flat, hilly, very hilly, extremely hilly)
+   and descriptions. hills sets how steep greens can tilt; cover is woods, open, mixed or bayou (water and cypress). */
+const GREENS_COURSE = {
+  pickard: {hills: 0, cover: "open"}, toboggan: {hills: 3, cover: "woods"},
+  maple: {hills: 2, cover: "woods"}, brewster: {hills: 2, cover: "open"}, foxrun: {hills: 1, cover: "open"},
+  hornets: {hills: 1, cover: "woods"}, heaven: {hills: 3, cover: "woods"}, parc: {hills: 0, cover: "bayou"},
+  ivy: {hills: 1, cover: "woods"}, idlewild: {hills: 3, cover: "mixed"}, ale: {hills: 3, cover: "woods"},
+  kippa: {hills: 3, cover: "woods"}, beast: {hills: 0, cover: "mixed"}, champions: {hills: 1, cover: "open"},
+  nokia: {hills: 2, cover: "woods"}, winthrop: {hills: 0, cover: "mixed"},
+};
+/* The green for a hole: the caddie-book or note facts above, plus the course's cover, and a slope where none is known
+   (its steepness follows the course's elevation rating; its direction is picked per hole). */
+function greenFor(courseId, n){
+  const g = GREENS[courseId] && GREENS[courseId][n], cc = GREENS_COURSE[courseId];
+  if (!g && !cc) return null;
+  const out = Object.assign({note: "", f: []}, g || {}, {f: ((g && g.f) || []).slice()});
+  if (cc){
+    out.cover = cc.cover;
+    if (cc.cover === "woods" && !out.f.some(x => x[0] === "woods")) out.f.push(["woods", "around", 0]);
+    if (cc.cover === "bayou") out.f.push(["bayou", "around", 0]);
+    if (out.slope === undefined && cc.hills){
+      const r = mulberry32(hashStr("slope|" + courseId + "|" + n));
+      out.slope = (r() < .5 ? -1 : 1) * (.015 + r() * .03 * cc.hills);
+    }
+  }
+  return out;
+}
 
 /* ---------- 3D hole view (three.js) ----------
    A "hole cam" above the scorecard. Each hole is built from its own facts (par, length, OB, backhand or forehand, the
@@ -9114,8 +9176,8 @@ function h3Clear(){
 /* The hole's centerline: tee at the origin, basket down -z, bent to one side. */
 function h3Path(len, bend){ return t => ({x: bend * Math.sin(Math.PI * t) * (0.6 + 0.4 * t), z: -len * t}); }
 /* Rolling ground: gentle hills, flattened at the tee and the green, a dip for water. */
-function h3Terrain(seed, end, water){
-  const r = mulberry32(seed), p = [r() * 6, r() * 6, r() * 6, r() * 6], amp = .9 + r() * 1.3;
+function h3Terrain(seed, end, water, bumpy){
+  const r = mulberry32(seed), p = [r() * 6, r() * 6, r() * 6, r() * 6], amp = (.9 + r() * 1.3) * (bumpy === undefined ? 1 : bumpy);
   const raw = (x0, z0) => { const x = x0 * .4, z = z0 * .4; return (Math.sin(x * .045 + p[0]) * Math.cos(z * .038 + p[1]) * 1.6 + Math.sin(x * .12 + z * .09 + p[2]) * .5 + Math.cos(z * .15 - p[3] + x * .03) * .3) * amp * 1.6; };
   const tee = raw(0, 1), green = raw(end.x, end.z);
   return (x, z) => {
@@ -9125,14 +9187,18 @@ function h3Terrain(seed, end, water){
     if (water){ const dw = water.island ? dg : Math.hypot(x - water.x, z - water.z); const inR = water.island ? H3_GREEN + 1.5 : water.r, outR = water.island ? H3_GREEN + 28 : water.r + 8;
       if (water.island){ if (dg > inR) y = Math.min(y, water.y - .6 * (1 - h3Smooth(outR - 4, outR, dg)) + (y - water.y + .6) * h3Smooth(outR - 4, outR + 6, dg)); }
       else if (dw < outR) y = Math.min(y, water.y - .5 + (y - water.y + .5) * h3Smooth(inR - 2, outR, dw)); }
-    y = y + (green - y) * (1 - h3Smooth(H3_GREEN, H3_GREEN * 1.9, dg));   // last, so nothing digs into the green
+    const flatTo = water && water.island ? H3_GREEN + 1.2 : H3_GREEN * 1.9;   // islands drop into the lake right at their edge
+    y = y + (green - y) * (1 - h3Smooth(H3_GREEN, flatTo, dg));   // last, so nothing digs into the green
     return y - tee;
   };
 }
 function h3BuildHole(h, c){
   const T = H3.THREE;
   h3Clear();
-  const W = H3.world, rng = mulberry32(hashStr(c.id + "|h3|" + h.n)), look = h3Look(c, h.n), S = look.S, Tm = look.Tm;
+  const W = H3.world, rng = mulberry32(hashStr(c.id + "|h3|" + h.n)), look = h3Look(c, h.n), Tm = look.Tm;
+  const G = typeof greenFor === "function" ? greenFor(c.id, h.n) : null, has = k => !!(G && G.f.some(f => f[0] === k));
+  // bayou courses: cypress greens and gray trunks, darker swampy grass
+  const S = G && G.cover === "bayou" ? Object.assign({}, look.S, {trees: [0x5f7a4a, 0x6b8452, 0x55703f, 0x7a8c5a], grass: [0x4c7336, 0x557d3c, 0x45692f]}) : look.S;
   const len = 30;   // putts only: just the approach and the green, not the whole hole
   const bend = (rng() - .5) * len * 0.35 + (h.shot === "FH" ? 2 : -2);
   const P = h3Path(len, bend), end = P(1);
@@ -9140,7 +9206,7 @@ function h3BuildHole(h, c){
 
   // Water: island greens get a lake all around; some OB holes get a pond along one side
   let water = null;
-  if (h.ob === 2) water = {island: true, x: end.x, z: end.z};
+  if (h.ob === 2 || has("island") || has("peninsula")) water = {island: true, x: end.x, z: end.z, peninsula: has("peninsula")};
   else if (h.ob && rng() < .55){
     // a pond beside the approach, kept well clear of the green
     const side = bend > 0 ? -1 : 1, r = 9 + rng() * 5, p = P(.15 + rng() * .2);
@@ -9148,12 +9214,15 @@ function h3BuildHole(h, c){
     const d = Math.hypot(water.x - end.x, water.z - end.z), need = H3_GREEN * 1.9 + r + 10;
     if (d < need){ water.x = end.x + (water.x - end.x) / (d || 1) * need; water.z = end.z + (water.z - end.z) / (d || 1) * need; }
   }
-  const ground0 = h3Terrain(hashStr(c.id + "|t|" + h.n), end, null);
+  // how rolling the ground is follows the course's elevation rating (flat bayou to extremely hilly)
+  const cc = typeof GREENS_COURSE !== "undefined" ? GREENS_COURSE[c.id] : null;
+  const bumpy = !cc ? 1 : cc.cover === "bayou" ? .12 : [.45, .85, 1.15, 1.4][cc.hills] || 1;
+  const ground0 = h3Terrain(hashStr(c.id + "|t|" + h.n), end, null, bumpy);
   if (water) water.y = (water.island ? ground0(end.x, end.z) : ground0(water.x, water.z)) - .15;
-  const G = typeof greenFor === "function" ? greenFor(c.id, h.n) : null;
   // the approach direction (from the basket back toward the fairway) and the slope up to the basket
   const back9 = P(.9), uL = Math.hypot(back9.x - end.x, back9.z - end.z) || 1, U = {x: (back9.x - end.x) / uL, z: (back9.z - end.z) / uL};
-  const flat = h3Terrain(hashStr(c.id + "|t|" + h.n), end, water), grade = (G && G.slope) || 0;
+  const wet = water || has("pond") || has("creek") || has("bayou");   // water lies level, so holes with water don't tilt
+  const flat = h3Terrain(hashStr(c.id + "|t|" + h.n), end, water, bumpy), grade = wet ? 0 : (G && G.slope) || 0;
   const ht = grade ? (x, z) => flat(x, z) - grade * ((x - end.x) * U.x + (z - end.z) * U.z) : flat;
   H3.height = ht;
 
@@ -9198,6 +9267,15 @@ function h3BuildHole(h, c){
     h3Every(() => { wm.color.setHSL(.555, .55, .41 + Math.sin(performance.now() / 900) * .015); });
   }
   H3.water = water;
+  if (water && water.peninsula){   // a peninsula: land runs out to the green from the fairway side
+    const pts = []; for (let t = .45; t <= 1.001; t += .05) pts.push(P(t));
+    const pos = [], idx = [];
+    pts.forEach((a, i) => { const b = pts[Math.min(i + 1, pts.length - 1)], o = pts[Math.max(i - 1, 0)], dx = b.x - o.x, dz = b.z - o.z, L = Math.hypot(dx, dz) || 1, w = 7;
+      for (const sg of [1, -1]){ const x = a.x - dz / L * w * sg, z = a.z + dx / L * w * sg; pos.push(x, Math.max(ht(x, z), water.y) + .06, z); }
+      if (i < pts.length - 1) idx.push(i * 2, i * 2 + 1, i * 2 + 2, i * 2 + 1, i * 2 + 3, i * 2 + 2); });
+    const bg = new T.BufferGeometry(); bg.setAttribute("position", new T.Float32BufferAttribute(pos, 3)); bg.setIndex(idx); bg.computeVertexNormals();
+    const bridge = new T.Mesh(bg, h3Mat(S.green, {side: T.DoubleSide})); bridge.receiveShadow = true; W.add(bridge);
+  }
   // OB stakes on OB holes
   if (h.ob === 1){
     const stake = new T.CylinderGeometry(.05, .05, 1.1, 6), white = h3Mat(0xffffff);
@@ -9207,9 +9285,9 @@ function h3BuildHole(h, c){
   // Tee pad and a tee sign
 
   // Trees: three kinds, colors from the season, thicker on harder courses
-  const woods = !!(G && G.f.some(f => f[0] === "woods"));
-  const keepOut = G ? h3GreenFeatures(W, {end, U, ht, rng, S}, G) : [];
-  h3Trees(W, P, end, woods ? fwHalf * .55 : fwHalf, ht, water, S, rng, (90 + c.diff * 15) * (woods ? 1.7 : 1), keepOut, woods);
+  const woods = has("woods"), open = !!(G && G.cover === "open");
+  const keepOut = G ? h3GreenFeatures(W, {end, U, ht, rng, S, P, fwHalf}, G) : [];
+  h3Trees(W, P, end, woods ? fwHalf * .55 : fwHalf, ht, water, S, rng, (90 + c.diff * 15) * (woods ? 1.7 : open ? .45 : 1), keepOut, woods);
   // Bushes along the fairway edge
   const nB = 18, bush = new T.InstancedMesh(new T.IcosahedronGeometry(.7, 0), h3Mat(S.trees[0], {flatShading: true}), nB), d = new T.Object3D();
   for (let i = 0; i < nB; i++){ const t = rng(), a = P(t), side = rng() < .5 ? -1 : 1, x = a.x + side * (fwHalf + 2 + rng() * 4), z = a.z + (rng() - .5) * 3, s = (.6 + rng() * .7) * 1.6; d.position.set(x, ht(x, z) + .3 * s, z); d.scale.set(s, s * .8, s); d.rotation.y = rng() * 6; d.updateMatrix(); bush.setMatrixAt(i, d.matrix); }
@@ -9313,6 +9391,50 @@ function h3GreenFeatures(W, ctx, G){
       const shrub = new T.IcosahedronGeometry(.45, 0), sm = h3Mat(0x4d7f3a, {flatShading: true});
       for (let k = 0; k < 6; k++){ const a0 = k / 6 * Math.PI * 2, r = dFt * F * .93, x = end.x + Math.cos(a0) * r, z = end.z + Math.sin(a0) * r, sh = new T.Mesh(shrub, sm); sh.position.set(x, ht(x, z) + .3, z); sh.castShadow = true; W.add(sh); }
       keep.push({x: end.x, z: end.z, r: dFt * F + 2});
+    }
+    else if (kind === "road" || kind === "path"){
+      const road = kind === "road", pts = across(v, dFt + (road ? 11 : 3), 90, 3);
+      ribbon(pts, (road ? 22 : 6) * F, h3Mat(road ? 0x45494e : 0xb8a888, {roughness: .95}), .05);
+      if (road){ for (let i = 0; i < pts.length - 1; i += 2){ const p = pts[i], q = pts[i + 1], L = Math.hypot(q.x - p.x, q.z - p.z), d = new T.Mesh(new T.PlaneGeometry(L * .6, .12), new T.MeshBasicMaterial({color: 0xf2c230})); d.rotation.x = -Math.PI / 2; d.rotation.z = -Math.atan2(q.z - p.z, q.x - p.x); d.position.set((p.x + q.x) / 2, ht((p.x + q.x) / 2, (p.z + q.z) / 2) + .07, (p.z + q.z) / 2); W.add(d); }
+        stakes(across(v, dFt, 70)); }
+      pts.forEach(p => keep.push({x: p.x, z: p.z, r: (road ? 16 : 6) * F}));
+    }
+    else if (kind === "wall"){
+      const pts = across(v, dFt, 60), rock = new T.DodecahedronGeometry(.45, 0), rm = h3Mat(0x8a8780, {flatShading: true});
+      for (let i = 0; i < pts.length - 1; i++) for (let k = 0; k < 3; k++){ const t = k / 3, x = pts[i].x + (pts[i + 1].x - pts[i].x) * t, z = pts[i].z + (pts[i + 1].z - pts[i].z) * t, st = new T.Mesh(rock, rm);
+        st.position.set(x, ht(x, z) + .3 + (k % 2) * .25, z); st.scale.set(1 + rng() * .4, .7 + rng() * .4, .8 + rng() * .3); st.rotation.set(rng() * 3, rng() * 3, rng() * 3); st.castShadow = true; W.add(st); }
+    }
+    else if (kind === "fencering"){
+      const pts = circle(dFt, 36), wood = h3Mat(0x7a5a3a);
+      pts.forEach((p, i) => { const q = pts[i + 1]; const y = ht(p.x, p.z); const post = new T.Mesh(new T.BoxGeometry(.12, 1.3, .12), wood); post.position.set(p.x, y + .65, p.z); post.castShadow = true; W.add(post);
+        if (!q) return; const L = Math.hypot(q.x - p.x, q.z - p.z);
+        for (const hy of [.55, 1.05]){ const rail = new T.Mesh(new T.BoxGeometry(L, .08, .05), wood); rail.position.set((p.x + q.x) / 2, (y + ht(q.x, q.z)) / 2 + hy, (p.z + q.z) / 2); rail.rotation.y = -Math.atan2(q.z - p.z, q.x - p.x); rail.castShadow = true; W.add(rail); } });
+    }
+    else if (kind === "spare"){ const c0 = at(v, dFt, 0), b = h3Basket(); b.position.set(c0.x, ht(c0.x, c0.z), c0.z); W.add(b); keep.push({x: c0.x, z: c0.z, r: 2}); }
+    else if (kind === "hazard"){
+      const pts = circle(dFt); ribbon(pts, .12, new T.MeshBasicMaterial({color: 0xf2c230}), .08);
+      const outer = new T.RingGeometry(dFt * F, (dFt + 40) * F, 64); outer.rotateX(-Math.PI / 2); outer.translate(end.x, 0, end.z);
+      const a = outer.attributes.position; for (let i = 0; i < a.count; i++) a.setY(i, ht(a.getX(i), a.getZ(i)) + .03); outer.computeVertexNormals();
+      W.add(new T.Mesh(outer, h3Mat(0x6f7a3e)));
+    }
+    else if (kind === "pit"){
+      const c0 = at(v, dFt + 20, 0), y = ht(c0.x, c0.z), pit = new T.Mesh(new T.CircleGeometry(26 * F, 40), h3Mat(0x5a4632)); pit.rotation.x = -Math.PI / 2; pit.position.set(c0.x, y + .03, c0.z); W.add(pit);
+      const inner = new T.Mesh(new T.CircleGeometry(18 * F, 40), h3Mat(0x3f3122)); inner.rotation.x = -Math.PI / 2; inner.position.set(c0.x, y + .04, c0.z); W.add(inner);
+      stakes(across(v, dFt, 50)); keep.push({x: c0.x, z: c0.z, r: 28 * F});
+    }
+    else if (kind === "haybale"){
+      const bale = new T.BoxGeometry(1.2, .6, .7), bm = h3Mat(0xd9b65a, {roughness: 1}), ring = 7;
+      for (let k = 0; k < ring; k++){ const a = k / ring * Math.PI * 2, x = end.x + Math.cos(a) * 1.2, z = end.z + Math.sin(a) * 1.2, b = new T.Mesh(bale, bm); b.position.set(x, ht(x, z) + .3, z); b.rotation.y = -a; b.castShadow = true; b.receiveShadow = true; W.add(b); }
+      const pts = circle(24); ribbon(pts, .12, white, .08); stakes(pts);
+    }
+    else if (kind === "sand"){
+      const c0 = at(v, dFt, 0), y = ht(c0.x, c0.z), bunker = new T.Mesh(new T.CircleGeometry(14 * F, 32), h3Mat(0xe2cf9a, {roughness: 1})); bunker.rotation.x = -Math.PI / 2; bunker.scale.set(1.6, 1, 1); bunker.rotation.z = Math.atan2(v.x, v.z) + Math.PI / 2; bunker.position.set(c0.x, y + .05, c0.z); W.add(bunker);
+    }
+    else if (kind === "bayou"){   // standing water scattered around, kept off the putting lane
+      for (const [dir2, d2, lat] of [["left", 44 + rng() * 14, (rng() - .5) * 30], ["right", 46 + rng() * 14, (rng() - .5) * 30], ["long", 48 + rng() * 12, (rng() - .5) * 40]]){
+        const c0 = at(DIR[dir2], d2, lat), y = ht(c0.x, c0.z), r = (16 + rng() * 14) * F, pond = new T.Mesh(new T.CircleGeometry(r, 40), new T.MeshStandardMaterial({color: 0x3a7275, roughness: .06, metalness: .3, transparent: true, opacity: .9}));
+        pond.rotation.x = -Math.PI / 2; pond.scale.set(1.4, 1, 1); pond.position.set(c0.x, y + .04, c0.z); W.add(pond); keep.push({x: c0.x, z: c0.z, r: r * 1.3});
+      }
     }
     else if (kind === "bunker"){
       const c0 = at(v, dFt, 0), trunk = new T.CylinderGeometry(.2, .3, 3, 7), crown = new T.IcosahedronGeometry(2.2, 0), tm = h3Mat(0x5a3b22), cm = h3Mat(0x356f32, {flatShading: true});
