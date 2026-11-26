@@ -2,7 +2,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="robots" content="noindex,nofollow">
-<!-- 18 Down test build: branch graphics-3d, commit a949d5c -->
+<!-- 18 Down test build: branch graphics-3d, commit 6ef292c -->
 <title>18 Down</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&family=Shrikhand&display=swap">
@@ -1202,6 +1202,38 @@ summary { cursor: pointer; font-family: var(--label); font-weight: 700; font-siz
 .plan-key { margin: 0; font-size: 11px; line-height: 1.3; color: var(--mute); }
 .plan-key .linkish { font-size: 11px; }
 .plan-key .linkish { padding: 0; margin: 0; min-height: 0; line-height: inherit; vertical-align: baseline; }
+
+/* Icons instead of text */
+.ico { width: 1.15em; height: 1.15em; flex: none; vertical-align: -.2em; }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.facts { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px; }
+.facts li { display: inline-flex; align-items: center; gap: 5px; padding: 4px 9px; border-radius: 999px; background: var(--pond-3); color: var(--chalk); font-family: var(--label); font-weight: 700; font-size: 13px; }
+.order { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; counter-reset: o; }
+.order li { counter-increment: o; position: relative; text-align: center; padding: 6px 2px; border-radius: 6px; border: 2px solid var(--ink); background: var(--sc, var(--chalk)); color: var(--ink); font-family: var(--label); font-weight: 700; font-size: 14px; }
+.order li:not(:last-child)::after { content: "›"; position: absolute; right: -9px; top: 50%; transform: translateY(-50%); color: var(--chalk); font-weight: 700; z-index: 1; }
+.toggles { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.tog { display: inline-flex; align-items: center; justify-content: center; gap: 6px; opacity: .6; }
+.tog.on { opacity: 1; background: var(--band); color: var(--ink); }
+span.pips, .calls-h span.pips { display: inline-flex; gap: 4px; vertical-align: middle; font-size: inherit; color: inherit; }
+.pips i { display: block; flex: none; width: 10px; height: 10px; border-radius: 50%; border: 2px solid currentColor; }
+.focus-why > span { display: inline-flex; }
+.pips i.on { background: var(--band); border-color: var(--band); }
+.respin-note { display: flex; align-items: center; gap: 8px; margin: 0; color: var(--mute); }
+.icon-btn { display: inline-grid; place-items: center; min-width: 44px; }
+.icon-btn .ico { width: 20px; height: 20px; }
+.plan-go { display: inline-flex; gap: 6px; }
+.seg.icons button { display: grid; place-items: center; min-width: 40px; padding: 5px 8px; }
+.seg.icons .ico { width: 18px; height: 18px; }
+.plan-info { display: inline-flex; gap: 10px; align-items: center; }
+.plan-info span { display: inline-flex; align-items: center; gap: 3px; }
+.plan-info .ob { color: #ff8a7a; }
+.focus-why { display: flex; align-items: center; gap: 8px; }
+.focus-why .ico { width: 22px; height: 22px; color: var(--band); }
+.focus-done { display: flex; justify-content: center; }
+.focus-done .pips i { width: 18px; height: 18px; }
+.lede .ico { color: var(--band); }
+.tier-key { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; color: var(--mute); }
+.tier-key .tier { min-width: 22px; height: 22px; font-size: 14px; margin-left: 4px; }
 </style>
 <main id="app"></main>
 <script type="application/json" id="edits">{}</script>
@@ -2282,6 +2314,43 @@ function playoffScore(course, pro, key, n, who){
   return {strokes: r.holes[idx].par + r.holes[idx].rel, hole: r.holes[idx]};
 }
 
+/* Small line icons, drawn in the text color. ico(name, label): label is read by screen readers and shown on hover. */
+const ICON_PATHS = {
+  safe: '<path d="M12 3l7 3v5c0 5-3 8.5-7 10-4-1.5-7-5-7-10V6z"/>',
+  normal: '<circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="2" fill="currentColor"/>',
+  attack: '<path d="M12 3c1 3 5 5 5 10a5 5 0 0 1-10 0c0-2 1-3.5 2-4.5 0 2 1 3 2 3 0-3-1-5 1-8.5z"/>',
+  lag: '<path d="M4 16c4-6 10-8 16-6"/><path d="M16 6l4 4-4 4"/>',
+  jam: '<path d="M13 2L5 14h6l-1 8 8-12h-6z"/>',
+  focus: '<circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M1 12h4M19 12h4"/>',
+  putt: '<path d="M12 4v17"/><path d="M6 4h12"/><path d="M7 4l2.5 6h5L17 4"/><path d="M5 13h14l-2.5 3.5h-9z"/><path d="M8 21h8"/>',
+  play: '<path d="M7 4l13 8-13 8z" fill="currentColor"/>',
+  ff: '<path d="M3 5l8 7-8 7zM12 5l8 7-8 7z" fill="currentColor"/>',
+  flag: '<path d="M6 21V4"/><path d="M6 4h11l-2 4 2 4H6"/>',
+  par: '<path d="M12 3l7 3v5c0 5-3 8.5-7 10-4-1.5-7-5-7-10V6z"/><path d="M9 12l2 2 4-4"/>',
+  prize: '<circle cx="12" cy="12" r="8"/><path d="M14.5 9.5c-.5-1-1.5-1.5-2.5-1.5-1.5 0-2.5.8-2.5 2s1 1.6 2.5 2 2.5.8 2.5 2-1 2-2.5 2c-1 0-2-.5-2.5-1.5M12 6.5v11"/>',
+  crown: '<path d="M3 18h18M4 16L3 7l5 4 4-6 4 6 5-4-1 9z"/>',
+  hole: '<path d="M8 20V5"/><path d="M8 5l8 3-8 3"/><ellipse cx="8" cy="20" rx="4" ry="1.2"/>',
+  ob: '<rect x="3" y="3" width="18" height="18" rx="3"/><path d="M8 8l8 8M16 8l-8 8"/>',
+  calls: '<path d="M4 6h10M4 12h16M4 18h7"/><circle cx="17" cy="6" r="2"/><circle cx="14" cy="18" r="2"/>',
+  cube: '<path d="M12 2l9 5v10l-9 5-9-5V7z"/><path d="M12 22V12M21 7l-9 5-9-5"/>',
+  same: '<circle cx="8" cy="9" r="3"/><circle cx="16" cy="9" r="3"/><path d="M3 20c0-3 2-5 5-5s5 2 5 5M11 20c0-3 2-5 5-5s5 2 5 5"/>',
+  hidden: '<path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/><path d="M3 3l18 18"/>',
+  nerves: '<path d="M3 12h3l2-5 3 10 3-8 2 3h5"/>',
+  playoff: '<path d="M7 7h10l-3-3M17 17H7l3 3"/>',
+  dice: '<rect x="4" y="4" width="16" height="16" rx="3"/><circle cx="9" cy="9" r="1.3" fill="currentColor"/><circle cx="15" cy="15" r="1.3" fill="currentColor"/><circle cx="15" cy="9" r="1.3" fill="currentColor"/><circle cx="9" cy="15" r="1.3" fill="currentColor"/>',
+  eye: '<path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>',
+  trophy: '<path d="M8 4h8v5a4 4 0 0 1-8 0z"/><path d="M8 6H4c0 3 2 4 4 4M16 6h4c0 3-2 4-4 4M12 13v4M8 20h8"/>',
+  once: '<circle cx="12" cy="12" r="8"/><path d="M11 9l2-1v8"/>',
+};
+function ico(name, label){
+  const p = ICON_PATHS[name] || "";
+  return `<svg class="ico ico-${name}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" ${label ? `role="img" aria-label="${label}"><title>${label}</title>` : `aria-hidden="true">`}${p}</svg>`;
+}
+/* A row of icon chips that stand in for a paragraph of rules: [[icon, short text, full text for hover/readers], ...] */
+function iconFacts(items){
+  return `<ul class="facts">${items.filter(Boolean).map(([i, t, full]) => `<li title="${full || t}">${ico(i)}<span>${t}</span>${full ? `<span class="sr">${full}</span>` : ""}</li>`).join("")}</ul>`;
+}
+
 /* ---------- Page ---------- */
 const app = document.getElementById("app");
 let EDITS = {};
@@ -2784,14 +2853,14 @@ function viewCourse(){
     <div id="course-detail" ${state.landing ? "hidden" : ""} style="display:grid;gap:16px">
       <div>
         <div class="strip" aria-label="${18 - fh} backhand holes and ${fh} forehand holes">${layout.map(h => `<span class="${h.shot}">${h.n}</span>`).join("")}</div>
-        <div class="strip-key"><span>${18 - fh} backhand holes</span><b>${fh} forehand holes</b></div>
+        <div class="strip-key"><span>BH ${18 - fh}</span><b>FH ${fh}</b></div>
       </div>
       <div class="traits">
         <div class="trait"><span>C2 looks</span>${dots(c.c2)}</div>
         <div class="trait"><span>OB risk</span>${dots(c.ob)}</div>
         <div class="trait"><span>Difficulty</span>${dots(c.diff)}</div>
       </div>
-      <p class="fine">You’ll pick a backhand, forehand, C1X putter, and C2 putter in that order. Each pro can only be used once, so plan ahead. ${c.holes ? "Par, length, and hole notes are real. Which holes call for a forehand is an estimate." : "This layout’s par and length are real, but its hole-by-hole list isn’t published, so those holes are estimates."}</p>
+      <ol class="order" aria-label="Draft order: backhand, forehand, C1X putter, C2 putter. Each pro once.">${SLOTS.map(k => `<li class="s-${k}">${SLOT_LABEL[k]}</li>`).join("")}</ol>
       <button class="btn primary full" id="start-draft" data-act="startDraft">Start the draft</button>
     </div>
   </div>`;
@@ -2901,14 +2970,14 @@ function tierCuts(){
 }
 function tierOf(s, k){ const c = tierCuts()[k], v = s && s[k]; if (typeof v !== "number") return "?"; return v >= c[1] ? "A" : v >= c[0] ? "B" : "C"; }
 function tierBadge(s, k){ const t = tierOf(s, k); return `<b class="tier t-${t}" title="${esc(SLOT_FULL[k] + ": tier " + t)}">${t}</b>`; }
-function knownFor(s){ let best = null, bz = -Infinity; for (const k of SLOTS){ if (typeof s[k] !== "number") continue; const z = (s[k] - MED[k]) / SPREAD[k]; if (z > bz){ bz = z; best = k; } } return best ? "Known for: " + SLOT_FULL[best].toLowerCase() : ""; }
+function knownFor(s){ let best = null, bz = -Infinity; for (const k of SLOTS){ if (typeof s[k] !== "number") continue; const z = (s[k] - MED[k]) / SPREAD[k]; if (z > bz){ bz = z; best = k; } } return best ? "★ " + SLOT_LABEL[best] : ""; }
 function pickerPoolHTML(){
   const open = SLOTS.filter(k => !state.picks[k]);
   const pool = availablePool(SEASONS, state.spin.sponsor, state.spin.year, usedNames());
   const hide = hidden();
   const best = s => Math.max(...open.map(k => (s[k] - MED[k]) / SPREAD[k]));
   if (hide) pool.sort((x, y) => x.name.localeCompare(y.name)); else pool.sort((x, y) => best(y) - best(x));
-  return `<div class="key">${hide ? `<span>Hard mode: ratings stay hidden until the round ends.</span>` : `<span><i class="pub-dot" style="background:var(--birdie)"></i>Real stat</span><span><i class="est-dot"></i>Estimate</span>`}<span>Tap a spot to put him there. Filled spots are locked.</span></div>
+  return `<div class="key">${hide ? `${hardKey()}` : `<span><i class="pub-dot" style="background:var(--birdie)"></i>Real stat</span><span><i class="est-dot"></i>Estimate</span>`}</div>
   <div class="pool picker-pool" id="pool">${pool.map(s => {
     const sub = [s.sponsor !== s.brand && s.brand !== "Unconfirmed sponsor" ? s.brand : "", hide ? "" : refText(s)].filter(Boolean).join(", ");
     return `<div class="pk-row"><div class="pr-who"><strong>${esc(s.name)}</strong>${sub ? `<small>${esc(sub)}</small>` : ""}</div>
@@ -2920,6 +2989,7 @@ function pickerPoolHTML(){
 }
 /* Each slot has its own color and plain-English name so it's always clear what you're drafting for. */
 const SLOT_FULL = {bh: "Backhand", fh: "Forehand", c1: "Circle 1 putting", c2: "Circle 2 putting"};
+function hardKey(){ return `<span class="tier-key" title="Ratings hidden until the round ends. A: top 20% at this spot, B: next 30%, C: the rest">${ico("hidden", "Ratings hidden")}<b class="tier t-A">A</b>20%<b class="tier t-B">B</b>30%<b class="tier t-C">C</b>50%</span>`; }
 const SLOT_WHAT = {bh: "Throws your tee shots on backhand holes", fh: "Throws your tee shots on forehand holes", c1: "Makes your putts inside 33 ft", c2: "Makes your putts from 33 to 66 ft"};
 const SLOT_CELL = {bh: "Backhand", fh: "Forehand", c1: "C1 putt", c2: "C2 putt"};
 function done0(){ return SLOTS.every(k => state.picks[k]); }
@@ -2928,7 +2998,7 @@ function slotBanner(){
   if (state.mode === "picker") return `<div class="slot-banner pick"><small>Open spots</small><div class="sb-chips">${SLOTS.filter(k => !state.picks[k]).map(k => `<span class="s-${k}">${SLOT_FULL[k]}</span>`).join("")}</div></div>`;
   const k = currentSlot(), open = SLOTS.filter(x => !state.picks[x]);
   const chips = open.length > 1 ? `<div class="sb-chips sb-choose" role="group" aria-label="Which spot to fill">${open.map(x => `<button type="button" class="s-${x}${x === k ? " on" : ""}" data-act="slotSel" data-slot="${x}" aria-pressed="${x === k}" ${slotChoosable(x) ? "" : "disabled"}>${SLOT_FULL[x]}${meReserved() && x === state.meAt ? " (My Player)" : ""}</button>`).join("")}</div>` : "";
-  return `<div class="slot-banner s-${k}"><small>Drafting your</small><b>${SLOT_FULL[k]}</b><span>${SLOT_WHAT[k]}</span>${chips}${chips ? `<small class="sb-tip">${state.spin && !state.spin.me ? "See who's here, then pick the spot he fills." : "Pick a spot now or after the spin."}</small>` : ""}</div>`;
+  return `<div class="slot-banner s-${k}"><b title="${SLOT_WHAT[k]}">${SLOT_FULL[k]}</b>${chips}</div>`;
 }
 function poolHTML(){
   if (state.mode === "picker") return pickerPoolHTML();
@@ -2936,7 +3006,7 @@ function poolHTML(){
   const pool = availablePool(SEASONS, state.spin.sponsor, state.spin.year, usedNames());
   const hide = hidden();
   if (hide) pool.sort((x, y) => x.name.localeCompare(y.name)); else pool.sort((x, y) => y[k] - x[k]);
-  return `<div class="key">${hide ? `<span>Hard mode: ratings stay hidden until the round ends. Tiers: A is the top 20% at this spot, B the next 30%, C the rest.</span>` : `<span><i class="pub-dot" style="background:var(--birdie)"></i>Real stat</span><span><i class="est-dot"></i>Estimate</span>`}<span>Tap a pro to make him your ${SLOT_FULL[k].toLowerCase()}.</span></div>
+  return `<div class="key">${hide ? `${hardKey()}` : `<span><i class="pub-dot" style="background:var(--birdie)"></i>Real stat</span><span><i class="est-dot"></i>Estimate</span>`}</div>
   <div class="pool" id="pool">${pool.map(s => {
     const cls = hide ? "" : s.src[k] === "published" ? "pub" : s.src[k] === "placeholder" ? "est" : "";
     const sub = [s.sponsor !== s.brand && s.brand !== "Unconfirmed sponsor" ? s.brand : "", !hide && (k === "bh" || k === "fh") ? refText(s) : ""].filter(Boolean).join(", ");
@@ -2960,11 +3030,11 @@ function viewDraft(){
     <div class="split">
       ${buildPanel(c, b, state.spinning)}
       <section class="draw" aria-label="The draw">
-        ${done ? `<p class="lede">Your build is set. ${layoutCourse(c).filter(h => h.shot === "FH").length} forehand holes are waiting at ${esc(c.name)}.</p>
-          <button class="btn primary full" id="play" data-act="play">${state.mode === "tourney" ? "Play round 1" : state.mode === "ctc" && typeof CT !== "undefined" && CT ? `Lock it in: play round 1 of ${CT.attempts}` : "Play the round"}</button>${state.mode === "ctc" ? `<p class="fine">This team plays every round of the contest.</p>` : shotCallsToggle()}` : `
+        ${done ? `<p class="lede">${ico("hole")} ${esc(c.name)}</p>
+          <button class="btn primary full" id="play" data-act="play">${state.mode === "tourney" ? "Play round 1" : state.mode === "ctc" && typeof CT !== "undefined" && CT ? `Lock it in: play round 1 of ${CT.attempts}` : "Play the round"}</button>${state.mode === "ctc" ? `${iconFacts([["once", "Every round", "This team plays every round of the contest"]])}` : shotCallsToggle()}` : `
         ${slotBanner()}${needMeSlot() ? meSlotHTML() : `<div class="reels">${reel("reel-sponsor", "Sponsor", spin && spin.sponsor)}${reel("reel-year", "Year", spin && String(spin.year))}</div>
         ${state.spinErr ? `<p class="fine">${esc(state.spinErr)}</p>` : ""}${!spin || state.spinning ? `<button class="btn primary full" id="spin" data-act="spin" ${state.spinning ? "disabled" : ""}>${state.spinning ? "Spinning" : state.mode === "picker" || !meReserved() || currentSlot() !== state.meAt ? "Spin for pick " + (n + 1) : "Spin for My Player"}</button>` : `
-        ${spin.me ? meDrawHTML() : `${state.mode === "ctc" ? `<p class="fine">${typeof CT !== "undefined" && CT && CT.server ? "Contest draft: everyone in this contest gets these same spins, revealed one pick at a time. No re-spins." : "Contest draft: no re-spins. Leaving doesn’t re-roll your spins."}</p>` : `<div class="skips">
+        ${spin.me ? meDrawHTML() : `${state.mode === "ctc" ? `${iconFacts([typeof CT !== "undefined" && CT && CT.server ? ["same", "Same spins", "Everyone in this contest gets these same spins, revealed one pick at a time"] : null, ["dice", "No re-spins", "No re-spins. Leaving doesn’t re-roll your spins."]])}` : `<div class="skips">
           ${skipBtn("sponsor", "skip-sponsor", "skipSponsor", "New sponsor", altSponsor)}
           ${skipBtn("year", "skip-year", "skipYear", "New year", altYear)}
         </div>${respinNote()}`}
@@ -2976,9 +3046,9 @@ function viewDraft(){
 }
 function shotCallsToggle(){
   const on = callsOn();
-  return `<button class="btn small full" id="shot-calls" data-act="shotCalls" aria-pressed="${on}">Shot calls: ${on ? "on" : "off"}</button>
-    <button class="btn small full" id="view-3d" data-act="view3d" aria-pressed="${storeGet("18down.view3d") !== "0"}">3D view: ${storeGet("18down.view3d") !== "0" ? "on" : "off"}</button>
-    <p class="fine">${on ? "Before each nine you set a call for each player (Safe, Normal or Aggressive; Lag or Jam for C2 putts), and you get a focus putt in critical moments." : "Turn on to plan each nine and take focus putts. Off plays the round as before."}</p>`;
+  const v3 = storeGet("18down.view3d") !== "0";
+  return `<div class="toggles"><button class="btn small tog${on ? " on" : ""}" id="shot-calls" data-act="shotCalls" aria-pressed="${on}" aria-label="Shot calls: ${on ? "on" : "off"}" title="Plan each nine, focus putts">${ico("calls")}<span>Calls</span></button>
+    <button class="btn small tog${v3 ? " on" : ""}" id="view-3d" data-act="view3d" aria-pressed="${v3}" aria-label="3D view: ${v3 ? "on" : "off"}" title="3D putts">${ico("cube")}<span>3D</span></button></div>`;
 }
 function skipBtn(kind, id, act, label, alt){
   if (dailyFair()){ const left = respinsLeft(); return `<button class="btn small" id="${id}" data-act="${act}" ${alt && left > 0 ? "" : "disabled"}>${label}: free</button>`; }
@@ -2990,10 +3060,11 @@ function skipBtn(kind, id, act, label, alt){
 const DAILY_RESPINS = 2;
 function dailyFair(){ return (state.mode === "daily" && !state.replay) || isRanked(); }
 function respinsLeft(){ return Math.max(0, DAILY_RESPINS - ((state.skips && state.skips.sponsor) || 0) - ((state.skips && state.skips.year) || 0)); }
-function respinNote(){ if (!dailyFair()) return ""; const left = respinsLeft(); return `<p class="fine respin-note">${left ? `${left} free re-spin${left === 1 ? "" : "s"} left today. Everyone gets the same ${DAILY_RESPINS}.` : `No re-spins left. Everyone gets the same ${DAILY_RESPINS} each day.`}</p>`; }
+function respinNote(){ if (!dailyFair()) return ""; const left = respinsLeft(); return `<p class="respin-note" role="img" aria-label="${left} of ${DAILY_RESPINS} free re-spins left" title="Free re-spins, same for everyone">${ico("dice")}${pips(left, DAILY_RESPINS)}</p>`; }
+function pips(n, of){ return `<span class="pips">${Array.from({length: of}, (_, i) => `<i class="${i < n ? "on" : ""}"></i>`).join("")}</span>`; }
 function meDrawHTML(){
   const s = meForMode(), k = currentSlot();
-  return `<div class="pool" id="pool"><button class="cell me-cell" id="me-take" data-act="meTake" aria-label="${esc("Take " + s.name + " as your " + SLOT_NAME[k])}"><small>${SLOT_LABEL[k]}</small><b>${esc(meFmt(k, s[k]))}</b><span>${esc(s.name)}, rated ${s.pdga}. My Player landed here. Tap to lock him in.</span></button></div>`;
+  return `<div class="pool" id="pool"><button class="cell me-cell" id="me-take" data-act="meTake" aria-label="${esc("Take " + s.name + " as your " + SLOT_NAME[k])}"><small>${SLOT_LABEL[k]}</small><b>${esc(meFmt(k, s[k]))}</b><span>${esc(s.name)} · ${s.pdga}</span></button></div>`;
 }
 function nextDraw(kind){
   const used = usedNames();
@@ -3585,25 +3656,24 @@ function callWho(s){ return s.me ? "My Player" : s.short || s.name; }
 /* One plan per nine, set for each player: before hole 1 and before hole 10 the backhand and forehand throwers each get
    Safe, Normal or Aggressive, and the C2 putter gets Lag, Normal or Jam. Every hole in the nine follows whoever throws or
    putts it. Focus is offered only in critical moments. */
-const TEE_CALLS = [["safe", "Safe", "Safe"], ["normal", "Norm", "Normal"], ["attack", "Aggr", "Aggressive"]];
-const PUTT_OPTS = [["lag", "Lag", "Lag"], ["normal", "Norm", "Normal"], ["jam", "Jam", "Jam"]];
+const TEE_CALLS = [["safe", "Safe: fewer parks, less OB"], ["normal", "Normal"], ["attack", "Aggressive: more parks, more OB"]];
+const PUTT_OPTS = [["lag", "Lag: no three-putts"], ["normal", "Normal"], ["jam", "Jam: more go in, longer comebacks"]];
 let callDraft = null;
 function planRows(from){
   const holes = state.round.holes.slice(from - 1, from + 8), b = buildObj();
   const who = k => `${esc(callWho(b[k]))}${hidden() ? " (" + tierOf(b[k], k) + ")" : ""}`;
-  const info = shot => { const hs = holes.filter(h => h.shot === shot), ob = hs.filter(h => h.ob).length; return `${hs.length} hole${hs.length === 1 ? "" : "s"}${ob ? " · " + ob + " OB" : ""}`; };
-  const row = (k, label, sub, opts) => `<div class="plan-row s-${k}"><p><b><i>${label}</i> ${who(k)}</b><small>${sub}</small></p>
-    <div class="seg" role="group" aria-label="${label}">${opts.map(([v, t, full]) => `<button type="button" class="${callDraft[k] === v ? "on" : ""}" id="plan-${k}-${v}" data-act="callpick" data-k="${k}" data-v="${v}" aria-pressed="${callDraft[k] === v}" aria-label="${full}" title="${full}">${t}</button>`).join("")}</div></div>`;
-  return row("bh", "BH", info("BH"), TEE_CALLS) + row("fh", "FH", info("FH"), TEE_CALLS) + row("c2", "C2", "33–66 ft putts", PUTT_OPTS);
+  const info = shot => { const hs = holes.filter(h => h.shot === shot), ob = hs.filter(h => h.ob).length; return `<span title="${hs.length} holes">${ico("hole")}${hs.length}</span>${ob ? `<span class="ob" title="${ob} with OB">${ico("ob")}${ob}</span>` : ""}`; };
+  const row = (k, label, sub, opts) => `<div class="plan-row s-${k}"><p><b><i>${label}</i> ${who(k)}</b><small class="plan-info">${sub}</small></p>
+    <div class="seg icons" role="group" aria-label="${label}">${opts.map(([v, full]) => `<button type="button" class="${callDraft[k] === v ? "on" : ""}" id="plan-${k}-${v}" data-act="callpick" data-k="${k}" data-v="${v}" aria-pressed="${callDraft[k] === v}" aria-label="${full}" title="${full}">${ico(v === "normal" ? "normal" : v)}</button>`).join("")}</div></div>`;
+  return row("bh", "BH", info("BH"), TEE_CALLS) + row("fh", "FH", info("FH"), TEE_CALLS) + row("c2", "C2", "", PUTT_OPTS);
 }
 async function askNine(from, token){
   const sp = state.round.spec;
   const thru = from > 1 ? state.round.holes[from - 2].running : 0;
   const prev = from > 1 && sp.calls[1] && sp.calls[1].plan;
   callDraft = Object.assign({bh: "normal", fh: "normal", c2: "normal"}, prev && typeof prev === "object" ? prev : {});
-  const v = await pickCall(`<div class="plan-top"><p class="calls-h"><b>${from === 1 ? "Front 9" : "Back 9"}</b>${from > 1 ? fmtTotal(thru) + " at the turn" : "Plan"}</p><button class="btn small primary" id="call-go" data-act="call" data-call="go">${from === 1 ? "Tee off" : "Go"}</button></div>
-    <div id="plan-rows">${planRows(from)}</div>
-    <p class="plan-key">Aggr: more parks, more OB · Safe: fewer · Jam: more drop, longer comebacks · Lag: no 3-putts · <button class="linkish" id="call-auto" data-act="call" data-call="auto">Sim the rest</button></p>`, token);
+  const v = await pickCall(`<div class="plan-top"><p class="calls-h"><b>${from === 1 ? "Front 9" : "Back 9"}</b>${from > 1 ? fmtTotal(thru) : ""}</p><span class="plan-go"><button class="btn small icon-btn" id="call-auto" data-act="call" data-call="auto" aria-label="Sim the rest" title="Sim the rest">${ico("ff")}</button><button class="btn small primary icon-btn" id="call-go" data-act="call" data-call="go" aria-label="${from === 1 ? "Tee off" : "Go"}" title="${from === 1 ? "Tee off" : "Go"}">${ico("play")}</button></span></div>
+    <div id="plan-rows">${planRows(from)}</div>`, token);
   if (v === null){ callDraft = null; return false; }
   if (v === "auto"){ callDraft = null; sp.auto = true; callsSave(); callPanel(""); return true; }
   const plan = Object.assign({}, callDraft); callDraft = null;
@@ -3644,14 +3714,14 @@ async function askCalls(i, token){
     callPreview = typeof h3Preview === "function" && await h3Preview(hp, token);
     if (token !== playToken){ callPreview = false; return false; }
     const left = focusLeft();
-    const v = await pickCall(`<div class="focus-ask"><p class="calls-h"><b>${esc(why)}</b>${hp.putt.kind === "c2" ? hp.feet : hp.parFeet || hp.feet} ft${hp.putt.forPar ? " for par" : ""} · ${left} focus left</p><div class="seg wide"><button type="button" class="on" id="call-focus" data-act="call" data-call="focus">Focus</button><button type="button" id="call-just" data-act="call" data-call="just">Putt</button></div></div>
-      <p class="plan-key">Focus: tap when the marker is centered. Good tap, likelier make; bad tap, less likely.</p>`, token);
+    const v = await pickCall(`<div class="focus-ask"><p class="calls-h focus-why" title="${esc(why)}">${ico(WHY_ICON[why] || "flag", why)}<b>${hp.putt.kind === "c2" ? hp.feet : hp.parFeet || hp.feet} ft</b><span role="img" aria-label="${left} focus left" title="Focus putts left">${pips(left, FOCUS_PER_ROUND)}</span></p><div class="seg wide icons"><button type="button" class="on" id="call-focus" data-act="call" data-call="focus" aria-label="Focus: time the stroke" title="Focus: time the stroke">${ico("focus")}</button><button type="button" id="call-just" data-act="call" data-call="just" aria-label="Just putt" title="Just putt">${ico("putt")}</button></div></div>`, token);
     if (v === null) return false;
     if (v === "focus"){
       const q = await focusMeter(token);
       if (q === null) return false;
       sp.calls[n].focus = Math.round(q * 100) / 100;
-      callPanel(`<p class="calls-h focus-done"><b>${q > .85 ? "Pure!" : q > .6 ? "Good stroke" : q > .35 ? "Okay" : "Pulled it"}</b></p>`);
+      const stars = q > .85 ? 3 : q > .6 ? 2 : q > .35 ? 1 : 0;
+      callPanel(`<p class="calls-h focus-done" role="img" aria-label="${["Pulled it", "Okay", "Good stroke", "Pure"][stars]}">${pips(stars, 3)}</p>`);
       if (!(await wait(650, token))) return false;
     } else sp.calls[n].focus = null;
     callPreview = false;
@@ -3660,15 +3730,15 @@ async function askCalls(i, token){
   callPanel("");
   return true;
 }
+const WHY_ICON = {"Closing stretch": "flag", "Par save": "par", "Prize on the line": "prize", "Chasing the lead": "crown"};
 /* Focus: three timed putts a round. A marker swings across the bar; tap Putt when it's in the middle. */
 const FOCUS_PER_ROUND = 3, BIG_FROM = 16;
 function focusLeft(){ const c = (state.round && state.round.spec && state.round.spec.calls) || {}; return FOCUS_PER_ROUND - Object.values(c).filter(x => x && typeof x.focus === "number").length; }
 function focusMeter(token){
   const period = REDUCED ? 2200 : 1150, t0 = performance.now();
   const pos = t => (1 - Math.cos(2 * Math.PI * ((t - t0) % period) / period)) / 2;
-  callPanel(`<p class="calls-h"><b>Focus</b>Tap Putt when the marker is in the middle</p>
-    <div class="focus-bar" aria-hidden="true"><i class="focus-sweet"></i><i class="focus-mark" id="focus-mark"></i></div>
-    <div class="calls-row one"><button class="btn primary" id="call-release" data-act="call" data-call="release">Putt</button></div>`);
+  callPanel(`    <div class="focus-bar" aria-hidden="true"><i class="focus-sweet"></i><i class="focus-mark" id="focus-mark"></i></div>
+    <div class="calls-row one"><button class="btn primary icon-btn" id="call-release" data-act="call" data-call="release" aria-label="Putt" title="Putt">${ico("putt")}</button></div>`);
   let raf = 0;
   const draw = () => { const m = document.getElementById("focus-mark"); if (!m) return; m.style.left = (pos(performance.now()) * 100).toFixed(1) + "%"; raf = requestAnimationFrame(draw); };
   draw();
@@ -3983,10 +4053,10 @@ function viewTour(){
         <div><b>${ctx.pay.length}</b><span>Places paid</span></div>
       </div>
       <div class="paylist">${ctx.pay.slice(0, 5).map((p, i) => `<span><small>${fmtPlace(i + 1)}</small>${fmtMoney(p)}</span>`).join("")}</div>
-      <p class="fine">Hard mode is always on. Everyone gets the same spins and the same luck today. My Player takes the spot you choose, you spin for the rest without seeing ratings (tiers only), and play all ${t.rounds} rounds with that team. Everyone gets the same course, event, and field today; your spins and your luck are your own. Lower-rated pros get nervous on the chase card and the lead card. A tie for first goes to a sudden-death playoff.</p>
+      ${iconFacts([["same", "Same spins", "Everyone gets the same spins and the same luck today"], ["hidden", "Tiers only", "Hard mode: ratings hidden, tiers only"], ["once", "One team", "Play all " + t.rounds + " rounds with one team"], ["nerves", "Nerves", "Lower-rated pros get nervous on the chase and lead cards"], ["playoff", "Playoff", "A tie for first goes to a sudden-death playoff"]])}
       <div class="tour-modes">
-        <button class="btn primary full" id="start-draft" data-act="startDraft" data-ranked="1"><b>Ranked</b><small>Standard My Player, ${DAILY_RESPINS} free re-spins. Equal for everyone.</small></button>
-        <button class="btn full" id="start-career" data-act="startDraft" data-ranked="0"><b>Career</b><small>Your own My Player and paid re-spins.</small></button>
+        <button class="btn primary full" id="start-draft" data-act="startDraft" data-ranked="1"><b>Ranked</b><small>${ico("same")} ${ico("dice")}×${DAILY_RESPINS}</small></button>
+        <button class="btn full" id="start-career" data-act="startDraft" data-ranked="0"><b>Career</b><small>${ico("prize")} Your My Player</small></button>
       </div>
     </div>
   </div>`;
@@ -4494,7 +4564,7 @@ function meSlotHTML(){
   const mini = state.mode !== "tourney";
   return `<div class="me-slot"><p class="eyebrow">${mini ? "Mini" : "Daily tournament"}</p>
     <h2 class="section-h">Where does ${esc(s.name)} play?</h2>
-    <p class="fine">${mini ? "Put My Player in one spot, or leave him out and spin all four." : isRanked() ? "Ranked: everyone's My Player is the same standard player, so only your choices count." : "My Player takes one spot on your team. The other three are spun."} Rating ${s.pdga}.</p>
+    ${isRanked() && !mini ? iconFacts([["same", "Standard", "Everyone's My Player is the same standard player"]]) : ""}
     <div class="me-slot-picks">${SLOTS.map(k => `<button class="cell" id="me-${k}" data-act="meSlot" data-slot="${k}"><small>${SLOT_LABEL[k]}</small><b>${fmtSlot(k, s[k])}</b></button>`).join("")}</div>
     ${mini ? `<button class="btn small full" id="me-skip" data-act="meSkip">No My Player this round</button>` : ""}</div>`;
 }
@@ -8342,8 +8412,8 @@ function puttStatsRefresh(){
 /* ---------- Bulletin board ---------- */
 function viewBulletin(){
   const key = dailyKey(new Date()), tc = tourneyCtx(key), ts = tSaved(key), t = tc.t;
-  const status = ts && ts.done ? `You took <em class="tnum">${esc(fmtPlace(ts.place, ts.tied))}</em> and won ${esc(fmtMoney(ts.pay))}. See results.`
-    : ts && ts.scores && ts.scores.length ? `In progress: round ${ts.scores.length + 1}. Pick up where you left off.` : `Same event and field for everyone today.`;
+  const status = ts && ts.done ? `${ico("trophy", "Finished")} <em class="tnum">${esc(fmtPlace(ts.place, ts.tied))}</em> · ${esc(fmtMoney(ts.pay))}`
+    : ts && ts.scores && ts.scores.length ? `${ico("play", "In progress")} Round ${ts.scores.length + 1}` : `${ico("same", "Same event and field for everyone today")}`;
   return `<div class="wrap">
     <div class="bar"><span class="mark-wrap"><span class="mark">18 Down</span>${moneyChip()}</span><span class="where"><b>Tournaments</b>The bulletin board</span></div>
     <section class="cork" aria-label="Bulletin board">
@@ -8359,19 +8429,19 @@ function viewBulletin(){
         <i class="tack" aria-hidden="true"></i>
         <span class="flyer-kicker">${CLASSIC_BACK_DAYS.includes(key) ? "It’s back!" : "Once a day"}</span>
         <b class="flyer-title">Classic</b>
-        <span class="flyer-status">${(() => { const d = dailySaved(key); return d ? `You shot ${esc(fmtTotal(d.total))} today${classicPrize(d.total) ? " and won " + fmtMoney(classicPrize(d.total)) : ""}. See your card.` : "Same spins for everyone today. Spin BH, FH, C1X, then C2; ratings hidden. 10 down pays $500, up to $20,000 for 18 down."; })()}</span>
+        <span class="flyer-status">${(() => { const d = dailySaved(key); return d ? `${ico("trophy", "Played today")} <span class="tnum">${esc(fmtTotal(d.total))}</span>${classicPrize(d.total) ? " · " + fmtMoney(classicPrize(d.total)) : ""}` : `${ico("same", "Same spins for everyone today")} ${ico("hidden", "Ratings hidden")} <span class="tnum" title="10 down pays $500, up to $20,000 for 18 down">−10 $500 · −18 $20,000</span>`; })()}</span>
       </button>
       <button class="flyer f-mini" id="teeoff" data-act="teeoff" data-mode="free">
         <i class="tack" aria-hidden="true"></i>
         <span class="flyer-kicker">Pickup round</span>
         <b class="flyer-title">Mini</b>
-        <span class="flyer-status">Spin BH, FH, C1X, then C2. Ratings hidden. Pays by strokes under par, up to $2,000 for 18 down.</span>
+        <span class="flyer-status">${ico("hidden", "Ratings hidden")} <span class="tnum" title="Pays by strokes under par, up to $2,000 for 18 down">−18 $2,000</span></span>
       </button>
       <button class="flyer f-picker" id="pickerplay" data-act="teeoff" data-mode="picker">
         <i class="tack" aria-hidden="true"></i>
         <span class="flyer-kicker">Just for fun</span>
         <b class="flyer-title">Picker</b>
-        <span class="flyer-status">Spin, then put each pro where you want. Ratings shown.</span>
+        <span class="flyer-status">${ico("eye", "Ratings shown")} ${ico("dice", "Spin, then put each pro where you want")}</span>
       </button>
     </section>
     ${typeof weekPanelHTML === "function" ? weekPanelHTML() : ""}
@@ -8808,7 +8878,7 @@ async function leagueFill(){
   leagueDraw();
 }
 function leagueHTML(){
-  if (LG.status === "out") return `<p class="fine">Sign in under Friends to play the weekly league: points for every daily Classic against your friends.</p>`;
+  if (LG.status === "out") return `<p class="fine" title="Points for every daily Classic against your friends">${ico("same")} Sign in under Friends</p>`;
   if (LG.status === "missing") return `<p class="fine">The weekly league isn’t switched on yet.</p>`;
   if (LG.status === "error") return `<p class="fine">Couldn’t load the league. Try again later.</p>`;
   if (LG.status !== "ready") return `<p class="fine">Loading…</p>`;
@@ -8938,7 +9008,7 @@ function careerPanelHTML(){
     <h2 class="section-h">Career</h2>
     <div class="card-line"><b>${card.name}</b><span class="tnum">${pts} tour points</span></div>
     ${next ? `<div class="card-bar" role="img" aria-label="${pts} of ${next.at} points to the ${next.name}"><i style="width:${Math.min(100, (pts - card.at) / (next.at - card.at) * 100).toFixed(0)}%"></i></div>
-      <p class="fine">${next.at - pts} more points to the ${next.name} (+${Math.round(next.bonus * 100)}% tournament prizes). Points: 100 for a win, 70 for 2nd, 50 for 3rd, down to 1 for playing.</p>` : `<p class="fine">The top card. Tournament prizes pay +${Math.round(card.bonus * 100)}%.</p>`}
+      <p class="fine" title="Points: 100 for a win, 70 for 2nd, 50 for 3rd, down to 1 for playing">${next.at - pts} → ${next.name} · +${Math.round(next.bonus * 100)}% ${ico("prize", "tournament prizes")}</p>` : `<p class="fine">+${Math.round(card.bonus * 100)}% ${ico("prize", "tournament prizes")}</p>`}
     <div class="row"><button class="btn small" id="coll-open" data-act="go" data-screen="collection">Collection: ${coll} of ${SEASONS.length}</button></div>
     <details class="achv"><summary>Achievements: ${got} of ${ACHIEVEMENTS.length}</summary>
       <ul class="challenges">${ACHIEVEMENTS.map(x => `<li class="${a[x[0]] ? "done" : ""}"><span>${a[x[0]] ? "★" : "☆"}</span><span><b>${esc(x[1])}</b> ${esc(x[2])}</span><small>${a[x[0]] ? esc(fmtDate(a[x[0]])) : ""}</small></li>`).join("")}</ul>
@@ -9756,7 +9826,7 @@ async function h3PlayHole(h, token){
   const why = typeof criticalWhy === "function" && state.round && state.round.holes ? criticalWhy(h.n, h) : "";
   for (let i = 0; i < putts.length; i++){
     const p = putts[i], from = reuse && i === 0 ? pre.from : h3Spot(hole, Math.max(4, p.feet), rng);
-    h3Caption(`Hole ${h.n} · ${p.feet} ft ${p.what}${why && i === 0 ? " · " + why : ""}${hole.G && hole.G.note ? "\n" + hole.G.note : ""}`);
+    h3Caption(`${h.n} · ${p.feet} ft`);
     // start low behind the putter, looking down the line, then drift to the side for the stroke
     const bx = from.x - end.x, bz = from.z - end.z, bl = Math.hypot(bx, bz) || 1;
     h3Stand(hole, {x: from.x + bx / bl * .3, z: from.z + bz / bl * .3});
@@ -9778,7 +9848,7 @@ async function h3PlayHole(h, token){
 /* ----- Hooks the round screen uses ----- */
 function h3BoxHTML(){
   if (!h3Wanted() || H3.status === "failed") return "";
-  return `<div class="hole3d" id="hole3d"><div class="h3-wait" id="h3-wait">Make Selection Below</div><div class="h3-stamp" id="h3-stamp" aria-hidden="true"></div><div class="h3-cap" id="h3-cap" hidden></div><div class="h3-ctrls"><button class="btn small" id="h3-speed" data-act="h3Speed" aria-label="Playback speed">${h3Speed()}×</button><button class="btn small" id="h3-skip" data-act="h3Skip">Skip to the scorecard</button></div></div>`;
+  return `<div class="hole3d" id="hole3d"><div class="h3-wait" id="h3-wait">Make Selection Below</div><div class="h3-stamp" id="h3-stamp" aria-hidden="true"></div><div class="h3-cap" id="h3-cap" hidden></div><div class="h3-ctrls"><button class="btn small" id="h3-speed" data-act="h3Speed" aria-label="Playback speed">${h3Speed()}×</button><button class="btn small icon-btn" id="h3-skip" data-act="h3Skip" aria-label="Skip to the scorecard" title="Skip to the scorecard">${ico("ff")}</button></div></div>`;
 }
 /* Called once per hole by playFrom. Returns false if the round was abandoned. */
 async function h3Hole(h, token){
@@ -9808,7 +9878,7 @@ async function h3Preview(h, token){
   H3.camera.fov = 48; H3.camera.updateProjectionMatrix();
   h3CamTo(h3V(from.x + bx / bl * 3.2 + bz / bl * .6, hole.ht(from.x, from.z) + 1.9, from.z + bz / bl * 3.2 - bx / bl * .6), h3V(end.x, gy + .8, end.z));
   const stamp = document.getElementById("h3-stamp"); if (stamp) stamp.className = "h3-stamp";
-  h3Caption(`Hole ${h.n} · ${p.feet} ft ${p.what}`);
+  h3Caption(`${h.n} · ${p.feet} ft`);
   H3.preview = {n: h.n, feet: p.feet, hole, from, worldId: H3.worldId};
   return true;
 }
