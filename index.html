@@ -2,7 +2,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="robots" content="noindex,nofollow">
-<!-- 18 Down test build: branch test-combined, commit af5d654 -->
+<!-- 18 Down test build: branch test-combined, commit e922067 -->
 <title>18 Down</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&family=Shrikhand&display=swap">
@@ -3213,19 +3213,7 @@ function tierCuts(){
 }
 function tierOf(s, k){ const c = tierCuts()[k], v = s && s[k]; if (typeof v !== "number") return "?"; return v >= c[1] ? "A" : v >= c[0] ? "B" : "C"; }
 function tierBadge(s, k){ return ""; }   // letter grades are off: hard mode shows names and what each pro is known for
-/* "Known for" only from real numbers (Kade: "don't guess what they're known for"): Hayden's own BH/FH ratings (the original
-   seasons), published or StatMando putting, and StatMando C1-in-regulation for driving. A season with only estimates shows
-   nothing. Uses each season's own numbers before votes. */
-function knownFor(s){
-  const st = s.stats || {}, hayden = !st.added && s.base && typeof s.base.bh === "number";
-  const realPutt = st.src === "statmando" || (s.src && s.src.c1 === "published");
-  const z = {};
-  if (hayden){ z.bh = (s.base.bh - MED.bh) / SPREAD.bh; z.fh = (s.base.fh - MED.fh) / SPREAD.fh; }
-  if (realPutt){ z.c1 = (s.base.c1 - MED.c1) / SPREAD.c1; z.c2 = (s.base.c2 - MED.c2) / SPREAD.c2; }
-  if (!hayden && s.tee && typeof STAT_TEE_MEAN !== "undefined" && STAT_TEE_MEAN.c1r_sd) z.drive = (st.c1r - STAT_TEE_MEAN.c1r) / STAT_TEE_MEAN.c1r_sd;
-  let best = null; for (const k in z) if (best === null || z[k] > z[best]) best = k;
-  return best ? "★ " + (best === "drive" ? "Driving" : SLOT_LABEL[best]) : "";
-}
+function knownFor(s){ return ""; }   // "known for" traits are off
 function pickerPoolHTML(){
   const open = SLOTS.filter(k => !state.picks[k]);
   const pool = availablePool(SEASONS, state.spin.sponsor, state.spin.year, usedNames(), state.spin.cut);
@@ -3286,7 +3274,7 @@ function viewDraft(){
       ${buildPanel(c, b, state.spinning)}
       <section class="draw" aria-label="The draw">
         ${done ? `<p class="lede">${ico("hole")} ${esc(c.name)}</p>
-          <button class="btn primary full" id="play" data-act="play">${state.mode === "tourney" ? "Play round 1" : state.mode === "ctc" && typeof CT !== "undefined" && CT ? `Lock it in: play round 1 of ${CT.attempts}` : "Play the round"}</button>${state.mode === "ctc" ? `${iconFacts([["once", "Every round", "This team plays every round of the contest"]])}` : shotCallsToggle()}` : `
+          <button class="btn primary full" id="play" data-act="play">${state.mode === "tourney" ? "Play round 1" : state.mode === "ctc" && typeof CT !== "undefined" && CT ? `Lock it in: play round 1 of ${CT.attempts}` : "Play the round"}</button>${state.mode === "ctc" ? `${iconFacts([["once", "Every round", "This team plays every round of the contest"]])}` : ""}` : `
         ${slotBanner()}${needMeSlot() ? meSlotHTML() : `<div class="reels">${reel("reel-sponsor", "Sponsor", spin && spin.sponsor)}${reel("reel-year", "Year", spin && String(spin.year))}</div>
         ${state.spinErr ? `<p class="fine">${esc(state.spinErr)}</p>` : ""}${!spin || state.spinning ? `<button class="btn primary full" id="spin" data-act="spin" ${state.spinning ? "disabled" : ""}>${state.spinning ? "Spinning" : state.mode === "picker" || !meReserved() || currentSlot() !== state.meAt ? "Spin for pick " + (n + 1) : "Spin for My Player"}</button>` : `
         ${spin.me ? meDrawHTML() : `${state.mode === "ctc" ? `${iconFacts([typeof CT !== "undefined" && CT && CT.server ? ["same", "Same spins", "Everyone in this contest gets these same spins, revealed one pick at a time"] : null, ["dice", "No re-spins", "No re-spins. Leaving doesn’t re-roll your spins."]])}` : `<div class="skips">
@@ -3881,7 +3869,7 @@ function slotForm(holes){
    Before each tee shot you call Safe, Normal or Attack; on a C2 look you call Lag, Normal or Jam. The round is worked out
    again from the same seed with your calls, so earlier holes never change. In Classic and tournaments the calls are saved
    as you make them, so restarting a round cannot be used to try a hole twice. Contests play without calls. */
-function callsOn(){ return storeGet("18down.calls") !== "0"; }   // on unless you turn it off
+function callsOn(){ return true; }   // shot calls are always on (the switch was removed)
 function callsAllowed(){ return state.mode !== "ctc"; }
 function callsLive(){ return !!(state.round && state.round.spec && state.round.spec.calls && !state.round.spec.auto); }
 function callsKey(){
@@ -9450,7 +9438,7 @@ const H3_URL = "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.mi
 const H3FT = 0.3;   // world units per foot: a 6 ft player is 1.8 units tall
 const H3_GREEN = 33 * 0.3 * 1.25;   // green radius, a little past circle 1
 
-function h3Wanted(){ return storeGet("18down.view3d") !== "0" && !REDUCED; }
+function h3Wanted(){ return !REDUCED; }   // the 3D view is always on (the switch was removed); Skip still jumps past it
 function h3Load(){
   if (H3.status !== "idle") return H3.loading || Promise.resolve(H3.status === "ready");
   H3.status = "loading";
