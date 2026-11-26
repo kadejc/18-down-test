@@ -2,7 +2,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="robots" content="noindex,nofollow">
-<!-- 18 Down test build: branch test-combined, commit 3ce9945 -->
+<!-- 18 Down test build: branch test-combined, commit 4bfa6dc -->
 <title>18 Down</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&family=Shrikhand&display=swap">
@@ -9957,24 +9957,24 @@ function h3Person(){
   add(upper, new T.SphereGeometry(.175, 20, 12), shortsMat, 0, -.02, 0, 1, .62, .8);
   add(upper, lathe([[.17, -.06], [.168, .04], [.158, .12]]), shortsMat, 0, 0, 0, 1, 1, .8);
   // torso: waist, belly, chest, then the shoulders rounding in; a little flatter front to back than side to side
-  add(upper, lathe([[.155, .1], [.15, .2], [.158, .3], [.175, .42], [.18, .52], [.165, .6], [.11, .66], [.06, .68], [0, .69]], 24), shirtMat, 0, 0, 0, 1, 1, .74);
+  add(upper, lathe([[.155, .1], [.15, .2], [.158, .3], [.175, .42], [.185, .52], [.19, .58], [.175, .63], [.13, .665], [.07, .685], [0, .69]], 24), shirtMat, 0, 0, 0, 1, 1, .74);
   // shoulder caps, in the shirt
-  for (const sx of [-.205, .205]) add(upper, new T.SphereGeometry(.062, 14, 10), shirtMat, sx, .6, 0, 1, .82, .85);
+  for (const sx of [-.2, .2]) add(upper, new T.SphereGeometry(.064, 14, 10), shirtMat, sx, .605, 0, 1.05, .8, .85);
 
   // neck and head: an oval skull, jaw, nose, ears, eyes, brows and hair at the back
   const neck = new T.Group(); neck.position.set(0, 1.6 - HIP, 0); upper.add(neck);
-  add(neck, cap(.05, .06), skin, 0, .02, -.005);
-  const head = add(neck, new T.SphereGeometry(.105, 24, 18), skin, 0, .125, 0, .9, 1.06, .98);
-  add(neck, new T.SphereGeometry(.07, 18, 12), skin, 0, .078, .02, .95, .72, .95);   // jaw and chin, tucked into the skull
-  add(neck, new T.ConeGeometry(.017, .05, 10), skin, 0, .098, .11).rotation.x = Math.PI / 2 - .25;   // nose
-  for (const ex of [-.093, .093]) add(neck, new T.SphereGeometry(.022, 10, 8), skin, ex, .12, 0, .5, 1, .8);   // ears
+  add(neck, cap(.047, .03), skin, 0, .005, -.008);   // a short neck: most of it hides under the collar and the jaw
+  const head = add(neck, new T.SphereGeometry(.113, 24, 18), skin, 0, .12, 0, .9, 1.05, .98);
+  add(neck, new T.SphereGeometry(.07, 18, 12), skin, 0, .07, .022, .98, .74, .95);   // jaw and chin, tucked into the skull
+  add(neck, new T.ConeGeometry(.017, .05, 10), skin, 0, .098, .118).rotation.x = Math.PI / 2 - .25;   // nose
+  for (const ex of [-.1, .1]) add(neck, new T.SphereGeometry(.023, 10, 8), skin, ex, .115, 0, .5, 1, .8);   // ears
   for (const ex of [-.035, .035]){
-    add(neck, new T.SphereGeometry(.014, 10, 8), m(0xf4f1ea, {roughness: .4}), ex, .12, .095, 1, .8, .6);   // eyes: whites
-    add(neck, new T.SphereGeometry(.008, 10, 8), dark, ex, .12, .103);          // and pupils
-    add(neck, new T.BoxGeometry(.032, .008, .012), hairMat, ex, .14, .101).rotation.z = ex < 0 ? .08 : -.08;   // brows
+    add(neck, new T.SphereGeometry(.014, 10, 8), m(0xf4f1ea, {roughness: .4}), ex, .12, .103, 1, .8, .6);   // eyes: whites
+    add(neck, new T.SphereGeometry(.008, 10, 8), dark, ex, .12, .111);          // and pupils
+    add(neck, new T.BoxGeometry(.032, .008, .012), hairMat, ex, .14, .108).rotation.z = ex < 0 ? .08 : -.08;   // brows
   }
-  add(neck, new T.BoxGeometry(.036, .007, .01), lips, 0, .066, .096);            // mouth
-  add(neck, new T.SphereGeometry(.108, 20, 14, 0, Math.PI * 2, 0, Math.PI * .52), hairMat, 0, .132, -.014, .93, 1.02, 1).rotation.x = -.75;   // hair: from the hairline over the top and down the back
+  add(neck, new T.BoxGeometry(.036, .007, .01), lips, 0, .066, .101);            // mouth
+  add(neck, new T.SphereGeometry(.116, 20, 14, 0, Math.PI * 2, 0, Math.PI * .52), hairMat, 0, .127, -.014, .93, 1.02, 1).rotation.x = -.75;   // hair: from the hairline over the top and down the back
   const hat = new T.Group(); h3Hat(hat, L, m); hat.position.y = -1.6; neck.add(hat);
 
   // arms: shoulder joint, sleeve and upper arm, elbow joint, forearm, then a hand with a thumb.
