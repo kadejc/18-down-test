@@ -2,7 +2,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="robots" content="noindex,nofollow">
-<!-- 18 Down test build: branch test-combined, commit 6ccbd11 -->
+<!-- 18 Down test build: branch test-combined, commit e5b38ae -->
 <title>18 Down</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&family=Shrikhand&display=swap">
@@ -2060,12 +2060,15 @@ function legendStats(seasons){
   }
   return seasons;
 }
+/* Sponsor corrections from Kade (2026-11-26), for every season of the player. */
+const SPONSOR_KADE = {"Andrew Miranda": "DGA", "Isaac Robinson": "Latitude 64"};
 function makeSeasons(rows, edits){
   return legendStats(rows.map(r => {
     const [name, year, brand0, bh, fh, c1r, c2r, c1Att0, c2Att0, sponsorOk0, pdga] = r;
     // a sponsor found in a source replaces an unconfirmed one (history.js)
     const sfill = typeof SPONSOR_FILL !== "undefined" && SPONSOR_FILL[slug(name) + year];
-    const brand = sfill || brand0, sponsorOk = sfill ? true : sponsorOk0;
+    const kade = SPONSOR_KADE[name];   // Kade's corrections win over everything else
+    const brand = kade || sfill || brand0, sponsorOk = kade || sfill ? true : sponsorOk0;
     // real StatMando putting replaces placeholder numbers (history.js)
     const fill = typeof STAT_FILL !== "undefined" && STAT_FILL[slug(name) + year];
     const [c1, c2, c1Att, c2Att] = fill || [c1r, c2r, c1Att0, c2Att0];
@@ -7725,7 +7728,7 @@ function vtStatsHTML(p){
     : "Putting is the game's estimate; backhand and forehand were set by Hayden, and the tee rates follow from them.";
   return `<div class="vt-real">
     <h3 class="vt-real-h">Season stats, ${s.year}</h3>${leg}
-    <p class="fine vt-sponsor">Sponsor: ${s.brand === "Unconfirmed sponsor" ? "not found yet" : esc(s.brand)}${typeof SPONSOR_SRC !== "undefined" && SPONSOR_SRC[s.id] ? ` (<a href="${esc(SPONSOR_SRC[s.id])}" target="_blank" rel="noopener">source</a>)` : s.brand !== "Unconfirmed sponsor" && !s.sponsorOk ? " (unconfirmed)" : ""}</p>
+    <p class="fine vt-sponsor">Sponsor: ${s.brand === "Unconfirmed sponsor" ? "not found yet" : esc(s.brand)}${typeof SPONSOR_KADE !== "undefined" && SPONSOR_KADE[s.name] ? " (confirmed by Kade)" : ""}${!(typeof SPONSOR_KADE !== "undefined" && SPONSOR_KADE[s.name]) && typeof SPONSOR_SRC !== "undefined" && SPONSOR_SRC[s.id] ? ` (<a href="${esc(SPONSOR_SRC[s.id])}" target="_blank" rel="noopener">source</a>)` : s.brand !== "Unconfirmed sponsor" && !s.sponsorOk ? " (unconfirmed)" : ""}</p>
     <div class="vt-st-grid">${putts.join("")}${tee.join("")}</div>
     ${res.length ? `<h4 class="vt-real-sub">Results</h4><div class="vt-st-grid">${res.join("")}</div>` : ""}
     <p class="fine">${source}${st.rating ? st.ratingFrom ? ` Rating about ${st.rating}, an estimate: PDGA event ratings start in 1998, so it ${st.ratingFrom === "carried" ? "comes from the player's first rated season" : "is typical of a top pro of the late 1990s"}.` : ` Rating ${st.rating}${st.ratingNear ? " (nearest season)" : ""}, the average of the season's MPO event ratings.` : ""}${st.plays ? ` In the game it plays at ${st.plays}: the rating with the same rank among 2016+ seasons, since ratings have climbed over the years.` : ""} ${resWhat}</p>
