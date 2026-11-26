@@ -2,7 +2,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="robots" content="noindex,nofollow">
-<!-- 18 Down test build: branch graphics-3d, commit 23d059d -->
+<!-- 18 Down test build: branch graphics-3d, commit a949d5c -->
 <title>18 Down</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&family=Shrikhand&display=swap">
@@ -3576,7 +3576,8 @@ let callWait = null;
 const OB_WORD = ["Open", "OB in play", "Tight: OB all around"];
 function callPanel(html){ const el = document.getElementById("calls"); if (!el) return false; el.innerHTML = html; el.hidden = !html; return true; }
 /* While the game waits on a plan or a focus putt, the 3D view says so; the inputs sit right below it. */
-function callWaiting(on){ const b = document.getElementById("hole3d"); if (b) b.classList.toggle("waiting", on); }
+let callPreview = false;   // the 3D view is showing the putt (focus screen), so it doesn't need the notice
+function callWaiting(on){ const b = document.getElementById("hole3d"); if (b) b.classList.toggle("waiting", on && !callPreview); }
 function pickCall(html, token){
   return new Promise(res => { if (!callPanel(html)) return res(null); callWaiting(true); callWait = v => { callWait = null; callWaiting(false); res(token === playToken ? v : null); }; });
 }
@@ -3632,6 +3633,7 @@ function criticalWhy(n, h){
 }
 async function askCalls(i, token){
   const sp = state.round.spec, n = i + 1;
+  callPreview = false;
   if ((n === 1 || n === 10) && !(sp.calls[n] && sp.calls[n].plan)){
     if (!(await askNine(n, token))) return false;
     if (sp.auto) return true;
@@ -3639,6 +3641,8 @@ async function askCalls(i, token){
   const hp = state.round.holes[i], why = criticalWhy(n, hp);
   if (why && !("focus" in (sp.calls[n] || {})) && focusLeft() > 0){
     sp.calls[n] = sp.calls[n] || {};
+    callPreview = typeof h3Preview === "function" && await h3Preview(hp, token);
+    if (token !== playToken){ callPreview = false; return false; }
     const left = focusLeft();
     const v = await pickCall(`<div class="focus-ask"><p class="calls-h"><b>${esc(why)}</b>${hp.putt.kind === "c2" ? hp.feet : hp.parFeet || hp.feet} ft${hp.putt.forPar ? " for par" : ""} · ${left} focus left</p><div class="seg wide"><button type="button" class="on" id="call-focus" data-act="call" data-call="focus">Focus</button><button type="button" id="call-just" data-act="call" data-call="just">Putt</button></div></div>
       <p class="plan-key">Focus: tap when the marker is centered. Good tap, likelier make; bad tap, less likely.</p>`, token);
@@ -3650,6 +3654,7 @@ async function askCalls(i, token){
       callPanel(`<p class="calls-h focus-done"><b>${q > .85 ? "Pure!" : q > .6 ? "Good stroke" : q > .35 ? "Okay" : "Pulled it"}</b></p>`);
       if (!(await wait(650, token))) return false;
     } else sp.calls[n].focus = null;
+    callPreview = false;
     roundRecalc(); callsSave();
   }
   callPanel("");
@@ -9739,16 +9744,18 @@ function h3PuttsFor(h){
 function h3Caption(text){ const el = document.getElementById("h3-cap"); if (el){ el.textContent = text; el.hidden = !text; } }
 /* Play hole h of the round: only its putts. Resolves when done (or skipped). */
 async function h3PlayHole(h, token){
-  const putts = h3PuttsFor(h);
+  const putts = h3PuttsFor(h), pre = H3.preview; H3.preview = null;
   if (!putts.length) return true;
   if (!h3Mount()) return false;
   h3Start();
-  const c = course(), hole = h3BuildHole(h, c), {disc, end, gy, rng} = hole;
+  // reuse the hole the focus screen already set up, if it's this hole and the same putt
+  const reuse = pre && pre.n === h.n && pre.feet === putts[0].feet && pre.worldId === H3.worldId;
+  const c = course(), hole = reuse ? pre.hole : h3BuildHole(h, c), {disc, end, gy, rng} = hole;
   disc.material.color.set(hole.player.userData.disc || "#ffd23f");   // your player, your disc
   const stamp = document.getElementById("h3-stamp"); if (stamp) stamp.className = "h3-stamp";
   const why = typeof criticalWhy === "function" && state.round && state.round.holes ? criticalWhy(h.n, h) : "";
   for (let i = 0; i < putts.length; i++){
-    const p = putts[i], from = h3Spot(hole, Math.max(4, p.feet), rng);
+    const p = putts[i], from = reuse && i === 0 ? pre.from : h3Spot(hole, Math.max(4, p.feet), rng);
     h3Caption(`Hole ${h.n} · ${p.feet} ft ${p.what}${why && i === 0 ? " · " + why : ""}${hole.G && hole.G.note ? "\n" + hole.G.note : ""}`);
     // start low behind the putter, looking down the line, then drift to the side for the stroke
     const bx = from.x - end.x, bz = from.z - end.z, bl = Math.hypot(bx, bz) || 1;
@@ -9782,6 +9789,28 @@ async function h3Hole(h, token){
   await h3PlayHole(h, token);
   return token === playToken;
 }
-function h3RoundStart(){ H3.skip = false; H3.timeScale = 1; }
+function h3RoundStart(){ H3.skip = false; H3.timeScale = 1; H3.preview = null; }
+/* The focus screen: build hole h and stand the putter over the first putt, seen from behind, while you decide.
+   Returns true if the 3D view is showing it. h3PlayHole picks up from here. */
+async function h3Preview(h, token){
+  if (!h3Wanted() || H3.skip || H3.status === "failed") return false;
+  const putts = h3PuttsFor(h); if (!putts.length) return false;
+  if (!(await h3Load()) || token !== playToken) return false;
+  h3Setup();
+  if (!h3Mount()) return false;
+  h3Start();
+  const hole = h3BuildHole(h, course()), {disc, end, gy, rng} = hole, p = putts[0];
+  disc.material.color.set(hole.player.userData.disc || "#ffd23f");
+  const from = h3Spot(hole, Math.max(4, p.feet), rng);
+  const bx = from.x - end.x, bz = from.z - end.z, bl = Math.hypot(bx, bz) || 1;
+  h3Stand(hole, {x: from.x + bx / bl * .3, z: from.z + bz / bl * .3});
+  disc.position.set(from.x, hole.ht(from.x, from.z) + 1, from.z);
+  H3.camera.fov = 48; H3.camera.updateProjectionMatrix();
+  h3CamTo(h3V(from.x + bx / bl * 3.2 + bz / bl * .6, hole.ht(from.x, from.z) + 1.9, from.z + bz / bl * 3.2 - bx / bl * .6), h3V(end.x, gy + .8, end.z));
+  const stamp = document.getElementById("h3-stamp"); if (stamp) stamp.className = "h3-stamp";
+  h3Caption(`Hole ${h.n} · ${p.feet} ft ${p.what}`);
+  H3.preview = {n: h.n, feet: p.feet, hole, from, worldId: H3.worldId};
+  return true;
+}
 function h3SkipNow(){ H3.skip = true; H3.timeScale = 1; h3Stop(); const box = document.getElementById("hole3d"); if (box) box.hidden = true; }
 </script>
