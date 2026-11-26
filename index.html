@@ -2,7 +2,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="robots" content="noindex,nofollow">
-<!-- 18 Down test build: branch test-combined, commit ae1992b -->
+<!-- 18 Down test build: branch test-combined, commit 95c2ce6 -->
 <title>18 Down</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&family=Shrikhand&display=swap">
@@ -2032,19 +2032,36 @@ function slug(name){ return name.normalize("NFD").replace(/[^A-Za-z]/g, "").toLo
 const REEL_SPONSORS = ["Innova","Discraft","Discmania","Prodigy","MVP","Trilogy","DGA","Lone Star","Meridian"];
 const BRAND_REEL = {"Lone Star Disc": "Lone Star", "Meridian Discs": "Meridian"};
 const TRILOGY = ["Latitude 64","Dynamic Discs","Westside"];
-/* Who gets a tag (Kade, 2026-11-26): Ken Climo and old-school McBeth (through 2019, his Innova years and all five of
-   those world titles) are GOATs. Any other MPO world champion who doesn't play anymore is a Legend. Champions still on
-   tour (a season in the last two years of data), and McBeth from 2020 on, get no tag. */
-const GOAT_SEASONS = {"Ken Climo": [0, 9999], "Paul McBeth": [0, 2019]};
-function legendTier(name, year, active){
-  const g = GOAT_SEASONS[name];
-  if (g) return year >= g[0] && year <= g[1] ? "goat" : null;
-  if (typeof LEGENDS === "undefined" || !LEGENDS[name]) return null;
-  return active.has(name) ? null : "legend";
+/* Who gets a tag, and what it does (Kade, 2026-11-26):
+   - Status runs from a player's first MPO world title to two years after their last one; outside that window they are a
+     normal season with no tag.
+   - GOATs are Ken Climo and Paul McBeth. Inside the window they play with perfect stats: 100 BH and FH, every C1X and
+     C2 putt, and the best rating in the game.
+   - Every other world champion is a Legend inside the window, with top-1% stats: the 99th percentile of every season's
+     BH, FH, C1X, C2 and rating.
+   GOATs and Legends also lift their teammates' putting a little (legendBoost below). */
+const GOATS = ["Ken Climo", "Paul McBeth"], LEGEND_WINDOW = 2;
+function legendTier(name, year){
+  const L = typeof LEGENDS !== "undefined" && LEGENDS[name];
+  if (!L || !L.titles || !L.titles.length) return null;
+  if (year < Math.min(...L.titles) || year > Math.max(...L.titles) + LEGEND_WINDOW) return null;
+  return GOATS.includes(name) ? "goat" : "legend";
+}
+/* Give GOAT and Legend seasons their stats. They throw from the ratings, not their real tee rates. */
+function legendStats(seasons){
+  const pct = (k, p) => { const v = seasons.map(s => s[k]).filter(x => typeof x === "number").sort((a, b) => a - b); return v[Math.min(v.length - 1, Math.floor(p * v.length))]; };
+  const top = {bh: pct("bh", .99), fh: pct("fh", .99), c1: pct("c1", .99), c2: pct("c2", .99), pdga: pct("pdga", .99)};
+  const best = {bh: 100, fh: 100, c1: 100, c2: 100, pdga: pct("pdga", 1)};
+  for (const s of seasons){
+    if (!s.legend) continue;
+    const S = s.legend === "goat" ? best : top;
+    Object.assign(s, {bh: S.bh, fh: S.fh, c1: S.c1, c2: S.c2, pdga: S.pdga, tee: null, teeBase: null});
+    s.src = {bh: s.legend, fh: s.legend, c1: s.legend, c2: s.legend};
+  }
+  return seasons;
 }
 function makeSeasons(rows, edits){
-  const lastYear = Math.max(...rows.map(r => r[1])), active = new Set(rows.filter(r => r[1] >= lastYear - 1).map(r => r[0]));
-  return rows.map(r => {
+  return legendStats(rows.map(r => {
     const [name, year, brand0, bh, fh, c1r, c2r, c1Att0, c2Att0, sponsorOk0, pdga] = r;
     // a sponsor found in a source replaces an unconfirmed one (history.js)
     const sfill = typeof SPONSOR_FILL !== "undefined" && SPONSOR_FILL[slug(name) + year];
@@ -2077,10 +2094,10 @@ function makeSeasons(rows, edits){
       stats: (typeof PLAYER_STATS !== "undefined" && PLAYER_STATS[id]) || null,
       tee: teeReal(typeof PLAYER_STATS !== "undefined" && PLAYER_STATS[id]),
       teeBase: teeBase(teeReal(typeof PLAYER_STATS !== "undefined" && PLAYER_STATS[id])),
-      legend: legendTier(name, year, active),
+      legend: legendTier(name, year),
       titles: leg ? leg.titles : null,
     };
-  });
+  }));
 }
 
 /* Trait scales. Each runs from trait value 1 to 5. */
@@ -7701,7 +7718,7 @@ function vtStatsHTML(p){
   const res = "starts" in st ? [row("Elite/Major starts", st.starts), row("Wins", st.wins), row("Podiums", st.podiums), row("Top 10s", st.top10), st.avgPlace != null ? row("Avg finish", st.avgPlace) : "", row("Earnings", fmtMoney(st.earnings || 0))]
     : st.pev ? [row("MPO events", st.pev), row("Wins", st.pwins), row("Podiums", st.ppod), row("Top 10s", st.ptop10), st.pavg != null ? row("Avg finish", st.pavg) : ""] : [];
   const resWhat = "starts" in st ? "Results: StatMando, Major and Elite Series events." : st.pev ? "Results: all of the season's PDGA MPO events (StatMando player page)." : "";
-  const leg = s.legend ? `<p class="vt-legend ${s.legend}">${s.legend === "goat" ? "GOAT" : "Legend"} · ${s.titles.length} world title${s.titles.length === 1 ? "" : "s"} (${s.titles.join(", ")}). Teammates get ${s.legend === "goat" ? "+2" : "+1"}% on putts and play steadier.</p>` : "";
+  const leg = s.legend ? `<p class="vt-legend ${s.legend}">${s.legend === "goat" ? "GOAT" : "Legend"} · ${s.titles.length} world title${s.titles.length === 1 ? "" : "s"} (${s.titles.join(", ")}). In the game this season plays with ${s.legend === "goat" ? "perfect stats: 100 BH and FH, every C1X and C2 putt" : "top-1% stats in every skill"}. Status lasts from ${Math.min(...s.titles)} to ${Math.max(...s.titles) + 2}. Teammates get ${s.legend === "goat" ? "+2" : "+1"}% on putts and play steadier.</p>` : "";
   const source = st.src === "statmando" ? `Season stats: StatMando ${s.year} DGPT (${st.rounds} rounds tracked). The game's tee shots follow these rates.`
     : realPutt ? "Putting: published season numbers. Tee rates are estimates from backhand and forehand (no public tee stats this season)."
     : st.added ? `Putting, arm and tee rates are estimates from the season rating${s.year < 2016 ? " (shot stats weren't tracked before 2016)" : ""}.`
