@@ -2,7 +2,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="robots" content="noindex,nofollow">
-<!-- 18 Down test build: branch test-combined, commit 9341a30 -->
+<!-- 18 Down test build: branch test-combined, commit f664c84 -->
 <title>18 Down</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&family=Shrikhand&display=swap">
@@ -9896,15 +9896,16 @@ function h3Tex(uri, repeatX){
    finish: legs drive up, the disc leaves around waist height, and the arm finishes high toward the basket.
    Angles in radians. Shoulders: x below 0 swings the arm forward and up. Elbows: below 0 folds the forearm forward.
    Hips: below 0 swings the thigh forward; spread opens the legs sideways. Knees: above 0 bends the shin back.
-   The putter stands side-on: the figure's +x (left) side faces the basket, so the putting arm swings across the front of
-   the body toward the left (shoulder z above 0). Its right side is -x. */
+   The putter stands 45 degrees open, right side toward the basket (the chest faces 45 degrees left of the line). The putting
+   arm starts pointed at the basket, swings down and across to the left side of the body (shoulder z above 0), then back
+   out toward the basket. The figure's right side is -x. */
 const H3_HAND_ON_HIP = {offX: .25, offZ: .55, offElbow: -.35, offElbowZ: -1.35};
 const H3_POSES = {
-  aim:    Object.assign({lean: .08, turn: 0, drop: .05, neck: -.06, look: 1.15, spread: .2, armX: -.3, armZ: 1.35, elbow: -.06, rHip: -.18, rKnee: .32, lHip: -.18, lKnee: .32}, H3_HAND_ON_HIP),
-  drop:   Object.assign({lean: .3, turn: 0, drop: .1, neck: -.25, look: 1.0, spread: .22, armX: -.25, armZ: .55, elbow: -.05, rHip: -.42, rKnee: .8, lHip: -.42, lKnee: .8}, H3_HAND_ON_HIP),
-  load:   Object.assign({lean: .55, turn: 0, drop: .19, neck: -.45, look: .8, spread: .3, armX: -.1, armZ: -.15, elbow: -.06, rHip: -.8, rKnee: 1.45, lHip: -.8, lKnee: 1.45}, H3_HAND_ON_HIP),
-  back:   Object.assign({lean: .42, turn: 0, drop: .14, neck: -.36, look: .85, spread: .28, armX: -.1, armZ: -.55, elbow: -.1, rHip: -.6, rKnee: 1.1, lHip: -.6, lKnee: 1.1}, H3_HAND_ON_HIP),
-  finish: Object.assign({lean: -.02, turn: .05, drop: .01, neck: .04, look: 1.15, spread: .18, armX: -.4, armZ: 1.75, elbow: -.04, rHip: -.02, rKnee: .06, lHip: -.02, lKnee: .06}, H3_HAND_ON_HIP),
+  aim:    Object.assign({lean: .08, turn: 0, drop: .05, neck: -.06, look: -.75, spread: .2, armX: -1.45, armZ: -.75, elbow: -.06, rHip: -.18, rKnee: .32, lHip: -.18, lKnee: .32}, H3_HAND_ON_HIP),
+  drop:   Object.assign({lean: .3, turn: 0, drop: .1, neck: -.25, look: -.6, spread: .22, armX: -.6, armZ: .1, elbow: -.15, rHip: -.42, rKnee: .8, lHip: -.42, lKnee: .8}, H3_HAND_ON_HIP),
+  load:   Object.assign({lean: .55, turn: 0, drop: .19, neck: -.45, look: -.5, spread: .3, armX: -.4, armZ: .75, elbow: -.3, rHip: -.8, rKnee: 1.45, lHip: -.8, lKnee: 1.45}, H3_HAND_ON_HIP),
+  back:   Object.assign({lean: .48, turn: .1, drop: .14, neck: -.4, look: -.55, spread: .28, armX: -.35, armZ: 1.0, elbow: -.4, rHip: -.6, rKnee: 1.1, lHip: -.6, lKnee: 1.1}, H3_HAND_ON_HIP),
+  finish: Object.assign({lean: -.02, turn: -.05, drop: .01, neck: .04, look: -.75, spread: .18, armX: -1.75, armZ: -.75, elbow: -.04, rHip: -.02, rKnee: .06, lHip: -.02, lKnee: .06}, H3_HAND_ON_HIP),
 };
 H3_POSES.set = H3_POSES.aim;   // the stance the putter holds while you decide
 function h3Person(){
@@ -10055,7 +10056,7 @@ async function h3Fly(hole, from, to, peak, fade, ms, token, follow){
   }, token);
 }
 /* Walk the player to a spot, facing the basket. */
-function h3Stand(hole, at){ const {player, end} = hole; player.position.set(at.x, hole.ht(at.x, at.z), at.z); player.lookAt(end.x, player.position.y, end.z); player.rotateY(-Math.PI / 2); h3Address(player); }   // side-on: the left side faces the basket
+function h3Stand(hole, at){ const {player, end} = hole; player.position.set(at.x, hole.ht(at.x, at.z), at.z); player.lookAt(end.x, player.position.y, end.z); player.rotateY(Math.PI / 4); h3Address(player); }   // 45 degrees open: halfway between square and side-on, right side toward the basket
 /* The TV putting shot: over the putter's left shoulder at the basket, zoomed in a little on longer putts. The more it
    zooms, the further back it stands, so the putter stays in frame. */
 function h3ShoulderCam(hole, from){
