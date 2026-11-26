@@ -2,7 +2,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="robots" content="noindex,nofollow">
-<!-- 18 Down test build: branch graphics-3d, commit d2b15a4 -->
+<!-- 18 Down test build: branch graphics-3d, commit fb40a15 -->
 <title>18 Down</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&family=Shrikhand&display=swap">
@@ -3675,7 +3675,7 @@ const PUTT_OPTS = [["lag", "Lag: no three-putts"], ["normal", "Normal"], ["jam",
 let callDraft = null;
 function planRows(from){
   const holes = state.round.holes.slice(from - 1, from + 8), b = buildObj();
-  const who = k => `${esc(callWho(b[k]))}${hidden() ? " (" + tierOf(b[k], k) + ")" : ""}`;
+  const who = k => esc(callWho(b[k]));
   const info = shot => { const hs = holes.filter(h => h.shot === shot), ob = hs.filter(h => h.ob).length; return `<span title="${hs.length} holes">${ico("hole")}${hs.length}</span>${ob ? `<span class="ob" title="${ob} with OB">${ico("ob")}${ob}</span>` : ""}`; };
   const row = (k, label, sub, opts) => `<div class="plan-row s-${k}"><p><b><i>${label}</i> ${who(k)}</b><small class="plan-info">${sub}</small></p>
     <div class="seg icons" role="group" aria-label="${label}">${opts.map(([v, full]) => `<button type="button" class="${callDraft[k] === v ? "on" : ""}" id="plan-${k}-${v}" data-act="callpick" data-k="${k}" data-v="${v}" aria-pressed="${callDraft[k] === v}" aria-label="${full}" title="${full}">${ico(v)}<span>${CALL_WORD[v]}</span></button>`).join("")}</div></div>`;
