@@ -2,7 +2,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="robots" content="noindex,nofollow">
-<!-- 18 Down test build: branch gameplay-test, commit 5de9d97 -->
+<!-- 18 Down test build: branch gameplay-test, commit 435c1df -->
 <title>18 Down</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&family=Shrikhand&display=swap">
@@ -2936,7 +2936,7 @@ function viewDraft(){
 function shotCallsToggle(){
   const on = callsOn();
   return `<button class="btn small full" id="shot-calls" data-act="shotCalls" aria-pressed="${on}">Shot calls: ${on ? "on" : "off"}</button>
-    <p class="fine">${on ? "You call each tee shot (Safe, Normal, Attack) and each C2 putt (Lag, Normal, Jam)." : "Turn on to make a call on every hole. Off plays the round as before."}</p>`;
+    <p class="fine">${on ? "Before each nine you choose Safe, Normal or Aggressive, and you get a focus putt in critical moments." : "Turn on to plan each nine and take focus putts. Off plays the round as before."}</p>`;
 }
 function skipBtn(kind, id, act, label, alt){
   if (dailyFair()){ const left = respinsLeft(); return `<button class="btn small" id="${id}" data-act="${act}" ${alt && left > 0 ? "" : "disabled"}>${label}: free</button>`; }
@@ -3536,29 +3536,56 @@ function pickCall(html, token){
   return new Promise(res => { if (!callPanel(html)) return res(null); callWait = v => { callWait = null; res(token === playToken ? v : null); }; });
 }
 function callWho(s){ return s.me ? "My Player" : s.short || s.name; }
+/* One plan per nine: before hole 1 and before hole 10 you choose Safe, Normal or Aggressive. It sets every tee shot in
+   that nine, and long putts follow it (Safe lags, Aggressive jams). Focus is offered only in critical moments. */
+const PLAN_PUTT = {safe: "lag", attack: "jam"};
+function nineSummary(from){
+  const holes = state.round.holes.slice(from - 1, from + 8), b = buildObj();
+  const ob = holes.filter(h => h.ob).length, fh = holes.filter(h => h.shot === "FH").length;
+  const who = k => `${esc(callWho(b[k]))}${hidden() ? " (" + tierOf(b[k], k) + ")" : ""}`;
+  return `${ob ? ob + " hole" + (ob === 1 ? "" : "s") + " with OB in play" : "No OB in play"} · ${fh} forehand, ${9 - fh} backhand<span>Backhand: ${who("bh")} · Forehand: ${who("fh")} · C2: ${who("c2")}</span>`;
+}
+async function askNine(from, token){
+  const sp = state.round.spec;
+  const thru = from > 1 ? state.round.holes[from - 2].running : 0;
+  const v = await pickCall(`<p class="calls-h"><b>${from === 1 ? "Front 9 plan" : "Back 9 plan"}</b>${from > 1 ? "You're " + fmtTotal(thru) + " at the turn. " : ""}${nineSummary(from)}</p>
+    <div class="calls-row"><button class="btn small" id="call-safe" data-act="call" data-call="safe">Safe</button><button class="btn small" id="call-normal" data-act="call" data-call="normal">Normal</button><button class="btn small" id="call-attack" data-act="call" data-call="attack">Aggressive</button></div>
+    <p class="fine">Aggressive: more parked and C1 drives and jammed long putts, but more OB and longer comebacks. Safe: fewer of both, and long putts are lagged. <button class="linkish" id="call-auto" data-act="call" data-call="auto">Sim the rest</button></p>`, token);
+  if (v === null) return false;
+  if (v === "auto"){ sp.auto = true; callsSave(); callPanel(""); return true; }
+  const tee = v === "normal" ? null : v;
+  for (let n = from; n < from + 9; n++) sp.calls[n] = Object.assign({}, sp.calls[n], {tee, putt: PLAN_PUTT[v] || null, plan: v});
+  callsSave(); roundRecalc();
+  return true;
+}
+/* Why a putt is critical, or "" if it isn't. Only critical putts offer focus. */
+function criticalWhy(n, h){
+  if (!h.putt) return "";
+  if (n >= BIG_FROM) return "Closing stretch";
+  if (h.putt.forPar) return "Par save";
+  const thru = n > 1 ? state.round.holes[n - 2].running : 0;
+  if (state.mode === "daily" && n >= 10 && thru <= -8 && !h.putt.forPar) return "Prize on the line";
+  if (state.mode === "tourney" && state.tour && n >= 10){
+    const ctx = tourneyCtx(state.dateKey), r = state.tour.scores.length;
+    if (r === ctx.t.rounds - 1){
+      const lead = Math.min(...ctx.rows.map(x => x.scores.reduce((a, b) => a + b, 0)));
+      const mine = state.tour.scores.reduce((a, b) => a + b, 0) + thru;
+      if (Math.abs(mine - lead) <= 2) return "Chasing the lead";
+    }
+  }
+  return "";
+}
 async function askCalls(i, token){
-  const sp = state.round.spec, n = i + 1, c = course();
-  if (!sp.calls[n]){
-    const h = state.round.holes[i];
-    const v = await pickCall(`<p class="calls-h"><b>Hole ${n}</b>Par ${h.par}${h.ft ? ", " + fmtFt(h.ft) : ""} · ${OB_WORD[h.ob] || "Open"}${c.ob >= 4 ? " · OB-heavy course" : ""}<span>${h.shot === "FH" ? "Forehand" : "Backhand"}: ${esc(callWho(h.thrower))}</span>${bigMomentText(n)}</p>
-      <div class="calls-row"><button class="btn small" id="call-safe" data-act="call" data-call="safe">Safe</button><button class="btn small" id="call-normal" data-act="call" data-call="normal">Normal</button><button class="btn small" id="call-attack" data-act="call" data-call="attack">Attack</button></div>
-      <p class="fine">Attack: more parked and C1, more OB. Safe: fewer of both. <button class="linkish" id="call-auto" data-act="call" data-call="auto">Sim the rest</button></p>`, token);
-    if (v === null) return false;
-    if (v === "auto"){ sp.auto = true; callsSave(); callPanel(""); return true; }
-    sp.calls[n] = {tee: v === "normal" ? null : v}; callsSave(); roundRecalc();
+  const sp = state.round.spec, n = i + 1;
+  if ((n === 1 || n === 10) && !(sp.calls[n] && sp.calls[n].plan)){
+    if (!(await askNine(n, token))) return false;
+    if (sp.auto) return true;
   }
-  const h = state.round.holes[i];
-  if (h.lie === "c2" && !("putt" in sp.calls[n])){
-    const v = await pickCall(`<p class="calls-h"><b>C2 look</b>${h.feet} ft for ${esc(callWho(h.putt.by))}<span>Hole ${n}</span></p>
-      <div class="calls-row"><button class="btn small" id="call-lag" data-act="call" data-call="lag">Lag</button><button class="btn small" id="call-pnormal" data-act="call" data-call="normal">Normal</button><button class="btn small" id="call-jam" data-act="call" data-call="jam">Jam</button></div>
-      <p class="fine">Jam: more go in, but a miss runs well past. Lag: fewer go in, never a three-putt.</p>`, token);
-    if (v === null) return false;
-    sp.calls[n].putt = v === "normal" ? null : v; roundRecalc(); callsSave();
-  }
-  const hp = state.round.holes[i];
-  if (hp.putt && !("focus" in sp.calls[n]) && focusLeft() > 0 && (n >= BIG_FROM || hp.lie === "c2")){
+  const hp = state.round.holes[i], why = criticalWhy(n, hp);
+  if (why && !("focus" in (sp.calls[n] || {})) && focusLeft() > 0){
+    sp.calls[n] = sp.calls[n] || {};
     const left = focusLeft();
-    const v = await pickCall(`<p class="calls-h"><b>${n >= BIG_FROM ? "Big putt" : "Focus?"}</b>${hp.putt.kind === "c2" ? hp.feet : hp.parFeet || hp.feet} ft${hp.putt.forPar ? " for par" : ""} for ${esc(callWho(hp.putt.by))}<span>${left} focus left this round</span></p>
+    const v = await pickCall(`<p class="calls-h"><b>${esc(why)}</b>${hp.putt.kind === "c2" ? hp.feet : hp.parFeet || hp.feet} ft${hp.putt.forPar ? " for par" : ""} for ${esc(callWho(hp.putt.by))}, hole ${n}<span>${left} focus left this round</span>${bigMomentText(n)}</p>
       <div class="calls-row two"><button class="btn small primary" id="call-focus" data-act="call" data-call="focus">Focus</button><button class="btn small" id="call-just" data-act="call" data-call="just">Just putt</button></div>
       <p class="fine">Focus: time your tap. Dead center makes it likelier to drop; a bad tap makes it less likely.</p>`, token);
     if (v === null) return false;
