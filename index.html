@@ -2,7 +2,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="robots" content="noindex,nofollow">
-<!-- 18 Down test build: branch test-combined, commit 95c2ce6 -->
+<!-- 18 Down test build: branch test-combined, commit e90005c -->
 <title>18 Down</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&family=Shrikhand&display=swap">
@@ -3938,7 +3938,7 @@ const TEE_CALLS = [["safe", "Safe: fewer parks, less OB"], ["normal", "Normal"],
 const PUTT_OPTS = [["lag", "Lag: no three-putts"], ["normal", "Normal"], ["jam", "Jam: more go in, longer comebacks"]];
 let callDraft = null;
 function planRows(from){
-  const holes = state.round.holes.slice(from - 1, from + 8), b = buildObj();
+  const holes = state.round.holes.slice(from - 1), b = buildObj();   // the plan covers every hole left in the round
   const who = k => esc(callWho(b[k]));
   const info = shot => { const hs = holes.filter(h => h.shot === shot), ob = hs.filter(h => h.ob).length; return `<span title="${hs.length} holes">${ico("hole")}${hs.length}</span>${ob ? `<span class="ob" title="${ob} with OB">${ico("ob")}${ob}</span>` : ""}`; };
   const row = (k, label, sub, opts) => `<div class="plan-row s-${k}"><p><b><i>${label}</i> ${who(k)}</b><small class="plan-info">${sub}</small></p>
@@ -3950,12 +3950,12 @@ async function askNine(from, token){
   const thru = from > 1 ? state.round.holes[from - 2].running : 0;
   const prev = from > 1 && sp.calls[1] && sp.calls[1].plan;
   callDraft = Object.assign({bh: "normal", fh: "normal", c2: "normal"}, prev && typeof prev === "object" ? prev : {});
-  const v = await pickCall(`<div class="plan-top"><p class="calls-h"><b>${from === 1 ? "Front 9" : "Back 9"}</b>${from > 1 ? fmtTotal(thru) : ""}</p><span class="plan-go"><button class="btn small icon-btn" id="call-auto" data-act="call" data-call="auto" aria-label="Sim the rest" title="Sim the rest">${ico("ff")}<span>Sim</span></button><button class="btn small primary icon-btn" id="call-go" data-act="call" data-call="go" aria-label="${from === 1 ? "Tee off" : "Go"}" title="${from === 1 ? "Tee off" : "Go"}">${ico("play")}<span>${from === 1 ? "Tee off" : "Go"}</span></button></span></div>
+  const v = await pickCall(`<div class="plan-top"><p class="calls-h"><b>Round plan</b></p><span class="plan-go"><button class="btn small icon-btn" id="call-auto" data-act="call" data-call="auto" aria-label="Sim the rest" title="Sim the rest">${ico("ff")}<span>Sim</span></button><button class="btn small primary icon-btn" id="call-go" data-act="call" data-call="go" aria-label="${from === 1 ? "Tee off" : "Go"}" title="${from === 1 ? "Tee off" : "Go"}">${ico("play")}<span>${from === 1 ? "Tee off" : "Go"}</span></button></span></div>
     <div id="plan-rows">${planRows(from)}</div>`, token);
   if (v === null){ callDraft = null; return false; }
   if (v === "auto"){ callDraft = null; sp.auto = true; callsSave(); callPanel(""); return true; }
   const plan = Object.assign({}, callDraft); callDraft = null;
-  for (let n = from; n < from + 9; n++){
+  for (let n = from; n <= 18; n++){
     const h = state.round.holes[n - 1], tee = plan[h.shot === "FH" ? "fh" : "bh"];
     sp.calls[n] = Object.assign({}, sp.calls[n], {tee: tee === "normal" ? null : tee, putt: plan.c2 === "normal" ? null : plan.c2, plan});
   }
@@ -3982,7 +3982,7 @@ function criticalWhy(n, h){
 async function askCalls(i, token){
   const sp = state.round.spec, n = i + 1;
   callPreview = false;
-  if ((n === 1 || n === 10) && !(sp.calls[n] && sp.calls[n].plan)){
+  if (n === 1 && !(sp.calls[n] && sp.calls[n].plan)){   // one plan, set before hole 1, for the whole round
     if (!(await askNine(n, token))) return false;
     if (sp.auto) return true;
   }
@@ -9552,13 +9552,14 @@ function h3Loop(t){
 function h3Start(){ if (!H3.raf){ H3.last = 0; H3.raf = requestAnimationFrame(h3Loop); } }
 function h3Stop(){ cancelAnimationFrame(H3.raf); H3.raf = 0; H3.tasks = []; }
 /* Run fn(k from 0 to 1) over ms of game time. Resolves false if the round moved on or the player skipped. */
+const H3_PACE = 1.65;   // every 3D animation runs this much faster (putts take about 60% of the old time)
 function h3Tween(ms, fn, token){
   return new Promise(res => {
     if (H3.skip || token !== playToken){ res(false); return; }
     let el = 0;
     H3.tasks.push(dt => {
       if (H3.skip || token !== playToken){ res(false); return false; }
-      el += dt * 1000 * (typeof SPEED === "number" ? SPEED : 1) * H3.timeScale * h3Speed();
+      el += dt * 1000 * (typeof SPEED === "number" ? SPEED : 1) * H3.timeScale * h3Speed() * H3_PACE;
       const k = Math.min(1, el / ms); fn(k);
       if (k >= 1){ res(true); return false; }
     });
@@ -10200,7 +10201,7 @@ async function h3Putt(hole, from, made, token, why){
   if (!(await legs(PS.aim, PS.drop, 220))) return false;
   if (!(await legs(PS.drop, PS.load, 240))) return false;
   if (!(await legs(PS.load, PS.back, 200))) return false;
-  if (why) H3.timeScale = .45;   // clutch putts in slow motion
+  if (why) H3.timeScale = .6;   // clutch putts in slow motion
   h3TrailReset(hole);
   const REL = .26, SWING = .6, start = new H3.THREE.Vector3();
   const ok = await h3Tween(Math.max(650, Math.min(1300, dist * 170)), k => {
