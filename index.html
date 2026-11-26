@@ -2,7 +2,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="robots" content="noindex,nofollow">
-<!-- 18 Down test build: branch test-combined, commit aca1dd0 -->
+<!-- 18 Down test build: branch test-combined, commit 43e6b15 -->
 <title>18 Down</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&family=Shrikhand&display=swap">
@@ -2174,6 +2174,7 @@ function legendStats(seasons){
   for (const s of seasons){
     if (!s.legend) continue;
     const S = s.legend === "goat" ? best : top;
+    s.real = {bh: s.bh, fh: s.fh, c1: s.c1, c2: s.c2, pdga: s.pdga, tee: s.tee, teeBase: s.teeBase};   // the season's own numbers, for tournament opponents
     Object.assign(s, {bh: S.bh, fh: S.fh, c1: S.c1, c2: S.c2, pdga: S.pdga, tee: null, teeBase: null});
     s.src = {bh: s.legend, fh: s.legend, c1: s.legend, c2: s.legend};
   }
@@ -2664,18 +2665,20 @@ function payTable(t){
 /* Tournament fields come from the original roster (SEASON_ROWS): their rank windows (t.depth) were tuned for it, and the
    history seasons (history.js) would otherwise crowd the top of the rankings and make every field stronger. */
 let FIELD_SKIP = null;
+/* The tournament field (Kade, 2026-11-26): only players from the current year, each playing as himself from his own
+   season stats (real tee rates and make rates where StatMando has them, otherwise the season's ratings). No strength
+   adjustments; current GOATs and Legends play their real numbers, not the boosted ones. The tier sets how deep into
+   the year's ratings list the field is drawn from. */
 function tourneyField(seasons, key, t){
-  if (!FIELD_SKIP) FIELD_SKIP = new Set(typeof HISTORY_ROWS !== "undefined" ? HISTORY_ROWS.map(r => slug(r[0]) + r[1]) : []);
+  const year = Math.max(...seasons.map(s => s.year));
   const latest = new Map();
-  for (const s of seasons) if (!FIELD_SKIP.has(s.id) && (!latest.has(s.name) || latest.get(s.name).year < s.year)) latest.set(s.name, s);
+  for (const s of seasons) if (s.year === year && !latest.has(s.name)) latest.set(s.name, s.real ? Object.assign({}, s, s.real, {legend: null}) : s);
   const ranked = [...latest.values()].sort((a, b) => (b.pdga || 0) - (a.pdga || 0) || a.name.localeCompare(b.name));
-  const pool = ranked.slice(t.depth[0], t.depth[1]);
-  const extra = t.depth[0] > 0 ? shuffled(ranked.slice(0, t.depth[0]), mulberry32(hashStr("stars|" + key))).slice(0, 3) : [];
+  const lo = Math.min(t.depth[0], Math.max(0, ranked.length - t.field)), hi = Math.min(t.depth[1], ranked.length);
+  const pool = ranked.slice(lo, hi);
+  const extra = lo > 0 ? shuffled(ranked.slice(0, lo), mulberry32(hashStr("stars|" + key))).slice(0, 3) : [];
   const picked = shuffled(pool, mulberry32(hashStr("field|" + key))).slice(0, t.field - extra.length).concat(extra);
-  return picked.map(s => {
-    const b = Object.assign({}, s, {bh: s.bh + t.boost * 2, fh: s.fh + t.boost * 2, c1: s.c1 + t.boost, c2: s.c2 + t.boost});
-    return {name: s.name, season: s, build: {bh: b, fh: b, c1: b, c2: b}};
-  });
+  return picked.map(s => ({name: s.name, season: s, build: {bh: s, fh: s, c1: s, c2: s}}));
 }
 function tourneySeed(key, r, who){ return hashStr("tround|" + key + "|" + r + "|" + who); }
 function cardPressure(rank){ return rank <= 4 ? 2 : rank <= 12 ? 1 : 0; }
