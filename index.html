@@ -2,7 +2,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="robots" content="noindex,nofollow">
-<!-- 18 Down test build: branch graphics-3d, commit 337d6e8 -->
+<!-- 18 Down test build: branch graphics-3d, commit 7b64e47 -->
 <title>18 Down</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&family=Shrikhand&display=swap">
@@ -1234,6 +1234,17 @@ span.pips, .calls-h span.pips { display: inline-flex; gap: 4px; vertical-align: 
 .lede .ico { color: var(--band); }
 .tier-key { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; color: var(--mute); }
 .tier-key .tier { min-width: 22px; height: 22px; font-size: 14px; margin-left: 4px; }
+
+/* Input buttons: icon plus word */
+.icon-btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; }
+.seg.icons button { display: flex; flex-direction: column; align-items: center; gap: 1px; min-width: 46px; padding: 4px 6px; font-size: 11px; line-height: 1.1; }
+.seg.icons .ico { width: 17px; height: 17px; }
+.focus-ask { flex-wrap: wrap; }
+.seg.focus-btns { display: grid; grid-template-columns: 1fr 1fr; width: 100%; }
+.seg.focus-btns button { display: flex; align-items: center; justify-content: center; gap: 8px; min-height: 52px; font-size: 17px; padding: 8px 12px; }
+.seg.focus-btns .ico { width: 26px; height: 26px; }
+#call-release { min-height: 52px; font-size: 17px; }
+#call-release .ico { width: 24px; height: 24px; }
 </style>
 <main id="app"></main>
 <script type="application/json" id="edits">{}</script>
@@ -3656,6 +3667,7 @@ function callWho(s){ return s.me ? "My Player" : s.short || s.name; }
 /* One plan per nine, set for each player: before hole 1 and before hole 10 the backhand and forehand throwers each get
    Safe, Normal or Aggressive, and the C2 putter gets Lag, Normal or Jam. Every hole in the nine follows whoever throws or
    putts it. Focus is offered only in critical moments. */
+const CALL_WORD = {safe: "Safe", normal: "Normal", attack: "Aggr", lag: "Lag", jam: "Jam"};
 const TEE_CALLS = [["safe", "Safe: fewer parks, less OB"], ["normal", "Normal"], ["attack", "Aggressive: more parks, more OB"]];
 const PUTT_OPTS = [["lag", "Lag: no three-putts"], ["normal", "Normal"], ["jam", "Jam: more go in, longer comebacks"]];
 let callDraft = null;
@@ -3664,7 +3676,7 @@ function planRows(from){
   const who = k => `${esc(callWho(b[k]))}${hidden() ? " (" + tierOf(b[k], k) + ")" : ""}`;
   const info = shot => { const hs = holes.filter(h => h.shot === shot), ob = hs.filter(h => h.ob).length; return `<span title="${hs.length} holes">${ico("hole")}${hs.length}</span>${ob ? `<span class="ob" title="${ob} with OB">${ico("ob")}${ob}</span>` : ""}`; };
   const row = (k, label, sub, opts) => `<div class="plan-row s-${k}"><p><b><i>${label}</i> ${who(k)}</b><small class="plan-info">${sub}</small></p>
-    <div class="seg icons" role="group" aria-label="${label}">${opts.map(([v, full]) => `<button type="button" class="${callDraft[k] === v ? "on" : ""}" id="plan-${k}-${v}" data-act="callpick" data-k="${k}" data-v="${v}" aria-pressed="${callDraft[k] === v}" aria-label="${full}" title="${full}">${ico(v === "normal" ? "normal" : v)}</button>`).join("")}</div></div>`;
+    <div class="seg icons" role="group" aria-label="${label}">${opts.map(([v, full]) => `<button type="button" class="${callDraft[k] === v ? "on" : ""}" id="plan-${k}-${v}" data-act="callpick" data-k="${k}" data-v="${v}" aria-pressed="${callDraft[k] === v}" aria-label="${full}" title="${full}">${ico(v)}<span>${CALL_WORD[v]}</span></button>`).join("")}</div></div>`;
   return row("bh", "BH", info("BH"), TEE_CALLS) + row("fh", "FH", info("FH"), TEE_CALLS) + row("c2", "C2", "", PUTT_OPTS);
 }
 async function askNine(from, token){
@@ -3672,7 +3684,7 @@ async function askNine(from, token){
   const thru = from > 1 ? state.round.holes[from - 2].running : 0;
   const prev = from > 1 && sp.calls[1] && sp.calls[1].plan;
   callDraft = Object.assign({bh: "normal", fh: "normal", c2: "normal"}, prev && typeof prev === "object" ? prev : {});
-  const v = await pickCall(`<div class="plan-top"><p class="calls-h"><b>${from === 1 ? "Front 9" : "Back 9"}</b>${from > 1 ? fmtTotal(thru) : ""}</p><span class="plan-go"><button class="btn small icon-btn" id="call-auto" data-act="call" data-call="auto" aria-label="Sim the rest" title="Sim the rest">${ico("ff")}</button><button class="btn small primary icon-btn" id="call-go" data-act="call" data-call="go" aria-label="${from === 1 ? "Tee off" : "Go"}" title="${from === 1 ? "Tee off" : "Go"}">${ico("play")}</button></span></div>
+  const v = await pickCall(`<div class="plan-top"><p class="calls-h"><b>${from === 1 ? "Front 9" : "Back 9"}</b>${from > 1 ? fmtTotal(thru) : ""}</p><span class="plan-go"><button class="btn small icon-btn" id="call-auto" data-act="call" data-call="auto" aria-label="Sim the rest" title="Sim the rest">${ico("ff")}<span>Sim</span></button><button class="btn small primary icon-btn" id="call-go" data-act="call" data-call="go" aria-label="${from === 1 ? "Tee off" : "Go"}" title="${from === 1 ? "Tee off" : "Go"}">${ico("play")}<span>${from === 1 ? "Tee off" : "Go"}</span></button></span></div>
     <div id="plan-rows">${planRows(from)}</div>`, token);
   if (v === null){ callDraft = null; return false; }
   if (v === "auto"){ callDraft = null; sp.auto = true; callsSave(); callPanel(""); return true; }
@@ -3714,7 +3726,7 @@ async function askCalls(i, token){
     callPreview = typeof h3Preview === "function" && await h3Preview(hp, token);
     if (token !== playToken){ callPreview = false; return false; }
     const left = focusLeft();
-    const v = await pickCall(`<div class="focus-ask"><p class="calls-h focus-why" title="${esc(why)}">${ico(WHY_ICON[why] || "flag", why)}<b>${hp.putt.kind === "c2" ? hp.feet : hp.parFeet || hp.feet} ft</b><span role="img" aria-label="${left} focus left" title="Focus putts left">${pips(left, FOCUS_PER_ROUND)}</span></p><div class="seg wide icons"><button type="button" class="on" id="call-focus" data-act="call" data-call="focus" aria-label="Focus: time the stroke" title="Focus: time the stroke">${ico("focus")}</button><button type="button" id="call-just" data-act="call" data-call="just" aria-label="Just putt" title="Just putt">${ico("putt")}</button></div></div>`, token);
+    const v = await pickCall(`<div class="focus-ask"><p class="calls-h focus-why" title="${esc(why)}">${ico(WHY_ICON[why] || "flag", why)}<b>${hp.putt.kind === "c2" ? hp.feet : hp.parFeet || hp.feet} ft</b><span role="img" aria-label="${left} focus left" title="Focus putts left">${pips(left, FOCUS_PER_ROUND)}</span></p><div class="seg focus-btns"><button type="button" class="on" id="call-focus" data-act="call" data-call="focus" aria-label="Focus: time the stroke" title="Focus: time the stroke">${ico("focus")}<span>Focus</span></button><button type="button" id="call-just" data-act="call" data-call="just" aria-label="Just putt" title="Just putt">${ico("putt")}<span>Putt</span></button></div></div>`, token);
     if (v === null) return false;
     if (v === "focus"){
       const q = await focusMeter(token);
@@ -3738,7 +3750,7 @@ function focusMeter(token){
   const period = REDUCED ? 2200 : 1150, t0 = performance.now();
   const pos = t => (1 - Math.cos(2 * Math.PI * ((t - t0) % period) / period)) / 2;
   callPanel(`    <div class="focus-bar" aria-hidden="true"><i class="focus-sweet"></i><i class="focus-mark" id="focus-mark"></i></div>
-    <div class="calls-row one"><button class="btn primary icon-btn" id="call-release" data-act="call" data-call="release" aria-label="Putt" title="Putt">${ico("putt")}</button></div>`);
+    <div class="calls-row one"><button class="btn primary icon-btn" id="call-release" data-act="call" data-call="release" aria-label="Putt" title="Putt">${ico("putt")}<span>Putt</span></button></div>`);
   let raf = 0;
   const draw = () => { const m = document.getElementById("focus-mark"); if (!m) return; m.style.left = (pos(performance.now()) * 100).toFixed(1) + "%"; raf = requestAnimationFrame(draw); };
   draw();
@@ -9851,7 +9863,7 @@ async function h3PlayHole(h, token){
 /* ----- Hooks the round screen uses ----- */
 function h3BoxHTML(){
   if (!h3Wanted() || H3.status === "failed") return "";
-  return `<div class="hole3d" id="hole3d"><div class="h3-wait" id="h3-wait">Make Selection Below</div><div class="h3-stamp" id="h3-stamp" aria-hidden="true"></div><div class="h3-cap" id="h3-cap" hidden></div><div class="h3-ctrls"><button class="btn small" id="h3-speed" data-act="h3Speed" aria-label="Playback speed">${h3Speed()}×</button><button class="btn small icon-btn" id="h3-skip" data-act="h3Skip" aria-label="Skip to the scorecard" title="Skip to the scorecard">${ico("ff")}</button></div></div>`;
+  return `<div class="hole3d" id="hole3d"><div class="h3-wait" id="h3-wait">Make Selection Below</div><div class="h3-stamp" id="h3-stamp" aria-hidden="true"></div><div class="h3-cap" id="h3-cap" hidden></div><div class="h3-ctrls"><button class="btn small" id="h3-speed" data-act="h3Speed" aria-label="Playback speed">${h3Speed()}×</button><button class="btn small icon-btn" id="h3-skip" data-act="h3Skip" aria-label="Skip to the scorecard" title="Skip to the scorecard">${ico("ff")}<span>Skip</span></button></div></div>`;
 }
 /* Called once per hole by playFrom. Returns false if the round was abandoned. */
 async function h3Hole(h, token){
