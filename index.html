@@ -2,7 +2,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="robots" content="noindex,nofollow">
-<!-- 18 Down test build: branch test-combined, commit 62105b2 -->
+<!-- 18 Down test build: branch test-combined, commit 5bbdb67 -->
 <title>18 Down</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&family=Shrikhand&display=swap">
@@ -4303,17 +4303,18 @@ function fmtStrokes(v){ const r = Math.round(Math.abs(v) * 10) / 10; return r ==
 function fmtAvg(v){ const r = Math.round(Math.abs(v) * 10) / 10; return r === 0 ? "even" : (v < 0 ? "−" : "+") + r.toFixed(1); }
 function breakdownHTML(){
   const bd = state.breakdown;
-  if (!bd) return `<h2 class="section-h">What each pick was worth</h2><p class="fine">Working it out.</p>`;
+  if (!bd) return `<details class="grade-box"><summary><span class="section-h">Draft grade</span></summary><p class="fine">Working it out.</p></details>`;
   const b = buildObj();
   const max = Math.max(2, ...SLOTS.map(k => Math.abs(bd.picks[k].gain)));
   const luck = bd.avg - state.round.total;
   const luckText = Math.abs(luck) < 0.5 ? "right about average" : Math.abs(luck).toFixed(1) + (luck > 0 ? " strokes better than average" : " strokes worse than average");
   const g = bd.grade;
   // the draft grade starts collapsed: just the letter, tap to see the best team from the same spins
-  const gradeHTML = g ? `<details class="grade-box"><summary><b class="grade-letter small g-${g.letter[0]}">${g.letter}</b><span class="section-h">Draft grade</span></summary><div class="grade"><div>
+  const gradeHTML = g ? `<div class="grade"><div>
       <p class="fine">${g.left < 0.25 ? "You got about everything out of your spins." : `The best team from the same spins, with each spin in its best spot, averages <b class="tnum">${fmtAvg(g.bestAvg)}</b>: ${g.left.toFixed(1)} stroke${g.left >= 0.95 && g.left < 1.05 ? "" : "s"} better than yours.`}</p>
-      ${g.left >= 0.25 ? `<p class="grade-team">${SLOTS.map(k => `<span class="s-${k}"><small>${SLOT_LABEL[k]}</small>${esc(g.team[k].short || g.team[k].name)}</span>`).join("")}</p>` : ""}</div></div></details>` : "";
-  return `${gradeHTML}<h2 class="section-h">What each pick was worth</h2>
+      ${g.left >= 0.25 ? `<p class="grade-team">${SLOTS.map(k => `<span class="s-${k}"><small>${SLOT_LABEL[k]}</small>${esc(g.team[k].short || g.team[k].name)}</span>`).join("")}</p>` : ""}</div></div>` : "";
+  // the whole draft section starts collapsed: just the letter, tap to see the best team and what each pick was worth
+  return `<details class="grade-box"><summary>${g ? `<b class="grade-letter small g-${g.letter[0]}">${g.letter}</b>` : ""}<span class="section-h">Draft grade</span></summary>${gradeHTML}<h2 class="section-h">What each pick was worth</h2>
     <p class="fine">Strokes gained over a field-level pro in that slot, averaged across ${bd.rounds} simulated rounds on this course.</p>
     <div class="bd-rows">${SLOTS.map(k => {
       const p = bd.picks[k];
@@ -4326,7 +4327,7 @@ function breakdownHTML(){
         ${p.best ? `<span class="alt">Best in that draw: ${esc(p.best.short)} at ${fmtSlot(k, p.best.value)}, worth ${p.best.more.toFixed(1)} more</span>` : ""}
       </div>`;
     }).join("")}</div>
-    <p class="bd-sum">This build averages <b class="tnum">${fmtAvg(bd.avg)}</b> here, and a field-level build averages <b class="tnum">${fmtAvg(bd.field)}</b>. You shot <b class="tnum">${fmtTotal(state.round.total)}</b>, ${luckText}.</p>`;
+    <p class="bd-sum">This build averages <b class="tnum">${fmtAvg(bd.avg)}</b> here, and a field-level build averages <b class="tnum">${fmtAvg(bd.field)}</b>. You shot <b class="tnum">${fmtTotal(state.round.total)}</b>, ${luckText}.</p></details>`;
 }
 function viewResult(){
   const c = course();
