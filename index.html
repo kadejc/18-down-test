@@ -2,7 +2,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="robots" content="noindex,nofollow">
-<!-- 18 Down test build: branch test-combined, commit e90005c -->
+<!-- 18 Down test build: branch test-combined, commit 5643ed3 -->
 <title>18 Down</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&family=Shrikhand&display=swap">
@@ -10192,7 +10192,8 @@ async function h3Putt(hole, from, made, token, why){
   const to = made ? top : {x: end.x + (end.x - from.x) / (dist || 1) * (1.2 + Math.random() * 1.5) + (Math.random() - .5), y: gy + .04, z: end.z + (end.z - from.z) / (dist || 1) * (1.2 + Math.random() * 1.5)};
   const cam = h3ShoulderCam(hole, from);
   H3.camera.fov = cam.fov; H3.camera.updateProjectionMatrix();
-  await h3CamMove(H3.camera.position.clone(), cam.pos, h3LookNow(), cam.look, 380, token);
+  // the camera only moves on slow-motion (clutch) putts; otherwise it holds the shot over the shoulder
+  if (why) await h3CamMove(H3.camera.position.clone(), cam.pos, h3LookNow(), cam.look, 380, token); else h3CamTo(cam.pos, cam.look);
   // Aim, then the pendulum: drop and load into the squat, swing back past the hip, then drive up and through
   const PS = H3_POSES, el = player.userData.arm.userData.elbow, handAt = new H3.THREE.Vector3();
   const hand = () => { player.updateMatrixWorld(true); return el.localToWorld(handAt.set(.02, -.33, .07)); };
@@ -10254,9 +10255,11 @@ async function h3PlayHole(h, token){
   h3Caption("");
   const label = h.rel <= -2 ? "EAGLE!" : h.rel === -1 ? "BIRDIE!" : h.rel === 0 ? "PAR" : h.rel === 1 ? "BOGEY" : "DOUBLE";
   h3Stamp(label, h.rel < 0 ? "good" : h.rel === 0 ? "par" : "bad");
-  H3.camera.fov = 48; H3.camera.updateProjectionMatrix();
-  const pl = hole.player, px = pl.position.x - end.x, pz = pl.position.z - end.z, pd = Math.hypot(px, pz) || 1;
-  await h3CamMove(H3.camera.position.clone(), h3V(end.x - px / pd * 4 + pz / pd * 1.5, gy + 2.1, end.z - pz / pd * 4 - px / pd * 1.5), h3LookNow(), h3V(end.x + px / pd * 1.5, gy + .9, end.z + pz / pd * 1.5), 450, token);
+  if (why){   // clutch putts only: swing round to the basket for the result
+    H3.camera.fov = 48; H3.camera.updateProjectionMatrix();
+    const pl = hole.player, px = pl.position.x - end.x, pz = pl.position.z - end.z, pd = Math.hypot(px, pz) || 1;
+    await h3CamMove(H3.camera.position.clone(), h3V(end.x - px / pd * 4 + pz / pd * 1.5, gy + 2.1, end.z - pz / pd * 4 - px / pd * 1.5), h3LookNow(), h3V(end.x + px / pd * 1.5, gy + .9, end.z + pz / pd * 1.5), 450, token);
+  }
   await h3Tween(h.rel < 0 ? 700 : 400, () => {}, token);
   return true;
 }
