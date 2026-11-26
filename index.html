@@ -2,7 +2,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="robots" content="noindex,nofollow">
-<!-- 18 Down test build: branch graphics-3d, commit 81a692f -->
+<!-- 18 Down test build: branch graphics-3d, commit 17af99a -->
 <title>18 Down</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&family=Shrikhand&display=swap">
@@ -9066,10 +9066,10 @@ function h3Terrain(seed, end, water){
     let y = raw(x, z);
     const dt = Math.hypot(x, z - 1), dg = Math.hypot(x - end.x, z - end.z);
     y = y + (tee - y) * (1 - h3Smooth(3, 9, dt));
-    y = y + (green - y) * (1 - h3Smooth(H3_GREEN, H3_GREEN * 1.9, dg));
     if (water){ const dw = water.island ? dg : Math.hypot(x - water.x, z - water.z); const inR = water.island ? H3_GREEN + 1.5 : water.r, outR = water.island ? H3_GREEN + 28 : water.r + 8;
       if (water.island){ if (dg > inR) y = Math.min(y, water.y - .6 * (1 - h3Smooth(outR - 4, outR, dg)) + (y - water.y + .6) * h3Smooth(outR - 4, outR + 6, dg)); }
       else if (dw < outR) y = Math.min(y, water.y - .5 + (y - water.y + .5) * h3Smooth(inR - 2, outR, dw)); }
+    y = y + (green - y) * (1 - h3Smooth(H3_GREEN, H3_GREEN * 1.9, dg));   // last, so nothing digs into the green
     return y - tee;
   };
 }
@@ -9085,7 +9085,13 @@ function h3BuildHole(h, c){
   // Water: island greens get a lake all around; some OB holes get a pond along one side
   let water = null;
   if (h.ob === 2) water = {island: true, x: end.x, z: end.z};
-  else if (h.ob && rng() < .55){ const p = P(.45 + rng() * .2), side = bend > 0 ? -1 : 1; water = {x: p.x + side * (fwHalf + 14), z: p.z, r: 14 + rng() * 6}; }
+  else if (h.ob && rng() < .55){
+    // a pond beside the approach, kept well clear of the green
+    const side = bend > 0 ? -1 : 1, r = 9 + rng() * 5, p = P(.15 + rng() * .2);
+    water = {x: p.x + side * (fwHalf + r + 3), z: p.z, r};
+    const d = Math.hypot(water.x - end.x, water.z - end.z), need = H3_GREEN * 1.9 + r + 10;
+    if (d < need){ water.x = end.x + (water.x - end.x) / (d || 1) * need; water.z = end.z + (water.z - end.z) / (d || 1) * need; }
+  }
   const ground0 = h3Terrain(hashStr(c.id + "|t|" + h.n), end, null);
   if (water) water.y = (water.island ? ground0(end.x, end.z) : ground0(water.x, water.z)) - .15;
   const ht = h3Terrain(hashStr(c.id + "|t|" + h.n), end, water);
@@ -9280,9 +9286,9 @@ function h3Person(){
   const head = part(new T.SphereGeometry(.115, 20, 14), skin, 0, 1.72, 0);
   for (const ex of [-.04, .04]) part(new T.SphereGeometry(.012, 8, 6), m(0x10272a), ex, 1.73, .105);
   h3Hat(g, L, m);
-  // arms: short sleeve, then skin
-  const arm = new T.Group(); arm.position.set(.22, 1.48, 0); g.add(arm);
-  const off = new T.Group(); off.position.set(-.22, 1.48, 0); g.add(off);
+  // arms: short sleeve, then skin. The figure faces +z, so the right (putting) arm is on the -x side.
+  const arm = new T.Group(); arm.position.set(-.22, 1.48, 0); g.add(arm);
+  const off = new T.Group(); off.position.set(.22, 1.48, 0); g.add(off);
   for (const a of [arm, off]){
     const sl = new T.Mesh(new T.CylinderGeometry(.06, .055, .16, 10), shirtMat); sl.position.y = -.07; sl.castShadow = true; a.add(sl);
     const fa = new T.Mesh(new T.CylinderGeometry(.045, .04, .5, 10), skin); fa.position.y = -.38; fa.castShadow = true; a.add(fa);
@@ -9385,19 +9391,25 @@ async function h3Putt(hole, from, made, token, why){
   const mid = h3V((from.x + end.x) / 2, gy + .8, (from.z + end.z) / 2), sx = -(end.z - from.z) / (dist || 1), sz = (end.x - from.x) / (dist || 1);
   // the TV putting shot: over the putter's shoulder at the basket, zoomed in a little on longer putts
   const ux = (end.x - from.x) / (dist || 1), uz = (end.z - from.z) / (dist || 1);
-  const camPos = h3V(from.x - ux * 2.1 + sx * .75, gy + 1.75, from.z - uz * 2.1 + sz * .75);
+  // the more it zooms, the further back it stands, so the putter stays in frame
+  const fov = Math.max(24, 46 - dist * 1.1), back = 2.1 * 46 / fov, lat = back * Math.tan(fov * Math.PI / 360 * .55);
+  const camPos = h3V(from.x - ux * back + sx * lat, gy + 1.75, from.z - uz * back + sz * lat);
   mid.set(end.x, gy + .75, end.z);
-  H3.camera.fov = Math.max(24, 46 - dist * 1.1); H3.camera.updateProjectionMatrix();
+  H3.camera.fov = fov; H3.camera.updateProjectionMatrix();
   await h3CamMove(H3.camera.position.clone(), camPos, h3LookNow(), mid, 380, token);
-  disc.position.set(from.x, hole.ht(from.x, from.z) + 1, from.z); disc.rotation.z = 0;
-  const arm = player.userData.arm;
-  if (!(await h3Tween(260, k => { arm.rotation.x = .9 * k; }, token))) return false;   // the putter draws back
+  // The disc sits in the right hand through the backswing and leaves it at release
+  const arm = player.userData.arm, handAt = new H3.THREE.Vector3();
+  const hand = () => { arm.rotation.z = -.12; player.updateMatrixWorld(true); return arm.localToWorld(handAt.set(.03, -.64, .06)); };
+  arm.rotation.x = 0; disc.position.copy(hand()); disc.rotation.set(0, 0, 0);
+  if (!(await h3Tween(260, k => { arm.rotation.x = .9 * k; disc.position.copy(hand()); }, token))) return false;   // the putter draws back
   if (why) H3.timeScale = .45;   // clutch putts in slow motion
   h3TrailReset(hole);
+  const REL = .2, start = new H3.THREE.Vector3();
   const ok = await h3Tween(Math.max(450, Math.min(1100, dist * 150)), k => {
-    const e = h3Ease(k);
-    arm.rotation.x = .9 - 1.8 * Math.min(1, k * 3);
-    disc.position.set(from.x + (to.x - from.x) * e, disc.position.y + ((hole.ht(from.x, from.z) + 1) + (to.y - hole.ht(from.x, from.z) - 1) * e + Math.sin(Math.PI * e) * Math.min(1.1, dist * .11) - disc.position.y), from.z + (to.z - from.z) * e);
+    arm.rotation.x = .9 - 1.8 * Math.min(1, k * 3);   // the arm swings through and follows through toward the basket
+    if (k < REL){ disc.position.copy(hand()); start.copy(disc.position); return; }
+    const e = h3Ease((k - REL) / (1 - REL));
+    disc.position.set(start.x + (to.x - start.x) * e, start.y + (to.y - start.y) * e + Math.sin(Math.PI * e) * Math.min(1.1, dist * .11), start.z + (to.z - start.z) * e);
     disc.rotation.y += .3; h3TrailPush(hole, disc.position);
   }, token);
   H3.timeScale = 1;
