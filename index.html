@@ -2,7 +2,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="robots" content="noindex,nofollow">
-<!-- 18 Down test build: branch graphics-3d, commit 86d6490 -->
+<!-- 18 Down test build: branch graphics-3d, commit 9f0ff6d -->
 <title>18 Down</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&family=Shrikhand&display=swap">
@@ -1404,6 +1404,9 @@ const SFX_PLAY = {
   ace:    () => { sfxChains(0, 0.2); [659, 784, 988, 1319, 1568].forEach((f, i) => sfxBell(f, 0.3 + i * 0.12, 0.08, 1.6)); sfxCrowd(0.3, 2.4, 0.08); },
   bogey:  () => sfxTone(294, 0, 0.45, 0.08, "sine", 247, 0.02),
   double: () => { sfxTone(294, 0, 0.4, 0.08, "sine", 247, 0.02); sfxTone(233, 0.22, 0.6, 0.08, "sine", 196, 0.02); },
+  whir:   () => sfxNoise(0, 1.5, 0.05, "bandpass", 520, 0.6, 240, 0.05),                                                                   // the wheel spinning down
+  flap:   () => { const f = 1250 + Math.random() * 250; sfxTone(f, 0, 0.035, 0.045, "sine", f * .78, 0.002); sfxNoise(0, 0.025, 0.03, "bandpass", 2600, 2.5, 0, 0.002); },   // the flapper clicking past a peg
+  land:   () => { sfxTone(160, 0, 0.25, 0.16, "sine", 105, 0.006); sfxBell(988, 0.06, 0.06, 0.9); },                                          // it settles on the course
   cash:   () => { for (let i = 0; i < 5; i++) sfxBell(2100 + Math.random() * 900, i * 0.06, 0.035, 0.45); sfxBell(1568, 0.05, 0.06, 0.8); },   // a few soft coins
 };
 function sfx(name){
@@ -2968,11 +2971,13 @@ function landCourse(){
   const order = shuffled(COURSES, Math.random).filter(c => c.id !== state.courseId);
   let i = 0;
   const token = ++playToken;
-  const finish = () => { state.landing = false; render("start-draft"); };
+  const finish = () => { state.landing = false; if (!REDUCED) sfx("land"); render("start-draft"); };
   if (REDUCED) return finish();
+  sfx("whir");   // the course wheel: a soft whir, a click for each name as it slows, then it settles
   const tick = () => {
     if (token !== playToken) return;
     if (i >= Math.min(order.length, 8)){ finish(); return; }
+    sfx("flap");
     nameEl.textContent = order[i++].name;
     setTimeout(tick, 70 + i * 22);
   };
