@@ -2,7 +2,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="robots" content="noindex,nofollow">
-<!-- 18 Down test build: branch test-combined, commit 5643ed3 -->
+<!-- 18 Down test build: branch test-combined, commit 6ccbd11 -->
 <title>18 Down</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&family=Shrikhand&display=swap">
@@ -10267,7 +10267,7 @@ async function h3PlayHole(h, token){
 /* ----- Hooks the round screen uses ----- */
 function h3BoxHTML(){
   if (!h3Wanted() || H3.status === "failed") return "";
-  return `<div class="hole3d" id="hole3d"><div class="h3-wait" id="h3-wait">Make Selection Below</div><div class="h3-stamp" id="h3-stamp" aria-hidden="true"></div><div class="h3-cap" id="h3-cap" hidden></div><div class="h3-ctrls"><button class="btn small" id="h3-speed" data-act="h3Speed" aria-label="Playback speed">${h3Speed()}×</button><button class="btn small icon-btn" id="h3-skip" data-act="h3Skip" aria-label="Skip to the scorecard" title="Skip to the scorecard">${ico("ff")}<span>Skip</span></button></div></div>`;
+  return `<div class="hole3d" id="hole3d"><div class="h3-wait" id="h3-wait">Make Selection Below</div><div class="h3-stamp" id="h3-stamp" aria-hidden="true"></div><div class="h3-cap" id="h3-cap" hidden></div><div class="h3-ctrls"><button class="btn small" id="h3-speed" data-act="h3Speed" aria-label="Playback speed">${h3Speed()}×</button><button class="btn small icon-btn" id="h3-skip" data-act="h3Skip" aria-label="Skip to the scorecard" title="Skip to the scorecard">${ico("ff")}</button></div></div>`;
 }
 /* Called once per hole by playFrom. Returns false if the round was abandoned. */
 async function h3Hole(h, token){
