@@ -2,7 +2,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="robots" content="noindex,nofollow">
-<!-- 18 Down test build: branch test-combined, commit 96c23ac -->
+<!-- 18 Down test build: branch test-combined, commit af737f7 -->
 <title>18 Down</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&family=Shrikhand&display=swap">
@@ -1459,7 +1459,7 @@ span.pips, .calls-h span.pips { display: inline-flex; gap: 4px; vertical-align: 
 .park-wrap .park-head h1 { font-size: clamp(34px, 10vw, 52px); }
 .park-wrap .hub-hero { flex: none; }
 .park-box { flex: 1 1 0; min-height: 0; display: grid; place-items: start center; container-type: size; }
-.park-box .park { width: min(100cqw, 50cqh); }
+.park-box .park { width: min(100cqw, calc(100cqh * var(--pkr, .5))); }
 .gear-btn { order: 3; width: 40px; height: 40px; border-radius: 50%; border: 2px solid var(--chalk); background: rgba(4,24,27,.5); color: var(--chalk); display: grid; place-items: center; padding: 0; cursor: pointer; flex: none; }
 .gear-btn .ico { width: 22px; height: 22px; }
 .park-head .money { margin-left: auto; }
@@ -1483,6 +1483,11 @@ html, body { margin: 0; }
 .park-box .spot .sign { min-width: clamp(70px, 29cqw, 104px); max-width: clamp(96px, 42cqw, 150px); padding: clamp(2px, 1cqw, 4px) clamp(5px, 2.5cqw, 9px); }
 .park-box .spot .sign b { font-size: clamp(11px, 4.4cqw, 16px); }
 .park-box .spot .sign small { font-size: clamp(9px, 3.3cqw, 12px); }
+
+/* Animations inside moved groups turn around their own shapes */
+.park-map .pk-flag { transform-box: fill-box; transform-origin: 0% 50%; }
+.park-map .pk-arm { transform-box: fill-box; transform-origin: 100% 0%; }
+.park.compact .spot .sign small { display: none; }
 </style>
 <main id="app"></main>
 <script type="application/json" id="edits">{}</script>
@@ -3840,7 +3845,7 @@ const HOME_BTN = `<button class="home-btn" data-act="newRun" aria-label="Home"><
 function frameScreen(){
   if (typeof fr !== "undefined"){ if (state.screen !== "friends"){ fr.view = "main"; fr.who = null; } else if (fr.view === "person") frDrawFig(); }
   if (typeof dressMe === "function") dressMe(app);
-  if (state.screen === "home") return;
+  if (state.screen === "home"){ if (typeof parkFit === "function") parkFit(); return; }
   const bar = app.querySelector(".bar");
   if (bar && !bar.querySelector(".home-btn")){ bar.insertAdjacentHTML("afterbegin", HOME_BTN); bar.classList.add("has-home"); }
   app.querySelectorAll('button[data-act="newRun"]:not(.home-btn)').forEach(b => {
@@ -9258,12 +9263,50 @@ function parkTree(x, y, s, pine){
     + blobs.map(([dx, dy, r], i) => `<circle cx="${x + dx * s}" cy="${y + dy * s}" r="${r * s}" fill="${["#2c6b45", "#2a6641", "#24603d"][i]}"/>`).join("")
     + `<path d="M${x + 2 * s} ${y - 26 * s} A10 10 0 0 1 ${x + 12.5 * s} ${y - 12 * s} Q${x + 6 * s} ${y - 6.5 * s} ${x + 1 * s} ${y - 8 * s} Q${x + 7 * s} ${y - 16 * s} ${x + 2 * s} ${y - 26 * s}Z" fill="rgba(16,39,42,.2)"/>`;
 }
-function parkSVG(){
+/* The park map is drawn to fit the space it gets: H is its height for a width of 360. The sky and woods take any
+   spare height; the three rows below (field and green with the pond, board and shop, the hangout) scale by s when
+   space is short; the parking lot sits on the bottom. The tap spots are placed from the same numbers. */
+function parkLayout(H){
+  H = Math.round(Math.max(470, Math.min(980, H || 720)));
+  const s = Math.max(.62, Math.min(1.1, (H - 46 - Math.min(210, Math.max(150, H * .3))) / 440)), T = Math.round(H - 46 - s * 440), ox = (360 - 360 * s) / 2;
+  const ya = T + 2, yb = ya + 190 * s, yc = yb + 140 * s;
+  const at = (y0) => (x, y) => [+(ox + x * s).toFixed(1), +(y0 + y * s).toFixed(1)];
+  return {H, s, T, ox, ya, yb, yc, A: at(ya), B: at(yb), C: at(yc)};
+}
+function parkSpotStyle(L){
+  const box = (f, x, y, w, h) => { const [gx, gy] = f(x, y); return `left:${(gx / 360 * 100).toFixed(2)}%;top:${(gy / L.H * 100).toFixed(2)}%;width:${(w * L.s / 360 * 100).toFixed(2)}%;height:${(h * L.s / L.H * 100).toFixed(2)}%`; };
+  const [px, py] = L.B(148, 35), [, cy] = L.C(0, -9);
+  return {
+    woods: `left:0;width:100%;top:${((L.T - 96) / L.H * 100).toFixed(2)}%;height:${(96 / L.H * 100).toFixed(2)}%`,
+    field: box(L.A, 14, 12, 180, 174), green: box(L.A, 198, 22, 155, 120),
+    board: box(L.B, 25, 26, 144, 96), shop: box(L.B, 198, 14, 155, 126), friends: box(L.C, 4, -4, 352, 116),
+    pin: `left:${(px / 360 * 100).toFixed(2)}%;top:${(py / L.H * 100).toFixed(2)}%`, live: `top:${(cy / L.H * 100).toFixed(2)}%`,
+  };
+}
+/* A smooth path through points (Catmull-Rom as cubic Beziers). */
+function pkSmooth(P){
+  let d = `M${P[0][0]} ${P[0][1]}`;
+  for (let i = 0; i < P.length - 1; i++){
+    const p0 = P[i - 1] || P[i], p1 = P[i], p2 = P[i + 1], p3 = P[i + 2] || p2;
+    const c1 = [p1[0] + (p2[0] - p0[0]) / 6, p1[1] + (p2[1] - p0[1]) / 6], c2 = [p2[0] - (p3[0] - p1[0]) / 6, p2[1] - (p3[1] - p1[1]) / 6];
+    d += ` C${c1.map(v => v.toFixed(1)).join(" ")} ${c2.map(v => v.toFixed(1)).join(" ")} ${p2.join(" ")}`;
+  }
+  return d;
+}
+function pkBranch(a, b, sag){ const m = [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2 + (sag || 6)]; return `M${a.join(" ")} Q${m.map(v => v.toFixed(1)).join(" ")} ${b.join(" ")}`; }
+function parkSVG(H){
+  const L = parkLayout(H), dy = L.T - 196, row = (y0, inner) => `<g transform="translate(${L.ox.toFixed(1)} ${y0.toFixed(1)}) scale(${L.s.toFixed(3)})">${inner}</g>`;
   const lines = [0, 1, 2, 3, 4, 5].map(i => {
     const t = i / 5, y = 384 - t * 156, xl = 20 + t * 22, xr = 186 - t * 22;
     return `<line x1="${xl}" y1="${y}" x2="${xr}" y2="${y}" stroke="var(--chalk)" stroke-opacity="${i ? .55 : .9}" stroke-width="${i ? 1.2 : 2}"/>${i ? `<text x="${xl + 4}" y="${y - 3}" font-family="var(--label)" font-weight="700" font-size="9" fill="var(--chalk)" fill-opacity=".85">${i * 100}</text>` : ""}`;
   }).join("");
-  return `<svg class="park-map" viewBox="0 0 360 720" aria-hidden="true">
+  const pa = L.A(194, 100), pb = L.B(183, 82), pc = L.C(180, 50);
+  const main = pkSmooth([[190, L.T - 6], pa, pb, pc, [180, L.H + 6]]);
+  const branches = [pkBranch(pa, L.A(214, 92), 2), pkBranch(L.A(193, 186), L.A(112, 190), 4), pkBranch(pb, L.B(150, 118), 6), pkBranch(pb, L.B(250, 142), 6), pkBranch(pc, L.C(118, 66), 6), pkBranch(pc, L.C(244, 66), 6)].join(" ");
+  const trees = PARK_TREES.map(([x, y, sz, pine]) => [x, y + dy, sz, pine]);
+  const bush = (x, y, r) => `<ellipse cx="${x + r * .5}" cy="${y + r * .7}" rx="${r * 1.3}" ry="${r * .35}" fill="#04181b" fill-opacity=".25"/><circle cx="${x - r * .6}" cy="${y}" r="${r * .75}" fill="#24603d" stroke="var(--ink)" stroke-width=".8"/><circle cx="${x + r * .6}" cy="${y + 1}" r="${r * .7}" fill="#2a6641" stroke="var(--ink)" stroke-width=".8"/><circle cx="${x}" cy="${y - r * .4}" r="${r * .8}" fill="#2c6b45" stroke="var(--ink)" stroke-width=".8"/><circle cx="${x - r * .2}" cy="${y - r * .7}" r="${r * .3}" fill="#fff" fill-opacity=".12"/>`;
+  const flowers = (x, y) => [[0, 0, "#f2417f"], [5, 2, "var(--band)"], [-4, 3, "#fff"], [2, -3, "var(--tang)"], [8, -1, "#fff"]].map(([a, b, c]) => `<circle cx="${x + a}" cy="${y + b}" r="1.6" fill="${c}" stroke="var(--ink)" stroke-width=".4"/>`).join("");
+  return `<svg class="park-map" viewBox="0 0 360 ${L.H}" aria-hidden="true">
   <defs><linearGradient id="pk-sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="var(--sky-top)"/><stop offset="1" stop-color="var(--sky-low)"/></linearGradient>
     <radialGradient id="pk-sun"><stop offset="0" stop-color="#ffe9a0" stop-opacity=".75"/><stop offset=".45" stop-color="#ffd23f" stop-opacity=".22"/><stop offset="1" stop-color="#ffd23f" stop-opacity="0"/></radialGradient>
     <linearGradient id="pk-mf" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2b7a80"/><stop offset="1" stop-color="var(--mtn-far)"/></linearGradient>
@@ -9279,34 +9322,39 @@ function parkSVG(){
     <linearGradient id="pk-lot" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8b9698"/><stop offset="1" stop-color="#6c7678"/></linearGradient>
     <radialGradient id="pk-vig" cx=".5" cy=".45" r=".75"><stop offset=".6" stop-color="#04181b" stop-opacity="0"/><stop offset="1" stop-color="#04181b" stop-opacity=".38"/></radialGradient>
     <linearGradient id="pk-fade" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1a5a44" stop-opacity="0"/><stop offset="1" stop-color="#1a5a44"/></linearGradient>
+    <radialGradient id="pk-pond" cx=".4" cy=".35" r=".7"><stop offset="0" stop-color="#7fd3e6"/><stop offset=".7" stop-color="#3a98b4"/><stop offset="1" stop-color="#2a7590"/></radialGradient>
     <filter id="pk-soft" x="-30%" y="-80%" width="160%" height="260%"><feGaussianBlur stdDeviation="2.2"/></filter>
   </defs>
-  <rect width="360" height="130" fill="url(#pk-sky)"/>
+  <rect width="360" height="${L.T + 10}" fill="url(#pk-sky)"/>
   <circle cx="300" cy="34" r="46" fill="url(#pk-sun)"/>
   <circle cx="300" cy="34" r="15" fill="#ffd23f"/><circle cx="296" cy="30" r="9" fill="#fff1a8" fill-opacity=".55"/>
   <g class="pk-cloud c1" fill="var(--chalk)" fill-opacity=".85"><ellipse cx="0" cy="26" rx="20" ry="7"/><ellipse cx="-9" cy="21" rx="10" ry="7"/><ellipse cx="7" cy="19" rx="12" ry="8"/></g>
   <g class="pk-cloud c2" fill="var(--chalk)" fill-opacity=".7"><ellipse cx="0" cy="52" rx="16" ry="5.5"/><ellipse cx="-6" cy="48" rx="8" ry="5.5"/><ellipse cx="6" cy="47" rx="9" ry="6"/></g>
   <g class="pk-cloud c3" fill="var(--chalk)" fill-opacity=".6"><ellipse cx="0" cy="14" rx="13" ry="4.5"/><ellipse cx="4" cy="10" rx="8" ry="5"/></g>
   <g class="pk-birds" fill="none" stroke="var(--ink)" stroke-width="1.2" stroke-linecap="round"><path d="M0 40 q3 -3 6 0 q3 -3 6 0"/><path d="M14 46 q2.5 -2.5 5 0 q2.5 -2.5 5 0"/></g>
+  <g transform="translate(0 ${dy})">
   <path d="M-10 118 L40 58 L74 92 L120 34 L168 96 L214 48 L262 100 L306 56 L370 112 L370 140 L-10 140 Z" fill="url(#pk-mf)"/>
   <path d="M40 58 L74 92 L74 140 L48.5 140 Z M120 34 L168 96 L168 140 L132.0 140 Z M214 48 L262 100 L262 140 L226.0 140 Z M306 56 L370 112 L370 140 L322.0 140 Z" fill="#04181b" fill-opacity="0.22"/>
   <rect y="70" width="360" height="70" fill="url(#pk-haze)"/>
   <path d="M120 34 L132 50 L124 48 L116 56 L108 50 Z M214 48 L226 64 L218 62 L210 70 L202 64 Z M306 56 L316 70 L308 68 L300 74 L294 70 Z" fill="var(--chalk)" fill-opacity=".85"/>
   <path d="M-10 130 L50 104 L110 126 L180 100 L250 124 L310 102 L370 122 L370 200 L-10 200 Z" fill="url(#pk-mn)"/>
   <path d="M50 104 L110 126 L110 200 L65.0 200 Z M180 100 L250 124 L250 200 L197.5 200 Z M310 102 L370 122 L370 200 L325.0 200 Z" fill="#04181b" fill-opacity="0.2"/>
-  <rect y="186" width="360" height="534" fill="url(#pk-grass)"/>
-  <rect y="150" width="360" height="40" fill="url(#pk-fade)"/>
-  <g fill="#fff" fill-opacity=".035">${[0, 1, 2, 3, 4, 5, 6, 7, 8, 9].map(i => `<rect y="${246 + i * 46}" width="360" height="23"/>`).join("")}</g>
-  <g fill="#04181b" fill-opacity=".28" filter="url(#pk-soft)">${PARK_TREES.map(([x, y, s]) => `<ellipse cx="${x + 5 * s}" cy="${y + 1}" rx="${10 * s}" ry="${2.6 * s}"/>`).join("")}</g>
-  <g>${PARK_TREES.map(([x, y, s, p], i) => `<g class="pk-sway" style="animation-delay:${-(i % 7) * .6}s;transform-origin:${x}px ${y}px">${parkTree(x, y, s, p)}</g>`).join("")}</g>
-  <!-- paths -->
+  </g>
+  <rect y="${L.T - 10}" width="360" height="${L.H - L.T + 10}" fill="url(#pk-grass)"/>
+  <rect y="${L.T - 46}" width="360" height="40" fill="url(#pk-fade)"/>
+  <g fill="#fff" fill-opacity=".035">${Array.from({length: Math.ceil((L.H - L.T) / 46)}, (_, i) => `<rect y="${L.T + 50 + i * 46}" width="360" height="23"/>`).join("")}</g>
+  <g fill="#04181b" fill-opacity=".28" filter="url(#pk-soft)">${trees.map(([x, y, sz]) => `<ellipse cx="${x + 5 * sz}" cy="${y + 1}" rx="${10 * sz}" ry="${2.6 * sz}"/>`).join("")}</g>
+  <g>${trees.map(([x, y, sz, pine], i) => `<g class="pk-sway" style="animation-delay:${-(i % 7) * .6}s;transform-origin:${x}px ${y}px">${parkTree(x, y, sz, pine)}</g>`).join("")}</g>
+  <!-- paths: one smooth trail from the woods to the lot, with a spur to each spot -->
   <g fill="none" stroke-linecap="round" stroke-linejoin="round">
-    <path id="pk-pm" d="M190 190 C193 222 200 244 196 262 C190 300 185 380 190 430 C195 482 180 540 180 600 L180 690"/><path id="pk-pb" d="M190 430 C150 432 120 438 96 446 M196 262 C226 270 246 278 262 290 M190 430 C230 436 252 440 270 452"/>
-    <g stroke="#04181b" stroke-opacity=".22" filter="url(#pk-soft)" transform="translate(1.5 2)"><use href="#pk-pm" stroke-width="15"/><use href="#pk-pb" stroke-width="11"/></g>
-    <g stroke="#a98652"><use href="#pk-pm" stroke-width="14"/><use href="#pk-pb" stroke-width="10"/></g>
-    <g stroke="#c9a66b"><use href="#pk-pm" stroke-width="11"/><use href="#pk-pb" stroke-width="7.5"/></g>
+    <path id="pk-pm" d="${main}"/><path id="pk-pb" d="${branches}"/>
+    <g stroke="#04181b" stroke-opacity=".22" filter="url(#pk-soft)" transform="translate(1.5 2)"><use href="#pk-pm" stroke-width="15"/><use href="#pk-pb" stroke-width="${(11 * L.s).toFixed(1)}"/></g>
+    <g stroke="#a98652"><use href="#pk-pm" stroke-width="14"/><use href="#pk-pb" stroke-width="${(10 * L.s).toFixed(1)}"/></g>
+    <g stroke="#c9a66b"><use href="#pk-pm" stroke-width="11"/><use href="#pk-pb" stroke-width="${(7.5 * L.s).toFixed(1)}"/></g>
     <g stroke="#e2c891" stroke-opacity=".45" filter="url(#pk-soft)"><use href="#pk-pm" stroke-width="4"/><use href="#pk-pb" stroke-width="2.5"/></g>
   </g>
+  ${bush(10, L.yb + 150 * L.s, 9)}${bush(352, L.ya + 172 * L.s, 8)}${bush(8, L.ya + 40 * L.s, 7)}
+  ${row(L.ya, `<g transform="translate(0 -210)">
   <!-- distance field -->
   <path d="M24 390 L192 390 L168 232 L46 232 Z" fill="#04181b" fill-opacity=".25" filter="url(#pk-soft)"/>
   <path d="M20 384 L186 384 L164 228 L42 228 Z" fill="url(#pk-field)"/>
@@ -9316,6 +9364,7 @@ function parkSVG(){
   <rect x="94" y="384" width="18" height="10" fill="#8f7f6a" stroke="var(--ink)" stroke-width="1"/>
   <ellipse cx="88" cy="300" rx="4" ry="1.6" fill="var(--band)" stroke="var(--ink)" stroke-width=".6"/><ellipse cx="130" cy="262" rx="4" ry="1.6" fill="var(--tang)" stroke="var(--ink)" stroke-width=".6"/><ellipse cx="110" cy="276" rx="4" ry="1.6" fill="var(--water-edge)" stroke="var(--ink)" stroke-width=".6"/>
   <g class="pk-throw"><ellipse cx="103" cy="380" rx="4.5" ry="1.7" fill="var(--chalk)" stroke="var(--ink)" stroke-width=".7"/></g>
+  </g><g transform="translate(-2 -236)">
   <!-- putting green -->
   <ellipse cx="288" cy="326" rx="72" ry="50" fill="#04181b" fill-opacity=".3" filter="url(#pk-soft)"/>
   <ellipse cx="282" cy="318" rx="70" ry="50" fill="url(#pk-green)"/>
@@ -9339,6 +9388,19 @@ function parkSVG(){
     <path class="pk-arm" d="M314 323 L308 326" stroke="var(--me-skin, var(--skin))" stroke-width="2" stroke-linecap="round"/>
   </g>
   <ellipse class="pk-putt" cx="306" cy="326" rx="3.4" ry="1.3" style="fill:var(--me-disc, var(--band))" stroke="var(--ink)" stroke-width=".6"/>
+  </g>
+  <!-- the pond, the bench and some flowers -->
+  <ellipse cx="304" cy="176" rx="50" ry="15" fill="#04181b" fill-opacity=".25" filter="url(#pk-soft)"/>
+  <ellipse cx="300" cy="172" rx="48" ry="14" fill="url(#pk-pond)" stroke="#2a6a52" stroke-width="2.4"/>
+  <path d="M272 168 q8 -3 16 0 M300 176 q10 -3 20 0" fill="none" stroke="#fff" stroke-opacity=".5" stroke-width="1"/>
+  <g fill="#4fb070" stroke="var(--ink)" stroke-width=".5"><path d="M318 166 a4 2 0 1 0 6 1 l-3 -1 z"/><path d="M286 177 a3.6 1.8 0 1 0 5 1 l-2.5 -1 z"/></g>
+  <circle cx="321" cy="166" r="1.3" fill="#f2417f"/>
+  <g stroke="#3a6b3a" stroke-width="1.2" stroke-linecap="round"><path d="M344 172 l-2 -12 M347 172 l1 -14 M350 172 l3 -10"/></g>
+  <g fill="#7a4a2b"><rect x="342" y="157" width="2.2" height="5" rx="1"/><rect x="348" y="155" width="2.2" height="5" rx="1"/></g>
+  <ellipse cx="256" cy="180" rx="6" ry="3.4" fill="#8a9396" stroke="var(--ink)" stroke-width=".8"/><ellipse cx="349" cy="182" rx="4" ry="2.4" fill="#9aa3a6" stroke="var(--ink)" stroke-width=".7"/>
+  <g transform="translate(222 150)"><ellipse cx="11" cy="13" rx="14" ry="2.5" fill="#04181b" fill-opacity=".25"/><rect x="0" y="4" width="22" height="4" rx="1" fill="#8a5a35" stroke="var(--ink)" stroke-width=".8"/><rect x="0" y="0" width="22" height="2.6" rx="1" fill="#8a5a35" stroke="var(--ink)" stroke-width=".7"/><path d="M3 8 v5 M19 8 v5" stroke="#5a3d2b" stroke-width="1.6"/></g>
+  ${flowers(208, 176)}${flowers(26, 196)}`)}
+  ${row(L.yb, `<g transform="translate(0 -394)">
   <!-- bulletin board -->
   <ellipse cx="104" cy="516" rx="66" ry="6" fill="#04181b" fill-opacity=".35" filter="url(#pk-soft)"/>
   <rect x="44" y="452" width="5" height="62" fill="#5a3d2b"/><rect x="148" y="452" width="5" height="62" fill="#5a3d2b"/>
@@ -9371,7 +9433,9 @@ function parkSVG(){
   <path d="M224 470 L240 470 L226 492 L224 492 Z M246 470 L252 470 L230 510 L226 510 Z" fill="#fff" fill-opacity=".28"/>
   <line x1="254" y1="468" x2="254" y2="512" stroke="var(--ink)" stroke-width="1"/>
   <rect x="298" y="476" width="30" height="54" fill="#8a5a35" stroke="var(--ink)" stroke-width="1.6"/><circle cx="322" cy="504" r="2" fill="var(--band)"/>
-${parkHangout()}
+  </g>${flowers(346, 140)}${flowers(206, 138)}`)}
+  ${row(L.yc, `<g transform="translate(0 -552)">${parkHangout()}</g>`)}
+  <g transform="translate(0 ${L.H - 720})">
   <!-- parking -->
   <g transform="translate(0 120)">
   <rect y="548" width="360" height="52" fill="url(#pk-lot)"/>
@@ -9380,10 +9444,21 @@ ${parkHangout()}
   <g stroke="var(--chalk)" stroke-opacity=".7" stroke-width="1.5">${[20, 60, 100, 240, 280, 320].map(x => `<line x1="${x}" y1="552" x2="${x}" y2="580"/>`).join("")}</g>
   <rect x="68" y="556" width="26" height="18" rx="4" fill="var(--water-edge)" stroke="var(--ink)" stroke-width="1"/><rect x="288" y="556" width="26" height="18" rx="4" fill="var(--tang)" stroke="var(--ink)" stroke-width="1"/>
 </g>
-  <rect width="360" height="720" fill="url(#pk-light)" pointer-events="none"/>
-  <rect width="360" height="720" fill="url(#pk-vig)" pointer-events="none"/>
+  </g>
+  <rect width="360" height="${L.H}" fill="url(#pk-light)" pointer-events="none"/>
+  <rect width="360" height="${L.H}" fill="url(#pk-vig)" pointer-events="none"/>
 </svg>`;
 }
+/* The map's height for the space under the career card: a first guess from the window, then measured. */
+function parkGuessH(){ const w = Math.min(window.innerWidth || 390, 560) - 32, h = (window.innerHeight || 844) - 210; return 360 * h / Math.max(200, w); }
+function parkFit(){
+  const box = document.querySelector(".park-box"); if (!box) return;
+  const w = Math.min(box.clientWidth, 528), h = box.clientHeight; if (!w || !h) return;
+  const want = Math.round(360 * h / w);
+  if (Math.abs(want - (ui.parkH || 0)) > 6){ ui.parkH = want; setTimeout(() => { if (state.screen === "home") render(); }, 0); }
+}
+let PARK_RESIZE = 0;
+window.addEventListener("resize", () => { clearTimeout(PARK_RESIZE); PARK_RESIZE = setTimeout(() => { if (state.screen === "home") parkFit(); }, 150); });
 /* A small person for the map, standing with feet at (x, y), or sitting on a seat at (x, y). i picks the colors;
    pose is "stand", "wave", "sit" or "throw"; face is 1 (right) or -1 (left); s is the size. */
 function pkPerson(x, y, i, pose, face, s){
@@ -9433,7 +9508,8 @@ function parkHangout(){
    spend), then the park itself with every place to go. */
 function viewHome(){
   const me = meLoad(), n = parkNotes(), bal = meBalance(me);
-  const spot = (id, act, cls, name, note, extra) => `<button class="spot ${cls}" id="${id}" data-act="${act}"${extra || ""}><span class="sign"><b>${name}</b><small>${esc(note)}</small></span></button>`;
+  const PL = parkLayout(ui.parkH || parkGuessH()), SP = parkSpotStyle(PL), SPK = {"s-woods": "woods", "s-field": "field", "s-green": "green", "s-board": "board", "s-shop": "shop", "s-friends": "friends"};
+  const spot = (id, act, cls, name, note, extra) => `<button class="spot ${cls}" id="${id}" data-act="${act}" style="${SP[SPK[cls.split(" ")[0]]] || ""}"${extra || ""}><span class="sign"><b>${name}</b><small>${esc(note)}</small></span></button>`;
   const L = typeof ladderLoad === "function" ? ladderLoad() : null, P = typeof mePrestige === "function" ? mePrestige(me) : 0;
   const lvl = L ? LADDER[L.level] : null, cur = L && L.current && ladderTierOf(L.current);
   const need = !lvl ? "" : lvl.level === LADDER.length - 1 ? "Win Worlds to be world champion" : `Top ${lvl.up} earns the ${LADDER[lvl.level + 1].name}`;
@@ -9445,17 +9521,17 @@ function viewHome(){
       <button class="btn primary" id="hub-play" data-act="careerEvent" data-id="${(cur || lvl).id}">${cur ? "Resume" : lvl.home ? "Play" : "Venues"}</button>
       <ol class="hub-steps" aria-label="Rung ${lvl.level + 1} of ${LADDER.length}">${LADDER.map((t, i) => `<li class="${i < L.level ? "done" : i === L.level ? "now" : ""}" title="${esc(t.name)}"></li>`).join("")}</ol>
     </section>` : ""}
-    <div class="park-box"><section class="park" style="${lookStyle(me)}" aria-label="The park. Pick where to go.">
-      ${parkSVG()}
+    <div class="park-box"><section class="park${PL.s < .82 ? " compact" : ""}" style="${lookStyle(me)};--pkr:${(360 / PL.H).toFixed(4)}" aria-label="The park. Pick where to go.">
+      ${parkSVG(PL.H)}
       ${spot("runner", "runner", "s-woods", "Disc Runner", n.runner)}
       ${spot("comp", "comp", "s-field", "Distance Comp", n.comp)}
       ${spot("area-putt", "go", "s-green", "Putting Green", n.putt, ' data-screen="putt"')}
       ${spot("area-board", "go", "s-board" + (n.tourneyOpen ? " live" : ""), "Tournaments", n.board, ' data-screen="bulletin"')}
-      ${n.tourneyOpen ? `<span class="pin-pulse" aria-hidden="true"></span>` : ""}
+      ${n.tourneyOpen ? `<span class="pin-pulse" aria-hidden="true" style="${SP.pin}"></span>` : ""}
       ${spot("me", "me", "s-shop", "Pro Shop", n.shop)}
       ${CLASSIC_BACK_DAYS.includes(dailyKey(new Date())) ? `<button class="classic-back" id="classic-back" data-act="daily"><b>Classic Mode is Back!</b><small>Up to $20,000 for 18 down</small></button>` : ""}
       ${spot("friends", "go", "s-friends" + (ui.ctLive ? " live" : ""), "Friends", n.friends, ' data-screen="friends"')}
-      ${ui.ctLive ? `<button class="ct-live" id="ct-live" data-act="go" data-screen="friends" aria-label="A friends contest is live. Open Friends."><i aria-hidden="true"></i><i aria-hidden="true"></i><i aria-hidden="true"></i><b>Contest live</b></button>` : ""}
+      ${ui.ctLive ? `<button class="ct-live" id="ct-live" style="${SP.live}" data-act="go" data-screen="friends" aria-label="A friends contest is live. Open Friends."><i aria-hidden="true"></i><i aria-hidden="true"></i><i aria-hidden="true"></i><b>Contest live</b></button>` : ""}
     </section></div>
   </div>`;
 }
