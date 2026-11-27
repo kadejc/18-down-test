@@ -2,7 +2,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="robots" content="noindex,nofollow">
-<!-- 18 Down test build: branch test-combined, commit a54f7be -->
+<!-- 18 Down test build: branch test-combined, commit bfe897d -->
 <title>18 Down</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&family=Shrikhand&display=swap">
@@ -1523,19 +1523,20 @@ html, body { margin: 0; }
 .pk-row .cell b { font-size: 17px; }
 .pk-row .cell.pub::after { top: 3px; right: 3px; width: 6px; height: 6px; }
 
-/* Draft picks, premium: each button is solid in its spot's color, with a gradient, a light top edge and a real shadow */
+/* Draft picks, in the house style: flat spot color, ink outline and a hard ink shadow, like the Play button and the spot tags */
 .pk-row .cell, .pk-row .cell[class*=" s-"] {
-  background: linear-gradient(180deg, color-mix(in srgb, var(--sc, #f2efd8) 62%, white) 0%, var(--sc, #f2efd8) 52%, color-mix(in srgb, var(--sc, #f2efd8) 82%, black) 100%);
-  border: 1px solid color-mix(in srgb, var(--sc, #f2efd8) 55%, black);
-  border-radius: 7px;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .6), inset 0 -2px 0 rgba(0, 0, 0, .12), 0 2px 0 color-mix(in srgb, var(--sc, #f2efd8) 50%, black), 0 4px 9px rgba(0, 0, 0, .35);
+  background: var(--sc, var(--card));
+  border: 2px solid var(--ink);
+  border-radius: 4px;
+  box-shadow: 2px 2px 0 var(--ink);
+  transition: transform .08s ease, box-shadow .08s ease;
 }
-.pk-row .cell > small, .pk-row .cell[class*=" s-"] > small { background: none !important; color: var(--ink) !important; opacity: .75; padding: 0 !important; font-size: 10px !important; letter-spacing: .05em; text-transform: uppercase; }
-.pk-row .cell b { color: var(--ink); text-shadow: 0 1px 0 rgba(255, 255, 255, .45); }
+.pk-row .cell > small, .pk-row .cell[class*=" s-"] > small { background: none !important; color: var(--ink) !important; opacity: .7; padding: 0 !important; font-size: 11px !important; letter-spacing: .08em; text-transform: uppercase; }
+.pk-row .cell b { color: var(--ink); }
 .pk-row .cell.est b { border-bottom-color: rgba(16, 39, 42, .55); }
-.pk-row .cell:hover:not(:disabled) { background: linear-gradient(180deg, color-mix(in srgb, var(--sc, #f2efd8) 45%, white) 0%, color-mix(in srgb, var(--sc, #f2efd8) 85%, white) 52%, var(--sc, #f2efd8) 100%); transform: translateY(-1px); }
-.pk-row .cell:active:not(:disabled) { transform: translateY(2px); box-shadow: inset 0 1px 3px rgba(0, 0, 0, .3), 0 1px 2px rgba(0, 0, 0, .25); }
-.pk-row .cell.pub::after { background: #fff; box-shadow: 0 0 0 1.5px var(--birdie); }
+.pk-row .cell:hover:not(:disabled) { background: var(--sc, var(--card)); transform: translate(-1px, -1px); box-shadow: 3px 3px 0 var(--ink); }
+.pk-row .cell:active:not(:disabled) { transform: translate(2px, 2px); box-shadow: 0 0 0 var(--ink); }
+.pk-row .cell.pub::after { background: var(--chalk); box-shadow: 0 0 0 1.5px var(--ink); }
 </style>
 <main id="app"></main>
 <script type="application/json" id="edits">{}</script>
@@ -3958,9 +3959,9 @@ function pickerPoolHTML(){
     const sub = [s.sponsor !== s.brand && s.brand !== "Unconfirmed sponsor" ? s.brand : "", hide ? "" : refText(s)].filter(Boolean).join(", ");
     return `<div class="pk-row"><div class="pr-who"><strong>${esc(s.name)}${legendTag(s)}</strong>${sub ? `<small>${esc(sub)}</small>` : ""}</div>
       <div class="cells" style="grid-template-columns:repeat(${open.length},minmax(0,1fr))">${open.map(k => false
-        ? `<button class="cell s-${k}" disabled aria-label="${esc(SLOT_NAME[k])} ${heldForMe(k) ? "is held for My Player" : "is filled"}"><small>${SLOT_CELL[k]}</small><b>${heldForMe(k) ? "Me" : "–"}</b></button>`
-        : hide ? `<button class="cell s-${k}" id="pick-${s.id}-${k}" data-act="pick" data-id="${s.id}" data-slot="${k}" aria-label="${esc("Put " + s.name + " " + s.year + " at " + SLOT_NAME[k])}"><small>${SLOT_CELL[k]}</small>${tierBadge(s, k)}</button>`
-        : `<button class="cell s-${k} ${s.src[k] === "published" ? "pub" : s.src[k] === "placeholder" ? "est" : ""}" id="pick-${s.id}-${k}" data-act="pick" data-id="${s.id}" data-slot="${k}" title="${esc(SLOT_NAME[k] + ": " + fmtSlot(k, s[k]) + ", " + sourceNote(s, k))}" aria-label="${esc("Put " + s.name + " " + s.year + " at " + SLOT_NAME[k] + ", " + fmtSlot(k, s[k]))}"><small>${SLOT_CELL[k]}</small><b>${fmtSlot(k, s[k])}</b></button>`).join("")}</div></div>`;
+        ? `<button class="cell s-${k}" disabled aria-label="${esc(SLOT_NAME[k])} ${heldForMe(k) ? "is held for My Player" : "is filled"}"><small>${SLOT_LABEL[k]}</small><b>${heldForMe(k) ? "Me" : "–"}</b></button>`
+        : hide ? `<button class="cell s-${k}" id="pick-${s.id}-${k}" data-act="pick" data-id="${s.id}" data-slot="${k}" aria-label="${esc("Put " + s.name + " " + s.year + " at " + SLOT_NAME[k])}"><small>${SLOT_LABEL[k]}</small>${tierBadge(s, k)}</button>`
+        : `<button class="cell s-${k} ${s.src[k] === "published" ? "pub" : s.src[k] === "placeholder" ? "est" : ""}" id="pick-${s.id}-${k}" data-act="pick" data-id="${s.id}" data-slot="${k}" title="${esc(SLOT_NAME[k] + ": " + fmtSlot(k, s[k]) + ", " + sourceNote(s, k))}" aria-label="${esc("Put " + s.name + " " + s.year + " at " + SLOT_NAME[k] + ", " + fmtSlot(k, s[k]))}"><small>${SLOT_LABEL[k]}</small><b>${fmtSlot(k, s[k])}</b></button>`).join("")}</div></div>`;
   }).join("")}</div>`;
 }
 /* Each slot has its own color and plain-English name so it's always clear what you're drafting for. */
