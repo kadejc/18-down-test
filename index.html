@@ -2,7 +2,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="robots" content="noindex,nofollow">
-<!-- 18 Down test build: branch test-combined, commit 03429bc -->
+<!-- 18 Down test build: branch test-combined, commit 04a5cdc -->
 <title>18 Down</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&family=Shrikhand&display=swap">
@@ -2551,12 +2551,12 @@ const PUTT_CALLS = {
   lag: {make: 0.85, back: 0, backMake: 1},       // about -4 points; pays when the C1 putter is shaky
 };
 
-/* Focus putt: the player times a tap. call.focus is how close it was, 0 (way off) to 1 (dead center). Centered so an
-   average tap changes nothing: a perfect tap adds FOCUS_PTS points to the real make rate, a bad one takes them away. */
-const FOCUS_PTS = {c1: 5, c2: 6};
-function focusP(p, call, kind){
+/* Focus putt: the player times a tap (Kade, 2026-11-26: "only make it if it lands in the green; if it lands in the
+   green you should always make it"). call.focus is 1 for a tap in the green, 0 for a miss. The putter's skill shows in
+   the meter instead: a better make chance gives a bigger green and a slower bar (see focusHard in ui.js). */
+function focusP(p, call){
   if (!call || typeof call.focus !== "number") return p;
-  return clamp01(p + (Math.max(0, Math.min(1, call.focus)) - 0.5) * 2 * FOCUS_PTS[kind || "c1"] / 100);
+  return call.focus >= 1 ? 1 : 0;
 }
 
 function teeWeights(q, course, hole, k, call, base, qRef){
@@ -2658,12 +2658,12 @@ function playRound(course, build, seed, opts){
     } else if (lie === "c1"){
       r.feet = 12 + Math.floor(uFeet * 22);
       const made = uPutt < focusP(c1Pct, call);
-      r.putt = {kind: "c1", made, by: build.c1};
+      r.putt = {kind: "c1", made, by: build.c1, p: c1Pct};
       r.rel = made ? -1 : 0;
     } else if (lie === "c2"){
       r.feet = 34 + Math.floor(uFeet * 33);
-      const made = uPutt < focusP(pc ? clamp01(c2Pct * pc.make) : c2Pct, call, "c2");
-      r.putt = {kind: "c2", made, by: build.c2};
+      const p2 = pc ? clamp01(c2Pct * pc.make) : c2Pct, made = uPutt < focusP(p2, call);
+      r.putt = {kind: "c2", made, by: build.c2, p: p2};
       if (pc) r.putt.call = call.putt;
       if (made) r.rel = -1;
       else if (uBack < (pc ? pc.back : 0.26)){
@@ -2678,7 +2678,7 @@ function playRound(course, build, seed, opts){
       else if (uSave2 < 0.5){ r.rel = 0; r.save = "tapin"; }
       else {
         const made = uParPutt < focusP(c1Pct, call);
-        r.putt = {kind: "c1", made, by: build.c1, forPar: true};
+        r.putt = {kind: "c1", made, by: build.c1, forPar: true, p: c1Pct};
         r.parFeet = 12 + Math.floor(uParFeet * 22);
         r.rel = made ? 0 : 1;
         r.save = "putt";
@@ -4666,9 +4666,9 @@ async function askCalls(i, token){
     const v = await pickCall(`<div class="focus-ask"><p class="calls-h focus-why" title="${esc(why)}">${ico(WHY_ICON[why] || "flag", why)}<b>${hp.putt.kind === "c2" ? hp.feet : hp.parFeet || hp.feet} ft</b><span role="img" aria-label="${left} focus left" title="Focus putts left">${pips(left, FOCUS_PER_ROUND)}</span></p><div class="seg focus-btns"><button type="button" class="on" id="call-focus" data-act="call" data-call="focus" aria-label="Focus: time the stroke" title="Focus: time the stroke">${ico("focus")}<span>Focus</span></button><button type="button" id="call-just" data-act="call" data-call="just" aria-label="Just putt" title="Just putt">${ico("putt")}<span>Putt</span></button></div></div>`, token);
     if (v === null) return false;
     if (v === "focus"){
-      const q = await focusMeter(token, hp.putt.kind === "c2" ? hp.feet : hp.parFeet || hp.feet);
+      const q = await focusMeter(token, hp.putt.p);
       if (q === null) return false;
-      sp.calls[n].focus = Math.round(q * 100) / 100;
+      sp.calls[n].focus = q;
     } else sp.calls[n].focus = null;
     callPreview = false;
     roundRecalc(); callsSave();
@@ -4680,14 +4680,15 @@ const WHY_ICON = {"Closing stretch": "flag", "Par save": "par", "Prize on the li
 /* Focus: three timed putts a round. A marker swings across the bar; tap Putt when it's in the middle. */
 const FOCUS_PER_ROUND = 3, BIG_FROM = 16;
 function focusLeft(){ const c = (state.round && state.round.spec && state.round.spec.calls) || {}; return FOCUS_PER_ROUND - Object.values(c).filter(x => x && typeof x.focus === "number").length; }
-/* How hard a focus putt is, from 0 (a short putt) to 1 (60 ft and beyond): longer putts swing faster and have a narrower
-   sweet spot. band is the half-width of the green zone, as a share of the bar. */
-function focusHard(feet){
-  const f = Math.max(0, Math.min(1, ((feet || 20) - 10) / 50));
-  return {f, band: .12 - .08 * f, period: (1500 - 700 * f) * (REDUCED ? 1.7 : 1)};
+/* How hard a focus putt is, from the putter's own make chance p on it (0 to 1): a good putter gets a wide green and a
+   slow bar, a long or shaky putt a thin green and a fast one. band is the half-width of the green, as a share of the bar.
+   About: a 90% C1 putt gets a 31%-wide green at 1.6 s a sweep; a 25% C2 putt a 7%-wide green at 1 s. */
+function focusHard(p){
+  p = Math.max(0, Math.min(1, typeof p === "number" ? p : .6));
+  return {p, band: .025 + .16 * p * p, period: (750 + 950 * p) * (REDUCED ? 1.7 : 1)};
 }
-function focusMeter(token, feet){
-  const H = focusHard(feet), period = H.period, t0 = performance.now();
+function focusMeter(token, p){
+  const H = focusHard(p), period = H.period, t0 = performance.now();
   const phase = t => ((t - t0) % period) / period, pos = t => (1 - Math.cos(2 * Math.PI * phase(t))) / 2;
   callPanel(`    <div class="focus-bar" aria-hidden="true"><i class="focus-sweet" style="left:${((.5 - H.band) * 100).toFixed(1)}%;width:${(H.band * 200).toFixed(1)}%"></i><i class="focus-mark" id="focus-mark"></i></div>
     <div class="calls-row one"><button class="btn primary icon-btn" id="call-release" data-act="call" data-call="release" aria-label="Putt" title="Putt">${ico("putt")}<span>Putt</span></button></div>`);
@@ -4702,7 +4703,7 @@ function focusMeter(token, feet){
   return new Promise(res => { callWait = v => {
     callWait = null; callWaiting(false); cancelAnimationFrame(raf);
     if (token !== playToken || v !== "release") return res(null);
-    const x = shown.x, off = Math.abs(x - .5), q = Math.max(0, 1 - off / (H.band * 4));
+    const x = shown.x, off = Math.abs(x - .5), q = off <= H.band ? 1 : 0;   // in the green it drops, outside it misses
     // the marker stops where you tapped; say how far off it was, hold it for a second, then putt
     const early = shown.rising ? x < .5 : x > .5, fb = focusFeedback(off, early, H.band);
     const panel = document.getElementById("calls"), btn = document.getElementById("call-release");
@@ -4712,13 +4713,14 @@ function focusMeter(token, feet){
     setTimeout(() => { if (panel) panel.classList.remove("focus-result", fb.cls); res(token === playToken ? q : null); }, 1000);
   }; });
 }
-/* Feedback scales with the sweet spot: inside it is "a little" off, twice as far is plain early/late, beyond that "very". */
+/* In the green is a make: "Perfect!" near the middle, "Good" toward its edges. Outside it: a little, plain or very early/late. */
 function focusFeedback(off, early, band){
   band = band || .08;
-  if (off < band * .45) return {text: "Perfect!", cls: "perfect"};
-  const how = off < band * 1.1 ? "A little " : off < band * 2.2 ? "" : "Very ";
+  if (off < band * .5) return {text: "Perfect!", cls: "perfect"};
+  if (off <= band) return {text: "Good", cls: "close"};
+  const how = off < band * 1.6 ? "A little " : off < band * 3 ? "" : "Very ";
   const word = early ? "early" : "late";
-  return {text: how + (how ? word : word[0].toUpperCase() + word.slice(1)), cls: off < band * 1.1 ? "close" : off < band * 2.2 ? "off" : "way-off"};
+  return {text: how + (how ? word : word[0].toUpperCase() + word.slice(1)), cls: off < band * 3 ? "off" : "way-off"};
 }
 /* The last holes: say what's riding on them. */
 function bigMomentText(n){
