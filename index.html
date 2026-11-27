@@ -2,7 +2,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="robots" content="noindex,nofollow">
-<!-- 18 Down test build: branch test-combined, commit 280f492 -->
+<!-- 18 Down test build: branch test-combined, commit 0432de6 -->
 <title>18 Down</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&family=Shrikhand&display=swap">
@@ -9263,12 +9263,12 @@ function parkSVG(){
   <g fill="#04181b" fill-opacity=".28" filter="url(#pk-soft)">${PARK_TREES.map(([x, y, s]) => `<ellipse cx="${x + 5 * s}" cy="${y + 1}" rx="${10 * s}" ry="${2.6 * s}"/>`).join("")}</g>
   <g>${PARK_TREES.map(([x, y, s, p], i) => `<g class="pk-sway" style="animation-delay:${-(i % 7) * .6}s;transform-origin:${x}px ${y}px">${parkTree(x, y, s, p)}</g>`).join("")}</g>
   <!-- paths -->
-  <g fill="none" stroke-linecap="round">
-    <path id="pk-main" d="M180 680 L180 600 C180 560 176 540 170 520 C160 486 196 470 190 430 C186 400 200 392 198 370 C196 330 182 300 196 262 C204 236 186 214 190 196" stroke="#8c6d3f" stroke-width="17"/>
-    <path d="M190 430 C150 432 120 438 96 446 M196 262 C226 270 246 278 262 290 M190 430 C230 436 252 440 270 452" stroke="#8c6d3f" stroke-width="13"/>
-    <path d="M180 680 L180 600 C180 560 176 540 170 520 C160 486 196 470 190 430 C186 400 200 392 198 370 C196 330 182 300 196 262 C204 236 186 214 190 196" stroke="#c9a66b" stroke-width="13"/>
-    <path d="M190 430 C150 432 120 438 96 446 M196 262 C226 270 246 278 262 290 M190 430 C230 436 252 440 270 452" stroke="#c9a66b" stroke-width="9"/>
-    <path d="M178 680 L178 600 C178 560 174 540 168 520 C158 486 194 470 188 430 C184 400 198 392 196 370 C194 330 180 300 194 262 C202 236 184 214 188 196" stroke="#e6cc94" stroke-opacity=".55" stroke-width="3"/>
+  <g fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <path id="pk-pm" d="M190 190 C193 222 200 244 196 262 C190 300 185 380 190 430 C195 482 180 540 180 600 L180 690"/><path id="pk-pb" d="M190 430 C150 432 120 438 96 446 M196 262 C226 270 246 278 262 290 M190 430 C230 436 252 440 270 452"/>
+    <g stroke="#04181b" stroke-opacity=".22" filter="url(#pk-soft)" transform="translate(1.5 2)"><use href="#pk-pm" stroke-width="15"/><use href="#pk-pb" stroke-width="11"/></g>
+    <g stroke="#a98652"><use href="#pk-pm" stroke-width="14"/><use href="#pk-pb" stroke-width="10"/></g>
+    <g stroke="#c9a66b"><use href="#pk-pm" stroke-width="11"/><use href="#pk-pb" stroke-width="7.5"/></g>
+    <g stroke="#e2c891" stroke-opacity=".45" filter="url(#pk-soft)"><use href="#pk-pm" stroke-width="4"/><use href="#pk-pb" stroke-width="2.5"/></g>
   </g>
   <!-- distance field -->
   <path d="M24 390 L192 390 L168 232 L46 232 Z" fill="#04181b" fill-opacity=".25" filter="url(#pk-soft)"/>
