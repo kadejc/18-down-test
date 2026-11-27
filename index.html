@@ -2,7 +2,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="robots" content="noindex,nofollow">
-<!-- 18 Down test build: branch test-combined, commit 60f3997 -->
+<!-- 18 Down test build: branch test-combined, commit e1bf589 -->
 <title>18 Down</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&family=Shrikhand&display=swap">
@@ -3835,7 +3835,7 @@ function buildPanel(c, b, spinning){
     ${discHTML(hashStr(c.id) % 97, `<div class="stamp">${Object.keys(b).length} of 4</div>${flightHTML(b)}`, spinning ? "spinning" : "")}
     <div class="slots">${SLOTS.map(k => b[k]
       ? `<div class="slot s-${k}"><span class="k">${SLOT_LABEL[k]}</span><span class="who">${esc(b[k].short)}${legendTag(b[k])}</span><span class="val">${hidden() ? "" : fmtSlot(k, b[k][k])}</span></div>`
-      : `<div class="slot open s-${k}${state.mode !== "picker" && !done0() && k === currentSlot() ? " now" : ""}"><span class="k">${SLOT_LABEL[k]}</span><span class="who">${slotHint(k, c)}</span><span></span></div>`).join("")}</div>
+      : `<div class="slot open s-${k}${state.spin && state.spin.me && k === state.meAt ? " now" : ""}"><span class="k">${SLOT_LABEL[k]}</span><span class="who">${slotHint(k, c)}</span><span></span></div>`).join("")}</div>
   </section>`;
 }
 function sourceNote(s, k){
@@ -3918,8 +3918,11 @@ function tierBadge(s, k){ return ""; }   // letter grades are off: hard mode sho
 /* World champions show it everywhere you see them: GOAT (5+ titles) or Legend. They lift their teammates' putting a little. */
 function legendTag(s){ if (!s || !s.legend) return ""; const g = s.legend === "goat"; return `<i class="lg-tag ${g ? "goat" : ""}" title="${g ? "GOAT" : "Legend"}: world champion, lifts teammates' putting">${g ? "GOAT" : "Legend"}</i>`; }
 function knownFor(s){ return ""; }   // "known for" traits are off
+/* After a spin (Kade, 2026-11-26: "select the player and the slot they go in when you roll"): every pro in the spin gets a
+   button for each open spot. A spot held for My Player stays closed until his own spin. */
+function heldForMe(k){ return state.mode !== "picker" && meReserved() && k === state.meAt; }
 function pickerPoolHTML(){
-  const open = SLOTS.filter(k => !state.picks[k]);
+  const open = SLOTS.filter(k => !state.picks[k] && !heldForMe(k));
   const pool = availablePool(poolSeasons(), state.spin.sponsor, state.spin.year, usedNames(), state.spin.cut);
   const hide = hidden();
   const best = s => Math.max(...open.map(k => (s[k] - MED[k]) / SPREAD[k]));
@@ -3928,8 +3931,8 @@ function pickerPoolHTML(){
   <div class="pool picker-pool" id="pool">${pool.map(s => {
     const sub = [s.sponsor !== s.brand && s.brand !== "Unconfirmed sponsor" ? s.brand : "", hide ? "" : refText(s)].filter(Boolean).join(", ");
     return `<div class="pk-row"><div class="pr-who"><strong>${esc(s.name)}${legendTag(s)}</strong>${sub ? `<small>${esc(sub)}</small>` : ""}</div>
-      <div class="cells">${SLOTS.map(k => state.picks[k]
-        ? `<button class="cell s-${k}" disabled aria-label="${esc(SLOT_NAME[k])} is filled"><small>${SLOT_CELL[k]}</small><b>–</b></button>`
+      <div class="cells">${SLOTS.map(k => state.picks[k] || heldForMe(k)
+        ? `<button class="cell s-${k}" disabled aria-label="${esc(SLOT_NAME[k])} ${heldForMe(k) ? "is held for My Player" : "is filled"}"><small>${SLOT_CELL[k]}</small><b>${heldForMe(k) ? "Me" : "–"}</b></button>`
         : hide ? `<button class="cell s-${k}" id="pick-${s.id}-${k}" data-act="pick" data-id="${s.id}" data-slot="${k}" aria-label="${esc("Put " + s.name + " " + s.year + " at " + SLOT_NAME[k])}"><small>${SLOT_CELL[k]}</small>${tierBadge(s, k)}</button>`
         : `<button class="cell s-${k} ${s.src[k] === "published" ? "pub" : s.src[k] === "placeholder" ? "est" : ""}" id="pick-${s.id}-${k}" data-act="pick" data-id="${s.id}" data-slot="${k}" title="${esc(SLOT_NAME[k] + ": " + fmtSlot(k, s[k]) + ", " + sourceNote(s, k))}" aria-label="${esc("Put " + s.name + " " + s.year + " at " + SLOT_NAME[k] + ", " + fmtSlot(k, s[k]))}"><small>${SLOT_CELL[k]}</small><b>${fmtSlot(k, s[k])}</b></button>`).join("")}</div></div>`;
   }).join("")}</div>`;
@@ -3942,25 +3945,9 @@ const SLOT_CELL = {bh: "Backhand", fh: "Forehand", c1: "C1 putt", c2: "C2 putt"}
 function done0(){ return SLOTS.every(k => state.picks[k]); }
 function slotBanner(){
   if (done0()) return "";
-  if (state.mode === "picker") return `<div class="slot-banner pick"><small>Open spots</small><div class="sb-chips">${SLOTS.filter(k => !state.picks[k]).map(k => `<span class="s-${k}">${SLOT_FULL[k]}</span>`).join("")}</div></div>`;
-  const k = currentSlot(), open = SLOTS.filter(x => !state.picks[x]);
-  const chips = open.length > 1 ? `<div class="sb-chips sb-choose" role="group" aria-label="Which spot to fill">${open.map(x => `<button type="button" class="s-${x}${x === k ? " on" : ""}" data-act="slotSel" data-slot="${x}" aria-pressed="${x === k}" ${slotChoosable(x) ? "" : "disabled"}>${SLOT_FULL[x]}${meReserved() && x === state.meAt ? " (My Player)" : ""}</button>`).join("")}</div>` : "";
-  return `<div class="slot-banner s-${k}"><b title="${SLOT_WHAT[k]}">${SLOT_FULL[k]}</b>${chips}</div>`;
+  return `<div class="slot-banner pick"><small>Open spots</small><div class="sb-chips">${SLOTS.filter(k => !state.picks[k]).map(k => `<span class="s-${k}">${SLOT_FULL[k]}${heldForMe(k) ? " (My Player)" : ""}</span>`).join("")}</div></div>`;
 }
-function poolHTML(){
-  if (state.mode === "picker") return pickerPoolHTML();
-  const k = currentSlot();
-  const pool = availablePool(poolSeasons(), state.spin.sponsor, state.spin.year, usedNames(), state.spin.cut);
-  const hide = hidden();
-  if (hide) pool.sort((x, y) => x.name.localeCompare(y.name)); else pool.sort((x, y) => y[k] - x[k]);
-  return `<div class="key">${hide ? `${hardKey()}` : `<span><i class="pub-dot" style="background:var(--birdie)"></i>Real stat</span><span><i class="est-dot"></i>Estimate</span>`}</div>
-  <div class="pool" id="pool">${pool.map(s => {
-    const cls = hide ? "" : s.src[k] === "published" ? "pub" : s.src[k] === "placeholder" ? "est" : "";
-    const sub = [s.sponsor !== s.brand && s.brand !== "Unconfirmed sponsor" ? s.brand : "", !hide && (k === "bh" || k === "fh") ? refText(s) : ""].filter(Boolean).join(", ");
-    if (hide) return `<button class="cell pro-row s-${k}" id="pick-${s.id}-${k}" data-act="pick" data-id="${s.id}" data-slot="${k}" aria-label="${esc("Draft " + s.name + " " + s.year + " at " + SLOT_NAME[k])}"><span class="pr-who"><strong>${esc(s.name)}${legendTag(s)}</strong><small>${esc([sub, knownFor(s)].filter(Boolean).join(" · "))}</small></span>${tierBadge(s, k)}</button>`;
-    return `<button class="cell pro-row s-${k} ${cls}" id="pick-${s.id}-${k}" data-act="pick" data-id="${s.id}" data-slot="${k}" title="${esc(SLOT_NAME[k] + ": " + fmtSlot(k, s[k]) + ", " + sourceNote(s, k))}" aria-label="${esc("Draft " + s.name + " " + s.year + " at " + SLOT_NAME[k] + ", " + fmtSlot(k, s[k]) + ", " + sourceNote(s, k))}"><span class="pr-who"><strong>${esc(s.name)}${legendTag(s)}</strong>${sub ? `<small>${esc(sub)}</small>` : ""}</span><b>${fmtSlot(k, s[k])}</b></button>`;
-  }).join("")}</div>`;
-}
+function poolHTML(){ return pickerPoolHTML(); }
 function viewDraft(){
   const c = course();
   const b = buildObj();
@@ -3980,7 +3967,7 @@ function viewDraft(){
         ${done ? `<p class="lede">${ico("hole")} ${esc(c.name)}</p>
           <button class="btn primary full" id="play" data-act="play">${state.mode === "tourney" ? "Play round 1" : state.mode === "ctc" && typeof CT !== "undefined" && CT ? `Lock it in: play round 1 of ${CT.attempts}` : "Play the round"}</button>${state.mode === "ctc" ? `${iconFacts([["once", "Every round", "This team plays every round of the contest"]])}` : ""}` : `
         ${slotBanner()}${needMeSlot() ? meSlotHTML() : `<div class="reels">${reel("reel-sponsor", "Sponsor", spin && spin.sponsor)}${reel("reel-year", "Year", spin && String(spin.year))}</div>
-        ${state.spinErr ? `<p class="fine">${esc(state.spinErr)}</p>` : ""}${!spin || state.spinning ? `<button class="btn primary full" id="spin" data-act="spin" ${state.spinning ? "disabled" : ""}>${state.spinning ? "Spinning" : state.mode === "picker" || !meReserved() || currentSlot() !== state.meAt ? "Spin for pick " + (n + 1) : "Spin for My Player"}</button>` : `
+        ${state.spinErr ? `<p class="fine">${esc(state.spinErr)}</p>` : ""}${!spin || state.spinning ? spinBtns(n) : `
         ${spin.me ? meDrawHTML() : `${state.mode === "ctc" ? `${iconFacts([typeof CT !== "undefined" && CT && CT.server ? ["same", "Same spins", "Everyone in this contest gets these same spins, revealed one pick at a time"] : null, ["dice", "No re-spins", "No re-spins. Leaving doesn’t re-roll your spins."]])}` : `<div class="skips">
           ${skipBtn("sponsor", "skip-sponsor", "skipSponsor", "New sponsor", altSponsor)}
           ${skipBtn("year", "skip-year", "skipYear", "New year", altYear)}
@@ -3990,6 +3977,12 @@ function viewDraft(){
       </section>
     </div>
   </div>`;
+}
+function spinBtns(n){
+  if (state.spinning) return `<button class="btn primary full" id="spin" data-act="spin" disabled>Spinning</button>`;
+  const me = state.mode !== "picker" && meReserved(), others = SLOTS.some(k => !state.picks[k] && !heldForMe(k));
+  return (others ? `<button class="btn primary full" id="spin" data-act="spin">Spin for pick ${n + 1}</button>` : "")
+    + (me ? `<button class="btn ${others ? "" : "primary "}full" id="${others ? "spin-me" : "spin"}" data-act="spin" data-me="1">Spin for My Player</button>` : "");
 }
 function shotCallsToggle(){
   const on = callsOn();
@@ -4010,7 +4003,7 @@ function respinsLeft(){ return Math.max(0, DAILY_RESPINS - ((state.skips && stat
 function respinNote(){ if (!dailyFair()) return ""; const left = respinsLeft(); return `<p class="respin-note" role="img" aria-label="${left} of ${DAILY_RESPINS} free re-spins left" title="Free re-spins, same for everyone">${ico("dice")}${pips(left, DAILY_RESPINS)}</p>`; }
 function pips(n, of){ return `<span class="pips">${Array.from({length: of}, (_, i) => `<i class="${i < n ? "on" : ""}"></i>`).join("")}</span>`; }
 function meDrawHTML(){
-  const s = meForMode(), k = currentSlot();
+  const s = meForMode(), k = state.meAt || currentSlot();
   return `<div class="pool" id="pool"><button class="cell me-cell" id="me-take" data-act="meTake" aria-label="${esc("Take " + s.name + " as your " + SLOT_NAME[k])}"><small>${SLOT_LABEL[k]}</small><b>${esc(meFmt(k, s[k]))}</b><span>${esc(s.name)} · ${s.pdga}</span></button></div>`;
 }
 function nextDraw(kind){
@@ -5994,7 +5987,7 @@ app.addEventListener("click", ev => {
   } else if (act === "slotSel"){
     if (slotChoosable(el.dataset.slot)){ state.slotSel = el.dataset.slot; render(); }
   } else if (act === "spin"){
-    if (meSpot() && state.meAt && currentSlot() === state.meAt && !Object.values(state.picks).includes("me")) runSpin({sponsor: "My Player", year: "You", me: true}, "both");
+    if (el.dataset.me && meSpot() && state.meAt && !Object.values(state.picks).includes("me")) runSpin({sponsor: "My Player", year: "You", me: true}, "both");
     else if (state.mode === "ctc" && typeof CT !== "undefined" && CT && !CT.serverOff && typeof ctServerSpin === "function"){
       if (state.spinning) return;
       state.spinning = true; state.spinErr = ""; render();
@@ -6003,7 +5996,7 @@ app.addEventListener("click", ev => {
     }
     else runSpin(nextDraw("main"), "both");
   } else if (act === "meTake"){
-    const slot = currentSlot();
+    const slot = (state.meAt && !state.picks[state.meAt]) ? state.meAt : currentSlot();
     state.meSnap = meForMode();
     if (state.tour) state.tour.me = state.meSnap;
     state.history.push({slot, id: "me", pool: []});
