@@ -2,7 +2,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="robots" content="noindex,nofollow">
-<!-- 18 Down test build: branch test-combined, commit c04632b -->
+<!-- 18 Down test build: branch test-combined, commit 6d808eb -->
 <title>18 Down</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&family=Shrikhand&display=swap">
@@ -1393,6 +1393,22 @@ span.pips, .calls-h span.pips { display: inline-flex; gap: 4px; vertical-align: 
 .home-chips button small { font-size: 10px; color: rgba(16,39,42,.6); }
 .home-chips button.on { background: var(--band); }
 .home-chips button:disabled { opacity: .35; cursor: default; }
+
+/* Home: compact career card and the Pro Shop card */
+.hub-hero.compact { padding: 12px; gap: 8px; }
+.hub-row { display: flex; align-items: center; gap: 10px; }
+.hub-row .hub-top { flex: 1; min-width: 0; }
+.hub-hero.compact .hub-top b { font-size: 26px; }
+.hub-row .btn.primary { min-width: 96px; min-height: 48px; font-size: 18px; }
+.shop-hero { display: grid; grid-template-columns: 92px 1fr auto; align-items: center; gap: 12px; width: 100%; padding: 8px 14px 8px 8px; border-radius: 14px; border: 2px solid var(--ink); background: linear-gradient(160deg, #ffe27a, #ffb84a); color: var(--ink); text-align: left; font: inherit; cursor: pointer; box-shadow: 0 6px 0 rgba(0,0,0,.25); touch-action: manipulation; }
+.shop-fig { display: block; height: 120px; background: rgba(255,255,255,.45); border-radius: 10px; overflow: hidden; }
+.shop-fig svg { display: block; width: 100%; height: 100%; }
+.shop-info { display: grid; gap: 2px; min-width: 0; }
+.shop-info small { font-family: var(--label); font-weight: 700; font-size: 12px; letter-spacing: .06em; text-transform: uppercase; }
+.shop-info > b { font-family: var(--display); font-size: 20px; line-height: 1.05; overflow-wrap: anywhere; }
+.shop-rating { font-size: 14px; }
+.shop-cta { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 700; }
+.shop-go { padding: 8px 14px; border-radius: 10px; border: 2px solid var(--ink); background: var(--ink); color: var(--band); font-family: var(--label); font-weight: 700; text-transform: uppercase; }
 </style>
 <main id="app"></main>
 <script type="application/json" id="edits">{}</script>
@@ -9104,37 +9120,42 @@ function parkHangout(){
   ${pkPerson(282, 642, 10, "sit", -1)}${pkPerson(302, 642, 11, "sit", 1)}`;
 }
 
-/* Home: career first. Your rung, how far up the ladder you are, and one button to play; every other mode below as a
-   card with its status. */
+/* Home: your career up top, the Pro Shop right under it (your My Player in his gear, his rating and what you can
+   spend), then the park itself with every place to go. */
 function viewHome(){
-  const me = meLoad(), n = parkNotes(), key = dailyKey(new Date());
+  const me = meLoad(), n = parkNotes(), bal = meBalance(me);
+  const spot = (id, act, cls, name, note, extra) => `<button class="spot ${cls}" id="${id}" data-act="${act}"${extra || ""}><span class="sign"><b>${name}</b><small>${esc(note)}</small></span></button>`;
   const L = typeof ladderLoad === "function" ? ladderLoad() : null, P = typeof mePrestige === "function" ? mePrestige(me) : 0;
   const lvl = L ? LADDER[L.level] : null, cur = L && L.current && ladderTierOf(L.current);
-  const need = !lvl ? "" : lvl.level === LADDER.length - 1 ? "Win Worlds to be world champion" : `Finish top ${lvl.up} to earn the ${LADDER[lvl.level + 1].name}`;
-  let tName = "Daily tournament", tNote = n.board || "";
-  try { const tc = tourneyCtx(key), ts = tSaved(key); tName = tc.t.name; tNote = ts && ts.done ? `You took ${fmtPlace(ts.place, ts.tied)}` : ts && ts.scores && ts.scores.length ? `Round ${ts.scores.length + 1} in progress` : "Today: same field for everyone"; } catch (e) {}
-  const d = typeof dailySaved === "function" ? dailySaved(key) : null;
-  const card = (id, act, icon, title, note, extra, cls) => `<button class="hub-card ${cls || ""}" id="${id}" data-act="${act}"${extra || ""}>${ico(icon)}<b>${title}</b><small>${esc(note || "")}</small></button>`;
-  return `<div class="wrap hub">
-    <header class="hub-head"><h1>18 Down</h1>${moneyChip()}</header>
-    ${lvl ? `<section class="hub-hero" aria-label="Career">
-      <div class="hub-top"><small>Career${P ? ` · ★${P}` : ""}</small><b>${esc(lvl.name)}</b><span>${esc(cur ? `${cur.name} in progress` : need)}</span></div>
+  const need = !lvl ? "" : lvl.level === LADDER.length - 1 ? "Win Worlds to be world champion" : `Top ${lvl.up} earns the ${LADDER[lvl.level + 1].name}`;
+  const nextBuy = SLOTS.map(k => me.levels[k] < ME_TIERS ? meCost(me.levels[k] + 1) : Infinity).reduce((a, b) => Math.min(a, b), Infinity);
+  return `<div class="wrap park-wrap hub">
+    <header class="park-head">${moneyChip()}<h1>18 Down</h1></header>
+    ${lvl ? `<section class="hub-hero compact" aria-label="Career">
+      <div class="hub-row"><div class="hub-top"><small>Career${P ? ` · ★${P}` : ""}</small><b>${esc(lvl.name)}</b><span>${esc(cur ? `${cur.name} in progress` : need)}</span></div>
+        <button class="btn primary" id="hub-play" data-act="careerEvent" data-id="${(cur || lvl).id}">${cur ? "Resume" : "Play"}</button></div>
       <ol class="hub-steps" aria-label="Rung ${lvl.level + 1} of ${LADDER.length}">${LADDER.map((t, i) => `<li class="${i < L.level ? "done" : i === L.level ? "now" : ""}" title="${esc(t.name)}"></li>`).join("")}</ol>
-      <button class="btn primary full" id="hub-play" data-act="careerEvent" data-id="${(cur || lvl).id}">${cur ? `Resume ${esc(cur.name)}` : `Play ${esc(lvl.name)}`}</button>
       <button class="linkish" id="hub-ladder" data-act="go" data-screen="ladder">See the ladder</button>
     </section>` : ""}
-    <div class="hub-cards">
-      ${card("classic", "daily", "same", "Classic", d ? `You shot ${fmtTotal(d.total)} today` : "Same spins for everyone · up to $20,000", "", d ? "" : "live")}
-      ${card("daily", "tourney", "trophy", tName, tNote, "", n.tourneyOpen ? "live" : "")}
-      ${card("teeoff", "teeoff", "dice", "Mini", "Pickup round · up to $2,000", ' data-mode="free"')}
-      ${card("pickerplay", "teeoff", "eye", "Picker", "Ratings shown, you place every pro", ' data-mode="picker"')}
-      ${card("me", "me", "prize", "Pro Shop", n.shop)}
-      ${card("friends", "go", "same", "Friends", n.friends, ' data-screen="friends"', ui.ctLive ? "live" : "")}
-      ${card("area-putt", "go", "putt", "Putting Green", n.putt, ' data-screen="putt"')}
-      ${card("comp", "comp", "flag", "Distance Comp", n.comp)}
-      ${card("runner", "runner", "hole", "Disc Runner", n.runner)}
-      ${card("votes", "go", "calls", "Player Ratings", "Vote on every pro's numbers", ' data-screen="votes"')}
-    </div>
+    <button class="shop-hero" id="shop-hero" data-act="me" aria-label="Pro Shop: ${esc(meName(me))}, rated ${meRating(me)}">
+      <span class="shop-fig" style="${lookStyle(me)}">${typeof clFigure === "function" ? clFigure(lookFull(me.look), "8 -4 104 204") : ""}</span>
+      <span class="shop-info"><small>Pro Shop</small><b>${esc(meName(me))}</b><span class="shop-rating">Rated <b class="tnum">${meRating(me)}</b>${P ? ` · ★${P}` : ""}</span>
+        <span class="shop-cta">${bal >= nextBuy ? `${ico("prize")} You can afford an upgrade` : `${ico("prize")} Skills, gear and discs`}</span></span>
+      <span class="shop-go">Shop</span>
+    </button>
+    <section class="park" style="${lookStyle(me)}" aria-label="The park. Pick where to go.">
+      ${parkSVG()}
+      ${spot("runner", "runner", "s-woods", "Disc Runner", n.runner)}
+      ${spot("comp", "comp", "s-field", "Distance Comp", n.comp)}
+      ${spot("area-putt", "go", "s-green", "Putting Green", n.putt, ' data-screen="putt"')}
+      ${spot("area-board", "go", "s-board" + (n.tourneyOpen ? " live" : ""), "Tournaments", n.board, ' data-screen="bulletin"')}
+      ${n.tourneyOpen ? `<span class="pin-pulse" aria-hidden="true"></span>` : ""}
+      ${spot("me", "me", "s-shop", "Pro Shop", n.shop)}
+      ${CLASSIC_BACK_DAYS.includes(dailyKey(new Date())) ? `<button class="classic-back" id="classic-back" data-act="daily"><b>Classic Mode is Back!</b><small>Up to $20,000 for 18 down</small></button>` : ""}
+      ${spot("friends", "go", "s-friends" + (ui.ctLive ? " live" : ""), "Friends", n.friends, ' data-screen="friends"')}
+      ${ui.ctLive ? `<button class="ct-live" id="ct-live" data-act="go" data-screen="friends" aria-label="A friends contest is live. Open Friends."><i aria-hidden="true"></i><i aria-hidden="true"></i><i aria-hidden="true"></i><b>Contest live</b></button>` : ""}
+    </section>
+    <button class="btn full vt-enter" id="votes" data-act="go" data-screen="votes">Player Ratings <small>vote on every pro’s numbers</small></button>
   </div>`;
 }
 
