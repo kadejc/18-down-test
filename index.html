@@ -2,7 +2,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="robots" content="noindex,nofollow">
-<!-- 18 Down test build: branch test-combined, commit 1bc0e44 -->
+<!-- 18 Down test build: branch test-combined, commit 532b43f -->
 <title>18 Down</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&family=Shrikhand&display=swap">
@@ -5453,6 +5453,9 @@ app.addEventListener("click", ev => {
     if (typeof h3SpeedCycle === "function") h3SpeedCycle();
   } else if (act === "h3Skip"){
     if (typeof h3SkipNow === "function") h3SkipNow();
+    // Skip plays out the rest of the round on its own: no more plans or focus putts
+    if (state.round && state.round.spec && state.round.spec.calls){ state.round.spec.auto = true; callsSave(); }
+    if (callWait) callWait(document.getElementById("call-release") ? "release" : document.getElementById("call-just") ? "just" : "auto");
   } else if (act === "view3d"){
     storeSet("18down.view3d", storeGet("18down.view3d") === "0" ? "1" : "0");
     render("view-3d");
