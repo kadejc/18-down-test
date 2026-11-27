@@ -2,7 +2,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="robots" content="noindex,nofollow">
-<!-- 18 Down test build: branch test-combined, commit 43e6b15 -->
+<!-- 18 Down test build: branch test-combined, commit fd2aa63 -->
 <title>18 Down</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&family=Shrikhand&display=swap">
@@ -1314,6 +1314,29 @@ span.pips, .calls-h span.pips { display: inline-flex; gap: 4px; vertical-align: 
 .rc-pay.compact b { font-size: 26px; }
 .lb-more { margin: 4px 0 0; }
 .lb-more > summary .section-h { font-size: 15px; }
+
+/* Finish screens fit one phone screen */
+.fin { gap: 8px; padding-top: 0; }
+.fin-hero { display: grid; grid-template-columns: auto 1fr; gap: 14px; align-items: center; }
+.fin-score { display: grid; justify-items: center; }
+.fin-score .total { font-family: var(--display); font-size: 58px; line-height: 1; color: var(--chalk); text-shadow: 3px 3px 0 rgba(0,0,0,.35); }
+.fin-score .total.under { color: #5ac46a; } .fin-score .total.over { color: #ff8a7a; }
+.fin-score .thru { font-family: var(--label); font-weight: 700; font-size: 12px; color: var(--mute); text-align: center; }
+.fin-side { display: grid; gap: 4px; min-width: 0; }
+.fin-side .verdict { margin: 0; font-size: 22px; line-height: 1.1; color: var(--chalk); text-align: left; }
+.fin-pay { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; margin: 0; padding: 4px 10px; border-radius: 8px; background: var(--band); color: var(--ink); font-family: var(--label); font-weight: 700; font-size: 12px; text-transform: uppercase; }
+.fin-pay b { font-family: var(--display); font-size: 20px; text-transform: none; }
+.fin-actions { display: flex; gap: 6px; }
+.fin-actions .btn { flex: 1; min-height: 40px; padding: 6px 8px; white-space: nowrap; }
+.fin .habit-news { padding: 6px 10px; font-size: 13px; }
+.fin .rtabs { margin-top: 0; }
+.fin .ld-grid { margin: 0; }
+.fin .lb-scroll { max-height: 50vh; overflow: auto; }
+.fin .rpanel .grade-box { margin-bottom: 0; }
+.dt-head { display: flex; align-items: center; gap: 10px; }
+.dt-head p { margin: 0; font-size: 14px; }
+.bd-rows.compact .bd-row { padding: 4px 0; }
+.fin .grade-team { margin: 0; }
 </style>
 <main id="app"></main>
 <script type="application/json" id="edits">{}</script>
@@ -4271,7 +4294,7 @@ function fillBreakdown(){
     if (state.breakdown.grade && state.breakdown.grade.letter[0] === "A" && typeof achieve === "function") achieve("agrade");
   }
   const slot = document.getElementById("breakdown");
-  if (slot) slot.innerHTML = breakdownHTML();
+  if (slot) slot.innerHTML = breakdownHTML(true);
 }
 function startRound(){
   SPEED = 1;
@@ -4326,9 +4349,26 @@ function resTabs(id, tabs){
   return `<div class="rtabs" role="tablist">${tabs.map(([k, label]) => `<button type="button" role="tab" class="rtab${k === cur ? " on" : ""}" data-act="rtab" data-tabs="${id}" data-k="${k}" aria-selected="${k === cur}">${label}</button>`).join("")}</div>
     ${tabs.map(([k, , html]) => `<div class="rpanel" role="tabpanel" data-tabs="${id}" data-k="${k}" ${k === cur ? "" : "hidden"}>${html}</div>`).join("")}`;
 }
-function breakdownHTML(){
+/* The Draft tab on the finish screen: the same facts as breakdownHTML, compact enough to fit one phone screen. The
+   longer notes (best in that draw, how it's measured) move into each row's hover text. */
+function draftTabHTML(){
   const bd = state.breakdown;
-  if (!bd) return `<details class="grade-box"><summary><span class="section-h">Draft grade</span></summary><p class="fine">Working it out.</p></details>`;
+  if (!bd) return `<p class="fine">Working out the draft grade.</p>`;
+  const b = buildObj(), g = bd.grade, max = Math.max(2, ...SLOTS.map(k => Math.abs(bd.picks[k].gain)));
+  return `<div class="dt-head">${g ? `<b class="grade-letter small g-${g.letter[0]}">${g.letter}</b>` : ""}<p>${!g ? "" : g.left < 0.25 ? "You got about everything out of your spins." : `Best team from your spins: <b class="tnum">${fmtAvg(g.bestAvg)}</b>, ${g.left.toFixed(1)} better`}</p></div>
+    ${g && g.left >= 0.25 ? `<p class="grade-team">${SLOTS.map(k => `<span class="s-${k}"><small>${SLOT_LABEL[k]}</small>${esc(g.team[k].short || g.team[k].name)}</span>`).join("")}</p>` : ""}
+    <div class="bd-rows compact">${SLOTS.map(k => {
+      const p = bd.picks[k], w = Math.abs(p.gain) / max * 50;
+      const tip = SLOT_NAME[k] + ": " + b[k].name + " " + b[k].year + ", " + fmtStrokes(p.gain) + " strokes against a field-level pro" + (p.best ? ". Best in that draw: " + p.best.short + " at " + fmtSlot(k, p.best.value) + ", worth " + p.best.more.toFixed(1) + " more" : "");
+      return `<div class="bd-row" title="${esc(tip)}"><span class="k">${SLOT_LABEL[k]}</span><span class="who">${esc(b[k].short)}${legendTag(b[k])}</span>
+        <span class="track" role="img" aria-label="${esc(fmtStrokes(p.gain))} strokes"><i class="bd-bar ${p.gain >= 0 ? "gain" : "cost"}" style="width:${w.toFixed(1)}%"></i></span><span class="v tnum">${fmtStrokes(p.gain)}</span></div>`;
+    }).join("")}</div>
+    <p class="fine" title="Strokes gained over a field-level pro in each slot, across ${bd.rounds} simulated rounds on this course">Build avg <b class="tnum">${fmtAvg(bd.avg)}</b> · field <b class="tnum">${fmtAvg(bd.field)}</b> · you <b class="tnum">${fmtTotal(state.round.total)}</b></p>`;
+}
+function breakdownHTML(open){
+  if (open) return draftTabHTML();
+  const bd = state.breakdown;
+  if (!bd) return `<details class="grade-box"${open ? " open" : ""}><summary><span class="section-h">Draft grade</span></summary><p class="fine">Working it out.</p></details>`;
   const b = buildObj();
   const max = Math.max(2, ...SLOTS.map(k => Math.abs(bd.picks[k].gain)));
   const luck = bd.avg - state.round.total;
@@ -4339,7 +4379,7 @@ function breakdownHTML(){
       <p class="fine">${g.left < 0.25 ? "You got about everything out of your spins." : `The best team from the same spins, with each spin in its best spot, averages <b class="tnum">${fmtAvg(g.bestAvg)}</b>: ${g.left.toFixed(1)} stroke${g.left >= 0.95 && g.left < 1.05 ? "" : "s"} better than yours.`}</p>
       ${g.left >= 0.25 ? `<p class="grade-team">${SLOTS.map(k => `<span class="s-${k}"><small>${SLOT_LABEL[k]}</small>${esc(g.team[k].short || g.team[k].name)}</span>`).join("")}</p>` : ""}</div></div>` : "";
   // the whole draft section starts collapsed: just the letter, tap to see the best team and what each pick was worth
-  return `<details class="grade-box"><summary>${g ? `<b class="grade-letter small g-${g.letter[0]}">${g.letter}</b>` : ""}<span class="section-h">Draft grade</span></summary>${gradeHTML}<h2 class="section-h">What each pick was worth</h2>
+  return `<details class="grade-box"${open ? " open" : ""}><summary>${g ? `<b class="grade-letter small g-${g.letter[0]}">${g.letter}</b>` : ""}<span class="section-h">Draft grade</span></summary>${gradeHTML}<h2 class="section-h">What each pick was worth</h2>
     <p class="fine">Strokes gained over a field-level pro in that slot, averaged across ${bd.rounds} simulated rounds on this course.</p>
     <div class="bd-rows">${SLOTS.map(k => {
       const p = bd.picks[k];
@@ -4371,16 +4411,16 @@ function viewResult(){
   const cell = h => `<div class="lc ${h.rel <= -2 ? "eagle" : h.rel === -1 ? "birdie" : h.rel === 0 ? "par" : h.rel === 1 ? "bogey" : "double"}" title="${esc(h.thrower.name + ": " + holeLabel(h))}"><small>${h.n}</small><b class="mk ${markClass(h.rel)}">${h.par + h.rel}</b>${typeof frAvatar === "function" ? frAvatar(proLook(h.thrower), 20) : ""}</div>`;
   return `<div class="wrap">
     <div class="bar"><span class="mark-wrap"><span class="mark">18 Down</span>${moneyChip()}</span><span class="where"><b>${esc(c.name)}</b>Par ${c.par}</span></div>
-    <section class="loader recap" aria-label="Round recap">
-      <p class="ld-title">${esc(title)}</p>
-      <div class="ld-total"><b class="total tnum ${r.total < 0 ? "under" : r.total > 0 ? "over" : ""}">${fmtTotal(r.total)}</b><span class="thru">Final${best !== null ? " · Best " + fmtTotal(+best) : ""}</span></div>
-      <div class="row top-actions">${daily ? `<button class="btn small primary" id="classic-again" data-act="classicAgain">Play Classic again</button>` : ""}<button class="btn small" id="again" data-act="go" data-screen="bulletin">Back to Tournaments</button></div>
-      <div class="rc-verdict"><h1 class="verdict">${esc(v.name)}</h1></div>
-      ${pay ? `<div class="rc-pay compact"><span>${pay.label}</span><b class="tnum">${fmtMoney(pay.amt)}</b></div>` : ""}
+    <section class="loader recap fin" aria-label="Round recap">
+      <div class="fin-hero">
+        <div class="fin-score"><b class="total tnum ${r.total < 0 ? "under" : r.total > 0 ? "over" : ""}">${fmtTotal(r.total)}</b><span class="thru">${esc(title)}${best !== null ? " · Best " + fmtTotal(+best) : ""}</span></div>
+        <div class="fin-side"><h1 class="verdict">${esc(v.name)}</h1>${pay ? `<p class="fin-pay"><span>${pay.label}</span><b class="tnum">${fmtMoney(pay.amt)}</b></p>` : ""}</div>
+      </div>
+      <div class="fin-actions">${daily ? `<button class="btn small primary" id="classic-again" data-act="classicAgain">Play again</button>` : ""}<button class="btn small${daily ? "" : " primary"}" id="again" data-act="go" data-screen="bulletin">Tournaments</button><button class="btn small" id="copy" data-act="copy" ${daily ? `title="The Classic result leaves out your picks, so it won’t spoil the round for your group."` : ""}>${ui.copied ? "Copied" : "Copy"}</button></div>
+      ${ui.shareFail ? `<textarea class="share-fallback" id="share-text" readonly aria-label="Select the text and copy it">${esc(shareText())}</textarea>` : ""}
       ${typeof habitNewsHTML === "function" ? habitNewsHTML() : ""}
       ${resTabs("res", [
-        ["card", "Card", `<p class="ld-nine">Front 9</p><div class="ld-grid">${r.holes.slice(0, 9).map(cell).join("")}</div>
-          <p class="ld-nine">Back 9</p><div class="ld-grid">${r.holes.slice(9).map(cell).join("")}</div>`],
+        ["card", "Card", `<div class="ld-grid">${r.holes.slice(0, 9).map(cell).join("")}</div><div class="ld-grid">${r.holes.slice(9).map(cell).join("")}</div>`],
         ["team", "Team", teamRowsHTML(r.holes, false)],
         ["stats", "Stats", `<div class="rc-stats">
           <div><b>${s.parked}</b><span>Parked</span></div>
@@ -4390,13 +4430,9 @@ function viewResult(){
         </div>
         <p class="fine verdict-line">${esc(v.line)}</p>
         ${pay ? `<p class="fine">${pay.note} Balance ${fmtMoney(meBalance(meLoad()))}.</p>` : ""}`],
+        ["draft", "Draft", `<section class="bd rc-bd" id="breakdown" aria-label="Draft grade">${breakdownHTML(true)}</section>`],
         daily && !state.replay ? ["friends", "Friends", `<section class="bd rc-bd" id="daily-lb" aria-label="Friends today">${typeof dlHTML === "function" ? dlHTML() : ""}</section>`] : null,
       ])}
-      <section class="bd rc-bd" id="breakdown" aria-label="What each pick was worth">${breakdownHTML()}</section>
-      <div class="actions">
-        <button class="btn primary full" id="copy" data-act="copy" ${daily ? `title="The Classic result leaves out your picks, so it won’t spoil the round for your group."` : ""}>${ui.copied ? "Copied" : "Copy result"}</button>
-        ${ui.shareFail ? `<label class="fine" for="share-text">Select the text below and copy it.</label><textarea class="share-fallback" id="share-text" readonly>${esc(shareText())}</textarea>` : ""}
-      </div>
     </section>
   </div>`;
 }
@@ -4657,27 +4693,24 @@ function viewTFinal(){
   const winner = T.place === 1 ? "You" : (rows.find(r => r.place === 1 && !r.you) || {}).name;
   return `<div class="wrap wide">
     <div class="bar"><span class="mark-wrap"><span class="mark">18 Down</span>${moneyChip()}</span><span class="where"><b>${esc(t.name)}</b>${esc(c.name)}, ${esc(fmtDate(state.dateKey))}</span></div>
-    <div class="split">
-      <section style="display:grid;gap:16px">
-        <div><p class="eyebrow">Final</p><h1 class="verdict">${fmtPlace(T.place, T.tied)} of ${t.field + 1}</h1>
-          <p class="verdict-line">${fmtTotal(me.total)} over ${t.rounds} rounds (${me.scores.map(fmtTotal).join(", ")}).${T.playoff ? (T.playoff.result === "won" ? " Won in a playoff." : " Lost in a playoff.") : ""}</p>${typeof habitNewsHTML === "function" ? habitNewsHTML() : ""}</div>
-        <div class="row top-actions"><button class="btn small primary" id="again" data-act="go" data-screen="bulletin">Back to Tournaments</button></div>
-        <div class="rc-pay compact"><span>Payout</span><b class="tnum">${fmtMoney(T.pay)}</b></div>
-        ${resTabs("tfin", [
-          ["board", "Leaderboard", (() => {   // top 10 and your own row; the rest folds away
-            const top = rows.slice(0, 10), mine = rows.find(r => r.you), short = top.includes(mine) || !mine ? top : top.concat(mine);
-            return `${lbHTML(short, t.rounds, t.rounds, "Top of the leaderboard")}${rows.length > short.length ? `<details class="grade-box lb-more"><summary><span class="section-h">Full leaderboard (${rows.length})</span></summary>${lbHTML(rows, t.rounds, t.rounds, "Final leaderboard")}</details>` : ""}`;
-          })()],
-          ["team", "Team", `<div class="reveal">${SLOTS.map(k => `<div><small>${SLOT_LABEL[k]}</small><b>${esc(b[k].short)}</b><span class="tnum">${fmtSlot(k, b[k][k])}</span></div>`).join("")}</div>
-            <p class="fine">Ratings are revealed now that the event is over. Balance ${fmtMoney(meBalance(meLoad()))}.</p>`],
-        ])}
-        <div class="actions">
-          <button class="btn primary full" id="copy" data-act="copy">${ui.copied ? "Copied" : "Copy result"}</button>
-          ${ui.shareFail ? `<label class="fine" for="share-text">Select the text below and copy it.</label><textarea class="share-fallback" id="share-text" readonly>${esc(shareText())}</textarea>` : ""}
-          <div class="row"><button class="btn small" id="earnings" data-act="earnings">History</button></div>
-        </div>
-      </section>
-    </div>
+    <section class="loader recap fin">
+      <div class="fin-hero">
+        <div class="fin-score"><b class="total tnum">${fmtPlace(T.place, T.tied)}</b><span class="thru">of ${t.field + 1} · ${fmtTotal(me.total)}${T.playoff ? (T.playoff.result === "won" ? " · won playoff" : " · lost playoff") : ""}</span></div>
+        <div class="fin-side"><h1 class="verdict">${esc(t.name)}</h1><p class="fin-pay"><span>Payout</span><b class="tnum">${fmtMoney(T.pay)}</b></p></div>
+      </div>
+      <div class="fin-actions"><button class="btn small primary" id="again" data-act="go" data-screen="bulletin">Tournaments</button><button class="btn small" id="copy" data-act="copy">${ui.copied ? "Copied" : "Copy"}</button><button class="btn small" id="earnings" data-act="earnings">History</button></div>
+      ${ui.shareFail ? `<textarea class="share-fallback" id="share-text" readonly aria-label="Select the text and copy it">${esc(shareText())}</textarea>` : ""}
+      ${typeof habitNewsHTML === "function" ? habitNewsHTML() : ""}
+      ${resTabs("tfin", [
+        ["board", "Leaderboard", (() => {   // the top 5 and your own row; the rest folds away
+          const top = rows.slice(0, 5), mine = rows.find(r => r.you), short = top.includes(mine) || !mine ? top : top.concat(mine);
+          return `${lbHTML(short, t.rounds, t.rounds, "Top of the leaderboard")}${rows.length > short.length ? `<details class="grade-box lb-more"><summary><span class="section-h">Full leaderboard (${rows.length})</span></summary><div class="lb-scroll">${lbHTML(rows, t.rounds, t.rounds, "Final leaderboard")}</div></details>` : ""}`;
+        })()],
+        ["rounds", "Rounds", `<p class="fine">Your rounds: ${me.scores.map(fmtTotal).join(", ")} (${fmtTotal(me.total)}). Winner: ${esc(winner || "")}.</p>`],
+        ["team", "Team", `<div class="reveal">${SLOTS.map(k => `<div><small>${SLOT_LABEL[k]}</small><b>${esc(b[k].short)}</b><span class="tnum">${fmtSlot(k, b[k][k])}</span></div>`).join("")}</div>
+          <p class="fine">Ratings are revealed now that the event is over. Balance ${fmtMoney(meBalance(meLoad()))}.</p>`],
+      ])}
+    </section>
   </div>`;
 }
 function viewEarnings(){
