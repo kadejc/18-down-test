@@ -2,7 +2,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="robots" content="noindex,nofollow">
-<!-- 18 Down test build: branch test-combined, commit 92e633d -->
+<!-- 18 Down test build: branch test-combined, commit c04632b -->
 <title>18 Down</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&family=Shrikhand&display=swap">
@@ -1340,11 +1340,11 @@ span.pips, .calls-h span.pips { display: inline-flex; gap: 4px; vertical-align: 
 
 /* Career ladder */
 .f-career { background: #d9ecff; }
-.ladder-head { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
-.ladder-head div { display: grid; padding: 8px 10px; border-radius: 8px; background: var(--pond-3); }
-.ladder-head small { font-family: var(--label); font-size: 11px; text-transform: uppercase; color: var(--mute); }
-.ladder-head b { font-family: var(--display); font-size: 20px; color: var(--chalk); }
-.ladder { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.cl-head { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.cl-head div { display: grid; padding: 8px 10px; border-radius: 8px; background: var(--pond-3); }
+.cl-head small { font-family: var(--label); font-size: 11px; text-transform: uppercase; color: var(--mute); }
+.cl-head b { font-family: var(--display); font-size: 20px; color: var(--chalk); }
+.cl-ladder { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
 .rung { display: flex; align-items: center; gap: 10px; padding: 8px 12px; border-radius: 8px; background: rgba(0,0,0,.18); opacity: .55; }
 .rung.open { opacity: 1; background: var(--pond-3); }
 .rung.next { box-shadow: 0 0 0 2px var(--band); }
@@ -1355,6 +1355,44 @@ span.pips, .calls-h span.pips { display: inline-flex; gap: 4px; vertical-align: 
 .rung .btn { min-width: 76px; }
 .rung-lock { color: var(--mute); }
 .ladder-up { margin: 0; padding: 8px 12px; border-radius: 8px; background: var(--band); color: var(--ink); font-weight: 700; display: flex; align-items: center; gap: 8px; }
+
+/* Prestige */
+.prestige-card { display: grid; gap: 6px; padding: 12px; border-radius: 10px; background: linear-gradient(135deg, #d4af37, #f6e27a); color: var(--ink); }
+.prestige-card p { margin: 0; font-size: 14px; }
+.prestige-card b { display: flex; align-items: center; gap: 6px; font-family: var(--label); text-transform: uppercase; }
+
+/* Home: career-first hub */
+.hub { display: grid; gap: 12px; }
+.hub-head { display: flex; align-items: center; justify-content: space-between; }
+.hub-head h1 { margin: 0; font-family: var(--display); font-size: 30px; color: var(--chalk); text-shadow: 3px 3px 0 rgba(0,0,0,.35); }
+.hub-hero { display: grid; gap: 10px; padding: 14px; border-radius: 14px; background: linear-gradient(160deg, #1f6f6a, #134246); border: 2px solid var(--band); box-shadow: 0 6px 0 rgba(0,0,0,.25); }
+.hub-top { display: grid; gap: 2px; }
+.hub-top small { font-family: var(--label); font-weight: 700; font-size: 12px; letter-spacing: .06em; text-transform: uppercase; color: var(--band); }
+.hub-top b { font-family: var(--display); font-size: 32px; line-height: 1.05; color: var(--chalk); }
+.hub-top span { font-size: 13px; color: var(--mute); }
+.hub-steps { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(11, 1fr); gap: 4px; }
+.hub-steps li { height: 8px; border-radius: 4px; background: rgba(255,255,255,.12); }
+.hub-steps li.done { background: var(--band); }
+.hub-steps li.now { background: #fff1a8; box-shadow: 0 0 8px rgba(255,210,63,.8); }
+.hub-hero .btn.primary { min-height: 52px; font-size: 18px; }
+.hub-hero .linkish { justify-self: center; }
+.hub-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.hub-card { display: grid; grid-template-columns: auto 1fr; grid-template-rows: auto auto; column-gap: 8px; align-items: center; text-align: left; padding: 10px; border-radius: 10px; border: 2px solid var(--ink); background: var(--pond-3); color: var(--chalk); font: inherit; cursor: pointer; touch-action: manipulation; min-height: 64px; }
+.hub-card .ico { grid-row: 1 / 3; width: 26px; height: 26px; color: var(--band); }
+.hub-card b { font-family: var(--label); font-size: 15px; line-height: 1.1; }
+.hub-card small { font-size: 11px; line-height: 1.2; color: var(--mute); overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+.hub-card.live { box-shadow: 0 0 0 2px var(--band); }
+.hub-card.wide { grid-column: 1 / -1; }
+
+/* Home area */
+.home-area { display: grid; gap: 6px; padding: 10px 12px; border-radius: 10px; background: var(--pond-3); }
+.home-area > b { font-family: var(--label); font-size: 13px; text-transform: uppercase; color: var(--chalk); }
+.home-area > small { font-size: 12px; color: var(--mute); }
+.home-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.home-chips button { display: inline-flex; align-items: baseline; gap: 4px; padding: 6px 10px; border-radius: 999px; border: 2px solid var(--ink); background: var(--chalk); color: var(--ink); font-family: var(--label); font-weight: 700; font-size: 14px; cursor: pointer; }
+.home-chips button small { font-size: 10px; color: rgba(16,39,42,.6); }
+.home-chips button.on { background: var(--band); }
+.home-chips button:disabled { opacity: .35; cursor: default; }
 </style>
 <main id="app"></main>
 <script type="application/json" id="edits">{}</script>
@@ -2033,6 +2071,11 @@ const SOURCES = [
   ["Disc Golf Fanatic: Marwede's C1X by season","https://discgolffanatic.com/best-putter-in-the-modern-era-of-pro-disc-golf"],
   ["UDisc: 2020 pro stat leaders","https://udisc.com/blog/post/disc-golfs-best-putters-hardest-hole-more-in-2020"],
 ];
+
+/* Local courses for each home state, from OpenStreetMap. (c) OpenStreetMap contributors, ODbL
+   (https://www.openstreetmap.org/copyright). Built by tools/local_courses.py; see it for the rules. */
+const HOME_STATES = {"TX": "Texas", "CA": "California", "MI": "Michigan", "NC": "North Carolina", "MN": "Minnesota", "CO": "Colorado"};
+const LOCAL_COURSE_ROWS = {"TX":[{"id":"osm885710079","name":"City Disc Park","event":"Local course","place":"TX","layout":"Mapped layout (9 holes, played twice)","par":54,"ft":5176,"fh":5,"ob":1,"diff":2,"holes":[[3,270],[3,242],[3,264],[3,352],[3,354],[3,383],[3,233],[3,247],[3,243],[3,270],[3,242],[3,264],[3,352],[3,354],[3,383],[3,233],[3,247],[3,243]],"est":true,"estPar":true,"src":"https://www.openstreetmap.org/way/885710079"},{"id":"osm885716012","name":"Eagle Ranch Park Disc Golf Course","event":"Local course","place":"TX","layout":"Mapped layout (9 holes, played twice)","par":60,"ft":6918,"fh":5,"ob":1,"diff":3,"holes":[[5,1048],[3,243],[3,288],[3,340],[3,276],[3,182],[3,208],[3,365],[4,509],[5,1048],[3,243],[3,288],[3,340],[3,276],[3,182],[3,208],[3,365],[4,509]],"est":true,"estPar":true,"src":"https://www.openstreetmap.org/way/885716012"},{"id":"osm885624084","name":"Gateway Park West Disc Golf Course","event":"Local course","place":"TX","layout":"Mapped layout","par":54,"ft":4130,"fh":5,"ob":1,"diff":1,"holes":[[3,171],[3,238],[3,192],[3,244],[3,156],[3,154],[3,219],[3,373],[3,110],[3,179],[3,306],[3,339],[3,293],[3,326],[3,264],[3,208],[3,163],[3,195]],"est":true,"estPar":true,"src":"https://www.openstreetmap.org/way/885624084"},{"id":"osm885738612","name":"Justin Disc Golf Course","event":"Local course","place":"TX","layout":"Mapped layout (9 holes, played twice)","par":56,"ft":6044,"fh":5,"ob":1,"diff":3,"holes":[[3,252],[3,257],[3,412],[3,263],[3,363],[4,450],[3,271],[3,365],[3,389],[3,252],[3,257],[3,412],[3,263],[3,363],[4,450],[3,271],[3,365],[3,389]],"est":true,"estPar":true,"src":"https://www.openstreetmap.org/way/885738612"},{"id":"osm885870447","name":"Mountain Creek Disc Golf Course","event":"Local course","place":"TX","layout":"Mapped layout (9 holes, played twice)","par":58,"ft":6834,"fh":5,"ob":1,"diff":3,"holes":[[3,368],[4,444],[3,420],[3,360],[3,319],[4,487],[3,304],[3,334],[3,381],[3,368],[4,444],[3,420],[3,360],[3,319],[4,487],[3,304],[3,334],[3,381]],"est":true,"estPar":true,"src":"https://www.openstreetmap.org/way/885870447"},{"id":"osm378249221","name":"Pearsall Park Disc Golf Course","event":"Local course","place":"TX","layout":"Mapped layout (9 holes, played twice)","par":56,"ft":5516,"fh":5,"ob":1,"diff":2,"holes":[[3,218],[3,266],[3,320],[3,325],[3,411],[3,283],[4,488],[3,179],[3,268],[3,218],[3,266],[3,320],[3,325],[3,411],[3,283],[4,488],[3,179],[3,268]],"est":true,"estPar":true,"src":"https://www.openstreetmap.org/way/378249221"},{"id":"osm885727867","name":"Sonora Park Disc Golf Course","event":"Local course","place":"TX","layout":"Mapped layout (9 holes, played twice)","par":54,"ft":3904,"fh":5,"ob":1,"diff":1,"holes":[[3,348],[3,278],[3,270],[3,219],[3,171],[3,177],[3,162],[3,148],[3,179],[3,348],[3,278],[3,270],[3,219],[3,171],[3,177],[3,162],[3,148],[3,179]],"est":true,"estPar":true,"src":"https://www.openstreetmap.org/way/885727867"},{"id":"osm1558653267","name":"Trophy Club Park Disc Golf","event":"Local course","place":"TX","layout":"Mapped layout","par":56,"ft":5832,"fh":5,"ob":1,"diff":2,"holes":[[3,344],[3,394],[3,201],[3,203],[3,321],[3,257],[3,290],[3,280],[4,594],[3,456],[3,333],[3,392],[3,200],[3,286],[3,260],[3,353],[4,416],[3,252]],"est":true,"estPar":false,"src":"https://www.openstreetmap.org/way/1558653267"},{"id":"osm885740706","name":"Wellington of Flower Mound Disc Golf Course","event":"Local course","place":"TX","layout":"Mapped layout (9 holes, played twice)","par":54,"ft":3770,"fh":5,"ob":1,"diff":1,"holes":[[3,133],[3,171],[3,265],[3,250],[3,131],[3,167],[3,182],[3,213],[3,373],[3,133],[3,171],[3,265],[3,250],[3,131],[3,167],[3,182],[3,213],[3,373]],"est":true,"estPar":true,"src":"https://www.openstreetmap.org/way/885740706"},{"id":"osm885642410","name":"Willow Creek Park Disc Golf Course","event":"Local course","place":"TX","layout":"Mapped layout (9 holes, played twice)","par":54,"ft":5080,"fh":5,"ob":1,"diff":2,"holes":[[3,293],[3,260],[3,244],[3,294],[3,375],[3,348],[3,247],[3,226],[3,253],[3,293],[3,260],[3,244],[3,294],[3,375],[3,348],[3,247],[3,226],[3,253]],"est":true,"estPar":true,"src":"https://www.openstreetmap.org/way/885642410"}],"CA":[{"id":"osm1463243309","name":"Central Park Disc Golf Course","event":"Local course","place":"CA","layout":"Mapped layout","par":54,"ft":3968,"fh":5,"ob":1,"diff":1,"holes":[[3,303],[3,155],[3,155],[3,183],[3,226],[3,281],[3,231],[3,208],[3,220],[3,285],[3,317],[3,149],[3,163],[3,249],[3,123],[3,165],[3,333],[3,222]],"est":true,"estPar":false,"src":"https://www.openstreetmap.org/way/1463243309"},{"id":"osm1320579590","name":"River Walk DGC","event":"Local course","place":"CA","layout":"Mapped layout (9 holes, played twice)","par":54,"ft":4456,"fh":5,"ob":1,"diff":1,"holes":[[3,207],[3,210],[3,185],[3,193],[3,303],[3,159],[3,232],[3,350],[3,389],[3,207],[3,210],[3,185],[3,193],[3,303],[3,159],[3,232],[3,350],[3,389]],"est":true,"estPar":false,"src":"https://www.openstreetmap.org/way/1320579590"},{"id":"osm1332644291","name":"Robertson Park Disc Golf","event":"Local course","place":"CA","layout":"Mapped layout (9 holes, played twice)","par":54,"ft":4572,"fh":5,"ob":1,"diff":1,"holes":[[3,275],[3,238],[3,160],[3,322],[3,165],[3,240],[3,307],[3,299],[3,280],[3,275],[3,238],[3,160],[3,322],[3,165],[3,240],[3,307],[3,299],[3,280]],"est":true,"estPar":true,"src":"https://www.openstreetmap.org/way/1332644291"},{"id":"osm594061586","name":"Ryan Ranch Disc Golf Course","event":"Local course","place":"Monterey, CA","layout":"Mapped layout","par":55,"ft":5939,"fh":5,"ob":1,"diff":3,"holes":[[3,345],[3,259],[3,385],[3,184],[3,276],[3,272],[3,411],[4,538],[3,335],[3,265],[3,348],[3,418],[3,273],[3,291],[3,334],[3,280],[3,335],[3,390]],"est":true,"estPar":true,"src":"https://www.openstreetmap.org/way/594061586"}],"MI":[],"NC":[],"MN":[],"CO":[]};
 
 /* ---------- History: more seasons (back to 1982), real season stats, legends ----------
    Made by gen_history.py from StatMando (statmando.com) season tables, yearly results and player event ratings, and the
@@ -2760,6 +2803,154 @@ function playoffScore(course, pro, key, n, who){
   return {strokes: r.holes[idx].par + r.holes[idx].rel, hole: r.holes[idx]};
 }
 
+/* ---------- Career ladder ----------
+   You earn your way up, like the real tour: Mini, C-tier, B-tier, A-tier, Jomez Series, DGPT, DGPT+, Major, DGPT Playoffs,
+   DGPT Championship, Worlds. Each event is a tournament against its own field. Finish high enough (the "up" place) to
+   earn your way into the next one; every tier you've earned stays open to play again.
+   - Mini, C-tier and B-tier fields are fictional local players, simulated from a rating (see localSeason).
+   - A-tier mixes locals with the lowest-rated current-year pros; from the Jomez Series up the fields are real
+     current-year pros, deeper into the ratings list the higher you climb.
+   - Your draft is capped: spins only include seasons rated at or under the tier's cap, so the pros you can draft get
+     better as you climb. Legends become draftable at the Playoffs (cap 1058) and GOATs only at Worlds (no cap). */
+const LADDER = [
+  {id: "mini",    name: "Mini",              rounds: 1, field: 23, first: 150,   local: [935, 995],  cap: 1014, up: 3},
+  {id: "c",       name: "C-Tier",            rounds: 2, field: 35, first: 500,   local: [955, 1005], cap: 1018, up: 3},
+  {id: "b",       name: "B-Tier",            rounds: 2, field: 47, first: 1500,  local: [975, 1015], cap: 1022, up: 3},
+  {id: "a",       name: "A-Tier",            rounds: 3, field: 59, first: 4000,  local: [985, 1015], pros: [100, 140], proShare: .4, cap: 1028, up: 3},
+  {id: "jomez",   name: "Jomez Series",      rounds: 3, field: 53, first: 8000,  depth: [70, 140], cap: 1038, up: 5},
+  {id: "dgpt",    name: "DGPT",              rounds: 3, field: 71, first: 16000, depth: [30, 120], cap: 1042, up: 5},
+  {id: "dgptp",   name: "DGPT+",             rounds: 4, field: 71, first: 20000, depth: [10, 100], cap: 1048, up: 5},
+  {id: "major",   name: "Major",             rounds: 4, field: 71, first: 40000, depth: [0, 80], cap: 1052, up: 10},
+  {id: "playoff", name: "DGPT Playoffs",     rounds: 3, field: 39, first: 30000, depth: [0, 48], cap: 1058, up: 5},
+  {id: "champ",   name: "DGPT Championship", rounds: 4, field: 23, first: 50000, depth: [0, 30], cap: 1058, up: 3},
+  {id: "worlds",  name: "Worlds",            rounds: 5, field: 89, first: 60000, depth: [0, 95], up: 1},
+];
+const LADDER_BY_ID = Object.fromEntries(LADDER.map((t, i) => [t.id, Object.assign(t, {level: i})]));
+
+/* Progress: highest tier earned, best finish per tier, titles, and the event in progress. */
+function ladderLoad(){
+  try { const v = JSON.parse(storeGet("18down.ladder") || "null"); if (v && typeof v.level === "number") return v; } catch (e) {}
+  return {level: 0, played: 0, best: {}, wins: {}, current: null};
+}
+function ladderSave(v){ storeSet("18down.ladder", JSON.stringify(v)); }
+function ladderKey(n, id){ return "c:" + n + ":" + id; }
+function ladderTierOf(key){ return typeof key === "string" && key.startsWith("c:") ? LADDER_BY_ID[key.split(":")[2]] || null : null; }
+
+/* The draft cap for the event you're in (null when there's none). */
+function careerCap(){ const t = state.mode === "tourney" && ladderTierOf(state.dateKey); return t && t.cap ? t.cap : null; }
+let POOL_CACHE = {cap: null, list: null};
+function poolSeasons(){
+  const cap = careerCap();
+  if (!cap) return SEASONS;
+  if (POOL_CACHE.cap !== cap || !POOL_CACHE.list) POOL_CACHE = {cap, list: SEASONS.filter(s => (s.pdga || PDGA_MID) <= cap)};
+  return POOL_CACHE.list;
+}
+
+/* Fictional local players. Stats come from a straight-line fit of every real season's stats against its rating, so a
+   local plays like a pro of his rating would. Names are made up: a first name and a last initial. */
+const LOCAL_FIRST = ["Tyler", "Josh", "Kyle", "Matt", "Ryan", "Cody", "Jake", "Nick", "Brandon", "Chris", "Derek", "Evan", "Garrett", "Hunter", "Ian", "Jordan", "Kevin", "Logan", "Mason", "Nate", "Owen", "Parker", "Quinn", "Reed", "Sam", "Trevor", "Wes", "Zach", "Austin", "Blake", "Caleb", "Dylan", "Eli", "Grant", "Jared", "Luke", "Miles", "Shane", "Travis", "Wyatt"];
+let LOCAL_FIT = null;
+function localFit(){
+  if (LOCAL_FIT) return LOCAL_FIT;
+  const R = SEASONS.filter(s => !s.legend && s.pdga && typeof s.bh === "number");
+  const fit = k => { const n = R.length, mx = R.reduce((a, s) => a + s.pdga - 1000, 0) / n, my = R.reduce((a, s) => a + s[k], 0) / n;
+    let sxy = 0, sxx = 0; for (const s of R){ sxy += (s.pdga - 1000 - mx) * (s[k] - my); sxx += (s.pdga - 1000 - mx) ** 2; }
+    const b = sxx ? sxy / sxx : 0; return {a: my - b * mx, b}; };
+  LOCAL_FIT = {bh: fit("bh"), fh: fit("fh"), c1: fit("c1"), c2: fit("c2")};
+  return LOCAL_FIT;
+}
+function localSeason(name, rating, i){
+  const F = localFit(), at = (k, lo, hi) => Math.max(lo, Math.min(hi, F[k].a + F[k].b * (rating - 1000)));
+  return {id: "local" + i, name, year: new Date().getFullYear(), sponsor: "Local", brand: "Local", short: name, pdga: rating,
+    bh: at("bh", 35, 95), fh: at("fh", 35, 95), c1: at("c1", 55, 92), c2: at("c2", 6, 40), tee: null, teeBase: null, stats: null, legend: null, local: true};
+}
+function localField(t, key, n){
+  const rng = mulberry32(hashStr("local|" + key)), used = new Set(), out = [];
+  for (let i = 0; out.length < n && i < n * 4; i++){
+    const name = LOCAL_FIRST[Math.floor(rng() * LOCAL_FIRST.length)] + " " + String.fromCharCode(65 + Math.floor(rng() * 26)) + ".";
+    if (used.has(name)) continue; used.add(name);
+    const r = Math.round(t.local[0] + (t.local[1] - t.local[0]) * Math.pow(rng(), 1.3));
+    const s = localSeason(name, r, out.length);
+    out.push({name, season: s, build: {bh: s, fh: s, c1: s, c2: s}});
+  }
+  return out;
+}
+/* The field for a career event. */
+function ladderField(t, key){
+  if (t.depth) return tourneyField(SEASONS, key, t);
+  if (t.pros){
+    const nPro = Math.round(t.field * t.proShare);
+    return tourneyField(SEASONS, key, {field: nPro, depth: t.pros}).concat(localField(t, key, t.field - nPro));
+  }
+  return localField(t, key, t.field);
+}
+
+/* Start (or resume) a career event at tier id. */
+function openCareerEvent(id){
+  const L = ladderLoad(), t = LADDER_BY_ID[id];
+  if (!t || t.level > L.level) return;
+  let key = L.current && ladderTierOf(L.current) === t ? L.current : null;
+  if (!key){ L.played = (L.played || 0) + 1; key = ladderKey(L.played, id); L.current = key; ladderSave(L); }
+  openTourney(key);
+}
+/* Called when a career event finishes. */
+function ladderResult(key, place){
+  const t = ladderTierOf(key); if (!t) return null;
+  const L = ladderLoad(), was = L.level;
+  L.best[t.id] = Math.min(L.best[t.id] || 999, place);
+  if (place === 1) L.wins[t.id] = (L.wins[t.id] || 0) + 1;
+  if (place <= t.up && t.level === L.level && L.level < LADDER.length - 1) L.level = t.level + 1;
+  if (L.current === key) L.current = null;
+  ladderSave(L);
+  return {up: L.level > was ? LADDER[L.level] : null, tier: t};
+}
+
+/* Prestige: once you've won Worlds you can restart the career from Mini with more talent (see meLv in ui.js) and new
+   Pro Shop items. Money, collection, achievements and what you've bought all stay. */
+function canPrestige(){ const L = ladderLoad(); return ((L.wins || {}).worlds || 0) > 0; }
+function doPrestige(){
+  if (!canPrestige()) return;
+  const me = meLoad(), L = ladderLoad();
+  me.prestige = mePrestige(me) + 1; meSave(me);
+  const past = (L.past || []).concat({prestige: me.prestige - 1, best: L.best, wins: L.wins, played: L.played});
+  ladderSave({level: 0, played: 0, best: {}, wins: {}, current: null, past});
+  habitNews && habitNews(`Prestige ${me.prestige}: My Player +${PRESTIGE_TIERS} tiers in every skill and +${PRESTIGE_RATING} rating. New gear unlocked in the Pro Shop.`);
+}
+function prestigeCard(){
+  const me = meLoad(), P = mePrestige(me), next = P + 1, unlocks = [].concat(...Object.values(CLOTHES)).concat(DISCS).filter(it => it.pr === next).length;
+  return `<div class="prestige-card"><b>${ico("trophy")} World champion</b>
+    <p>Prestige ${next}: restart from Mini with My Player +${PRESTIGE_TIERS} tiers in every skill and +${PRESTIGE_RATING} rating${unlocks ? `, and unlock ${unlocks} new Pro Shop item${unlocks > 1 ? "s" : ""}` : ""}. You keep your money, collection and gear.</p>
+    <button class="btn ${ui.prestigeSure ? "primary" : ""} full" data-act="prestige">${ui.prestigeSure ? "Tap again to prestige" : `Prestige ${next}`}</button></div>`;
+}
+/* Home area: Mini, C-tier and B-tier events are played on real courses from your home state (OpenStreetMap). */
+function homeAreaHTML(){
+  if (typeof HOME_STATES === "undefined") return "";
+  const me = meLoad(), st = me.home, counts = Object.fromEntries(Object.keys(HOME_STATES).map(k => [k, homeCourses(k).length]));
+  return `<div class="home-area"><b>Home area</b><div class="home-chips">${Object.entries(HOME_STATES).map(([k, name]) => `<button class="${st === k ? "on" : ""}" data-act="homeArea" data-st="${k}" ${counts[k] ? "" : "disabled"} title="${esc(name)}: ${counts[k]} local course${counts[k] === 1 ? "" : "s"}">${k}<small>${counts[k]}</small></button>`).join("")}</div>
+    <small>${st ? `Local events play on ${counts[st]} ${esc(HOME_STATES[st])} course${counts[st] === 1 ? "" : "s"} from OpenStreetMap.` : "Pick a state to play your local events (Mini to B-tier) on real courses there."}</small></div>`;
+}
+/* The career hub: the ladder, what each rung takes, and where you are. */
+function viewLadder(){
+  const L = ladderLoad(), cur = L.current && ladderTierOf(L.current);
+  const titles = Object.values(L.wins || {}).reduce((a, b) => a + b, 0);
+  return `<div class="wrap">
+    <div class="bar has-home"><span class="mark-wrap"><span class="mark">18 Down</span>${moneyChip()}</span><span class="where"><b>Career</b>Earn your way up</span></div>
+    <div class="cl-head"><div><small>Level${mePrestige(meLoad()) ? ` · ★${mePrestige(meLoad())}` : ""}</small><b>${esc(LADDER[L.level].name)}</b></div><div><small>Wins</small><b class="tnum">${titles}</b></div><div><small>Events</small><b class="tnum">${L.played || 0}</b></div></div>
+    ${homeAreaHTML()}
+    ${canPrestige() ? prestigeCard() : ""}
+    ${cur ? `<button class="btn primary full" data-act="careerEvent" data-id="${cur.id}">Resume ${esc(cur.name)}</button>` : ""}
+    <ol class="cl-ladder">${LADDER.map(t => {
+      const open = t.level <= L.level, next = t.level === L.level, best = L.best[t.id], wins = (L.wins || {})[t.id] || 0;
+      const need = t.level === LADDER.length - 1 ? "Win it to be world champion" : `Top ${t.up} earns ${LADDER[t.level + 1].name}`;
+      return `<li class="rung${open ? " open" : ""}${next ? " next" : ""}">
+        <div class="rung-main"><b>${esc(t.name)}</b><small>${t.rounds} round${t.rounds > 1 ? "s" : ""} · ${t.field + 1} players · ${fmtMoney(t.first)} to win${t.cap ? ` · draft up to ${t.cap}` : ""}</small>
+          <small class="rung-need">${open ? need : "Locked"}${best ? ` · best ${fmtPlace(best)}` : ""}${wins ? ` · ${wins} win${wins > 1 ? "s" : ""}` : ""}</small></div>
+        ${open ? `<button class="btn small${next ? " primary" : ""}" data-act="careerEvent" data-id="${t.id}" ${cur && cur !== t ? "disabled" : ""}>${cur === t ? "Resume" : "Play"}</button>` : `<span class="rung-lock" aria-label="Locked">${ico("hidden")}</span>`}
+      </li>`; }).join("")}</ol>
+    <div class="row"><button class="btn small" data-act="go" data-screen="bulletin">Back to Tournaments</button></div>
+  </div>`;
+}
+
 /* Small line icons, drawn in the text color. ico(name, label): label is read by screen readers and shown on hover. */
 const ICON_PATHS = {
   safe: '<path d="M12 3l7 3v5c0 5-3 8.5-7 10-4-1.5-7-5-7-10V6z"/>',
@@ -2849,7 +3040,13 @@ let playToken = 0;
 function esc(s){ return String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
 function fmtTotal(t){ return t === 0 ? "E" : t < 0 ? "−" + Math.abs(t) : "+" + t; }
 function fmtSlot(slot, v){ return slot === "c1" || slot === "c2" ? (Number.isInteger(v) ? String(v) : v.toFixed(1)) : String(v); }
-function course(){ return COURSES.find(c => c.id === state.courseId); }
+let LOCAL_COURSES = null;
+function localCourses(){
+  if (!LOCAL_COURSES) LOCAL_COURSES = typeof LOCAL_COURSE_ROWS === "undefined" ? [] : makeCourses([].concat(...Object.values(LOCAL_COURSE_ROWS)), {});
+  return LOCAL_COURSES;
+}
+function homeCourses(st){ return st && typeof LOCAL_COURSE_ROWS !== "undefined" && LOCAL_COURSE_ROWS[st] ? localCourses().filter(c => LOCAL_COURSE_ROWS[st].some(r => r.id === c.id)) : []; }
+function course(){ return COURSES.find(c => c.id === state.courseId) || localCourses().find(c => c.id === state.courseId); }
 function buildObj(){ const b = {}; for (const k of SLOTS) if (state.picks[k]) b[k] = getSeason(state.picks[k]); return b; }
 function usedNames(){ return Object.values(state.picks).filter(id => id !== "me").map(id => getSeason(id).name); }
 /* Browser storage can be blocked in some views; keep a copy in memory so money still adds up this session. */
@@ -4472,7 +4669,9 @@ function tourneyCtx(key){
   if (tCache.has(key)) return tCache.get(key);
   const lt = typeof ladderTierOf === "function" && ladderTierOf(key);   // a career event: its own tier and field
   const t = lt || tourneyFor(key);
-  const c = lt ? COURSES[hashStr("course|" + key) % COURSES.length] : dailyCourse(COURSES, key);   // career keys aren't dates
+  const home = lt && lt.local ? homeCourses(meLoad().home) : [];   // Mini to B-tier: your home area's courses, if it has any
+  const pool = home.length ? home : COURSES;
+  const c = lt ? pool[hashStr("course|" + key) % pool.length] : dailyCourse(COURSES, key);   // career keys aren't dates
   const field = lt ? ladderField(lt, key) : tourneyField(SEASONS, key, t);
   const rows = playField(c, field, key, t.rounds);
   const ctx = {key, t, c, field, rows, pay: payTable(t)};
@@ -4555,7 +4754,8 @@ function viewTour(){
     <div id="tour-detail" ${state.landing ? "hidden" : ""} style="display:grid;gap:16px">
       <div><h1 class="course-name">${esc(c.name)}</h1>
         <p class="course-sub">${esc(c.event)}, ${esc(c.place)}</p>
-        <p class="course-layout">${esc(c.layout)}, par ${c.par}, ${fmtFt(c.ft)}</p></div>
+        <p class="course-layout">${esc(c.layout)}, par ${c.par}, ${fmtFt(c.ft)}</p>
+        ${c.est ? `<p class="fine">Course map © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap contributors</a>${c.estPar ? ". Pars estimated from hole length" : ""}.</p>` : ""}</div>
       <div class="statline tour-facts">
         <div><b>${t.rounds}</b><span>Rounds</span></div>
         <div><b>${t.field + 1}</b><span>Players</span></div>
@@ -4782,6 +4982,8 @@ const DISCS = [
   {name: "Happy Holidays", c: "#c8102e", price: 10000, pat: "holiday", seasonal: true}, {name: "Autumn Leaves", c: "#f0d9a0", price: 5000, pat: "leaf", seasonal: true},
   // added after the seasonal pair (always add on the end)
   {name: "Halo 21", c: "#e4f4f4", price: 20000, pat: "halo"}, {name: "The Spinner", c: "#8fe0ec", price: 20000, pat: "turbine"},
+  // prestige discs: earned by restarting your career after winning Worlds
+  {name: "Gold", c: "#d4af37", price: 25000, pr: 1}, {name: "Platinum", c: "#e5e4e2", price: 50000, pr: 2}, {name: "Diamond", c: "#b9f2ff", price: 100000, pat: "glow", pr: 3}
 ];
 const LEAVES = [[-14, -16, 0.5, "#c8421c"], [12, -18, -0.7, "#e08a1e"], [-20, 6, 2.2, "#8a4b20"], [3, -2, 1.2, "#d9a514"], [19, 4, -2.0, "#c8421c"], [-6, 19, 0.2, "#e08a1e"], [13, 21, 2.7, "#8a4b20"], [-24, -6, -1.1, "#d9a514"], [24, -9, 1.9, "#8a4b20"]];   // x, y, turn, color on a disc of radius 34
 const SPARKS = [[-22, -18, 3.2], [23, -15, 2.6], [-25, 9, 2.4], [24, 13, 3.2], [0, 25, 2.6], [1, -27, 2.2]];
@@ -4933,23 +5135,26 @@ function eggSpin(el){
 function discArtFlat(g, i, x, y, rx, ry){ if (!DISCS[i] || !DISCS[i].pat) return; g.save(); g.translate(x, y); g.scale(1, ry / rx); discArt(g, i, rx); g.restore(); }
 /* Clothes in the pro shop. The first six of each keep their old spots so saves still point at the same thing.
    n name, c main color (what the small figures wear), p price, s the style drawn on the big figures. */
-const CL = (n, c, p, s) => ({n, c, p, s: s || null});
+const CL = (n, c, p, s, pr) => ({n, c, p, s: s || null, pr: pr || 0});   // pr: prestige needed to buy it
 const CLOTHES = {
   cap: [CL("Yellow cap", "#ffd23f", 0), CL("Pink cap", "#f2417f", 1000), CL("Blue cap", "#3a98d4", 1000), CL("White cap", "#ffffff", 1000), CL("Black cap", "#1d1d1f", 1000), CL("Green cap", "#5ac46a", 1000),
     CL("Red cap", "#e4503f", 1000), CL("Purple cap", "#7a4cc2", 1000), CL("Orange cap", "#ff6b2c", 1000),
     CL("Beanie", "#e4503f", 10000, "beanie"), CL("Visor", "#ffffff", 10000, "visor"), CL("Bucket hat", "#c9b48a", 10000, "bucket"),
     CL("Cowboy hat", "#8a5a35", 20000, "cowboy"), CL("Pinwheel hat", "#ffd23f", 20000, "pinwheel"), CL("Santa hat", "#c8102e", 20000, "santa"),
-    CL("Viking helmet", "#a7adb2", 50000, "viking"), CL("Sombrero", "#e8c36a", 50000, "sombrero")],
+    CL("Viking helmet", "#a7adb2", 50000, "viking"), CL("Sombrero", "#e8c36a", 50000, "sombrero"),
+    CL("Champion cap", "#d4af37", 25000, null, 1), CL("Worlds visor", "#d4af37", 40000, "visor", 2), CL("Platinum beanie", "#e5e4e2", 60000, "beanie", 3)],
   shirt: [CL("Orange", "#ff6b2c", 0), CL("Blue", "#3a98d4", 1000), CL("Purple", "#7a4cc2", 1000), CL("Red", "#e4503f", 1000), CL("Cream", "#f4ecd6", 1000), CL("Green", "#2f8a5c", 1000),
     CL("Black", "#1d1d1f", 1000), CL("Yellow", "#ffd23f", 1000), CL("Pink", "#f2417f", 1000),
     CL("Tie-dye", "#f2417f", 10000, "tiedye"), CL("Stripes", "#f4ecd6", 10000, "stripes"), CL("Flames", "#1d1d1f", 10000, "flames"), CL("Hawaiian", "#3a98d4", 10000, "hawaii"), CL("Camo", "#6f7a4a", 10000, "camo"),
     CL("Tuxedo", "#1d1d1f", 20000, "tux"), CL("Chainwreck", "#c8102e", 20000, "chainwreck"), CL("The Freeman", "#fff1f3", 20000, "freeman"), CL("Just the Chain", "#ffd23f", 20000, "bare"),
-    CL("Super Hero", "#2456b8", 50000, "hero"), CL("Football Pads", "#7a2335", 50000, "pads")],
+    CL("Super Hero", "#2456b8", 50000, "hero"), CL("Football Pads", "#7a2335", 50000, "pads"),
+    CL("Worlds Gold", "#d4af37", 25000, "stripes", 1), CL("Hall of Fame", "#1d1d1f", 50000, "flames", 2), CL("Platinum", "#e5e4e2", 75000, "tux", 3)],
   pants: [CL("Slate", "#27424c", 1000), CL("Black", "#1d1d1f", 0), CL("Brown", "#6b4a2f", 1000), CL("Tan", "#c9b48a", 1000), CL("Navy", "#3a4f7a", 1000), CL("Gray", "#7a7f86", 1000),
     CL("Olive", "#5f6b3a", 1000), CL("Maroon", "#7a2335", 1000), CL("Royal", "#2456b8", 1000),
     CL("Plaid", "#2f5a8a", 10000, "plaid"), CL("Board shorts", "#1fa3a3", 10000, "board"), CL("Camo", "#6f7a4a", 10000, "camo"), CL("Track stripes", "#1d1d1f", 10000, "track"), CL("Tie-dye", "#8e5bd6", 10000, "tiedye"),
     CL("Cow print", "#fbf8ee", 20000, "cow"), CL("Kilt", "#2f6a3a", 20000, "kilt"), CL("Speedo", "#c8102e", 20000, "speedo"),
-    CL("Disco Pants", "#c9ccd3", 20000, "disco"), CL("Assless Chaps", "#7a4a24", 20000, "chaps")],
+    CL("Disco Pants", "#c9ccd3", 20000, "disco"), CL("Assless Chaps", "#7a4a24", 20000, "chaps"),
+    CL("Champion Gold", "#d4af37", 25000, null, 1), CL("Platinum", "#e5e4e2", 50000, null, 3)],
 };
 const CLOTH_FREE = {cap: 0, shirt: 0, pants: 1};
 function clothOwned(me, part, i){ return (me.clothes && me.clothes[part] || []).includes(i) || CLOTH_FREE[part] === i; }
@@ -5019,9 +5224,15 @@ function payMini(total){
 function meCost(tier){ return Math.max(5, Math.round(525 * Math.pow(1.0675, tier - 1) / 5) * 5); }
 let ME_RANGE = null;
 /* 0% is a weak tour pro; 100% matches the best real season in the game for that skill. */
-function meStat(me, k){ const [lo, hi] = ME_SCALE[k]; const v = lo + (hi - lo) * me.levels[k] / ME_TIERS; return Math.round(v * 10) / 10; }
+/* Prestige: each time you restart the career after winning Worlds, My Player gets +5 tiers in every skill (on top of
+   what you've bought, up to tier 50) and +10 rating. */
+const PRESTIGE_TIERS = 5, PRESTIGE_RATING = 10;
+function mePrestige(me){ return (me && me.prestige) || 0; }
+function meLv(me, k){ return Math.min(ME_TIERS, (me.levels[k] || 0) + PRESTIGE_TIERS * mePrestige(me)); }
+function prestigeLocked(it){ return (it && it.pr || 0) > mePrestige(meLoad()); }
+function meStat(me, k){ const [lo, hi] = ME_SCALE[k]; const v = lo + (hi - lo) * meLv(me, k) / ME_TIERS; return Math.round(v * 10) / 10; }
 function meFmt(k, v){ return k === "bh" || k === "fh" ? String(Math.round(v)) : (Number.isInteger(v) ? v : v.toFixed(1)) + "%"; }
-function meRating(me){ return 900 + SLOTS.reduce((a, k) => a + me.levels[k], 0); }   // +1 per tier, 1100 when maxed
+function meRating(me){ return 900 + SLOTS.reduce((a, k) => a + meLv(me, k), 0) + PRESTIGE_RATING * mePrestige(me); }   // +1 per tier, plus prestige
 function meName(me){ return (me.name || "").trim() || "My Player"; }
 function meSeason(me){
   const name = meName(me);
@@ -5033,7 +5244,7 @@ function meSeason(me){
 /* Ranked tournaments use the same standard My Player for everyone (tier 25 in every skill); everywhere else it's yours. */
 const RANKED_LEVEL = 25;
 function isRanked(){ return state.mode === "tourney" && !!(state.tour && state.tour.ranked); }
-function meForMode(){ const me = meLoad(); return isRanked() ? Object.assign(meSeason(Object.assign({}, me, {levels: {bh: RANKED_LEVEL, fh: RANKED_LEVEL, c1: RANKED_LEVEL, c2: RANKED_LEVEL}})), {ranked: true}) : meSeason(me); }
+function meForMode(){ const me = meLoad(); return isRanked() ? Object.assign(meSeason(Object.assign({}, me, {prestige: 0, levels: {bh: RANKED_LEVEL, fh: RANKED_LEVEL, c1: RANKED_LEVEL, c2: RANKED_LEVEL}})), {ranked: true}) : meSeason(me); }
 function getSeason(id){
   if (id === "me") return (state.tour && state.tour.me) || state.meSnap || meForMode();
   return SEASON_BY_ID.get(id);
@@ -5283,13 +5494,13 @@ app.addEventListener("click", ev => {
     const me = meLoad(), part = el.dataset.part, i = +el.dataset.i, it = CLOTHES[part] && CLOTHES[part][i];
     if (!it){ /* nothing */ }
     else if (clothOwned(me, part, i)){ me.look[part] = i; meSave(me); ui.clothBuy = null; }
-    else if (meBalance(me) >= it.p) ui.clothBuy = {part, i};
+    else if (!prestigeLocked(it) && meBalance(me) >= it.p) ui.clothBuy = {part, i};
     render();
     { const cf = document.querySelector(".cl-confirm"); if (cf) cf.scrollIntoView({block: "nearest", behavior: REDUCED ? "auto" : "smooth"}); }
   } else if (act === "clothCancel"){ ui.clothBuy = null; render();
   } else if (act === "clothBuy"){
     const me = meLoad(), b = ui.clothBuy, it = b && CLOTHES[b.part] && CLOTHES[b.part][b.i];
-    if (it && !clothOwned(me, b.part, b.i) && meBalance(me) >= it.p){
+    if (it && !prestigeLocked(it) && !clothOwned(me, b.part, b.i) && meBalance(me) >= it.p){
       me.spent = (me.spent || 0) + it.p; me.clothSpent = (me.clothSpent || 0) + it.p;
       me.clothes = me.clothes || {cap: [0], shirt: [0], pants: [1]};
       me.clothes[b.part] = (me.clothes[b.part] || []).concat(b.i); me.look[b.part] = b.i; meSave(me);
@@ -5299,13 +5510,13 @@ app.addEventListener("click", ev => {
   } else if (act === "disc"){
     const me = meLoad(), i = +el.dataset.i;
     if (discOwned(me, i)){ me.look.disc = i; meSave(me); ui.discBuy = null; }
-    else if (meBalance(me) >= DISCS[i].price) ui.discBuy = i;
+    else if (!prestigeLocked(DISCS[i]) && meBalance(me) >= DISCS[i].price) ui.discBuy = i;
     render();
     { const cf = document.querySelector(".dw-confirm"); if (cf) cf.scrollIntoView({block: "nearest", behavior: REDUCED ? "auto" : "smooth"}); }
   } else if (act === "discCancel"){ ui.discBuy = null; render();
   } else if (act === "discBuy"){
     const me = meLoad(), i = ui.discBuy, d = DISCS[i];
-    if (d && !discOwned(me, i) && meBalance(me) >= d.price){
+    if (d && !prestigeLocked(d) && !discOwned(me, i) && meBalance(me) >= d.price){
       me.spent = (me.spent || 0) + d.price; me.discSpent = (me.discSpent || 0) + d.price;
       me.discs = (me.discs || [0]).concat(i); me.look.disc = i; meSave(me);
       ui.discBuy = null; render();
@@ -5341,6 +5552,11 @@ app.addEventListener("click", ev => {
     render("spin");
   } else if (act === "tourney"){
     openTourney();
+  } else if (act === "prestige"){
+    if (!ui.prestigeSure){ ui.prestigeSure = true; render(); }
+    else { ui.prestigeSure = false; doPrestige(); render(); window.scrollTo(0, 0); }
+  } else if (act === "homeArea"){
+    const me = meLoad(); me.home = el.dataset.st || null; meSave(me); render();
   } else if (act === "careerEvent"){
     openCareerEvent(el.dataset.id);
   } else if (act === "playoff"){
@@ -8888,24 +9104,37 @@ function parkHangout(){
   ${pkPerson(282, 642, 10, "sit", -1)}${pkPerson(302, 642, 11, "sit", 1)}`;
 }
 
+/* Home: career first. Your rung, how far up the ladder you are, and one button to play; every other mode below as a
+   card with its status. */
 function viewHome(){
-  const me = meLoad(), n = parkNotes();
-  const spot = (id, act, cls, name, note, extra) => `<button class="spot ${cls}" id="${id}" data-act="${act}"${extra || ""}><span class="sign"><b>${name}</b><small>${esc(note)}</small></span></button>`;
-  return `<div class="wrap park-wrap">
-    <header class="park-head">${moneyChip()}<h1>18 Down</h1></header>
-    <section class="park" style="${lookStyle(me)}" aria-label="The park. Pick where to go.">
-      ${parkSVG()}
-      ${spot("runner", "runner", "s-woods", "Disc Runner", n.runner)}
-      ${spot("comp", "comp", "s-field", "Distance Comp", n.comp)}
-      ${spot("area-putt", "go", "s-green", "Putting Green", n.putt, ' data-screen="putt"')}
-      ${spot("area-board", "go", "s-board" + (n.tourneyOpen ? " live" : ""), "Tournaments", n.board, ' data-screen="bulletin"')}
-      ${n.tourneyOpen ? `<span class="pin-pulse" aria-hidden="true"></span>` : ""}
-      ${spot("me", "me", "s-shop", "Pro Shop", n.shop)}
-      ${CLASSIC_BACK_DAYS.includes(dailyKey(new Date())) ? `<button class="classic-back" id="classic-back" data-act="daily"><b>Classic Mode is Back!</b><small>Up to $20,000 for 18 down</small></button>` : ""}
-      ${spot("friends", "go", "s-friends" + (ui.ctLive ? " live" : ""), "Friends", n.friends, ' data-screen="friends"')}
-      ${ui.ctLive ? `<button class="ct-live" id="ct-live" data-act="go" data-screen="friends" aria-label="A friends contest is live. Open Friends."><i aria-hidden="true"></i><i aria-hidden="true"></i><i aria-hidden="true"></i><b>Contest live</b></button>` : ""}
-    </section>
-    <button class="btn full vt-enter" id="votes" data-act="go" data-screen="votes">Player Ratings <small>vote on every pro’s numbers</small></button>
+  const me = meLoad(), n = parkNotes(), key = dailyKey(new Date());
+  const L = typeof ladderLoad === "function" ? ladderLoad() : null, P = typeof mePrestige === "function" ? mePrestige(me) : 0;
+  const lvl = L ? LADDER[L.level] : null, cur = L && L.current && ladderTierOf(L.current);
+  const need = !lvl ? "" : lvl.level === LADDER.length - 1 ? "Win Worlds to be world champion" : `Finish top ${lvl.up} to earn the ${LADDER[lvl.level + 1].name}`;
+  let tName = "Daily tournament", tNote = n.board || "";
+  try { const tc = tourneyCtx(key), ts = tSaved(key); tName = tc.t.name; tNote = ts && ts.done ? `You took ${fmtPlace(ts.place, ts.tied)}` : ts && ts.scores && ts.scores.length ? `Round ${ts.scores.length + 1} in progress` : "Today: same field for everyone"; } catch (e) {}
+  const d = typeof dailySaved === "function" ? dailySaved(key) : null;
+  const card = (id, act, icon, title, note, extra, cls) => `<button class="hub-card ${cls || ""}" id="${id}" data-act="${act}"${extra || ""}>${ico(icon)}<b>${title}</b><small>${esc(note || "")}</small></button>`;
+  return `<div class="wrap hub">
+    <header class="hub-head"><h1>18 Down</h1>${moneyChip()}</header>
+    ${lvl ? `<section class="hub-hero" aria-label="Career">
+      <div class="hub-top"><small>Career${P ? ` · ★${P}` : ""}</small><b>${esc(lvl.name)}</b><span>${esc(cur ? `${cur.name} in progress` : need)}</span></div>
+      <ol class="hub-steps" aria-label="Rung ${lvl.level + 1} of ${LADDER.length}">${LADDER.map((t, i) => `<li class="${i < L.level ? "done" : i === L.level ? "now" : ""}" title="${esc(t.name)}"></li>`).join("")}</ol>
+      <button class="btn primary full" id="hub-play" data-act="careerEvent" data-id="${(cur || lvl).id}">${cur ? `Resume ${esc(cur.name)}` : `Play ${esc(lvl.name)}`}</button>
+      <button class="linkish" id="hub-ladder" data-act="go" data-screen="ladder">See the ladder</button>
+    </section>` : ""}
+    <div class="hub-cards">
+      ${card("classic", "daily", "same", "Classic", d ? `You shot ${fmtTotal(d.total)} today` : "Same spins for everyone · up to $20,000", "", d ? "" : "live")}
+      ${card("daily", "tourney", "trophy", tName, tNote, "", n.tourneyOpen ? "live" : "")}
+      ${card("teeoff", "teeoff", "dice", "Mini", "Pickup round · up to $2,000", ' data-mode="free"')}
+      ${card("pickerplay", "teeoff", "eye", "Picker", "Ratings shown, you place every pro", ' data-mode="picker"')}
+      ${card("me", "me", "prize", "Pro Shop", n.shop)}
+      ${card("friends", "go", "same", "Friends", n.friends, ' data-screen="friends"', ui.ctLive ? "live" : "")}
+      ${card("area-putt", "go", "putt", "Putting Green", n.putt, ' data-screen="putt"')}
+      ${card("comp", "comp", "flag", "Distance Comp", n.comp)}
+      ${card("runner", "runner", "hole", "Disc Runner", n.runner)}
+      ${card("votes", "go", "calls", "Player Ratings", "Vote on every pro's numbers", ' data-screen="votes"')}
+    </div>
   </div>`;
 }
 
@@ -9018,10 +9247,10 @@ function viewMe(){
   const day = dailyKey(new Date()), paidToday = me.bonus.day === day && typeof me.bonus.paid === "number" ? me.bonus.paid : 0;
   const hot = (cls, t, label) => `<button class="hot ${cls}" data-act="shopTab" data-tab="${t}" aria-label="${label}"></button>`;
   const swatches = parts => parts.map(part => `<div class="look-row"><span>${part === "pants" ? "Shorts" : LOOK_NAME[part]}</span><div class="swatches">${LOOKS[part].map((c, i) => `<button class="swatch ${me.look[part] === i ? "on" : ""}" style="background:${c}" data-act="look" data-part="${part}" data-i="${i}" aria-label="${part === "pants" ? "Shorts" : LOOK_NAME[part]} color ${i + 1}" aria-pressed="${me.look[part] === i}"></button>`).join("")}</div></div>`).join("");
-  const clothBtn = (part, i) => { const it = CLOTHES[part][i], own = clothOwned(me, part, i), on = me.look[part] === i, can = bal >= it.p, pk = ui.clothBuy && ui.clothBuy.part === part && ui.clothBuy.i === i;
+  const clothBtn = (part, i) => { const it = CLOTHES[part][i], own = clothOwned(me, part, i), on = me.look[part] === i, can = bal >= it.p && !prestigeLocked(it), pk = ui.clothBuy && ui.clothBuy.part === part && ui.clothBuy.i === i;
     return `<button class="dw-disc cl-item ${on ? "on" : ""} ${own ? "own" : can ? "" : "locked"} ${pk ? "picked" : ""}" id="cl-${part}-${i}" data-act="cloth" data-part="${part}" data-i="${i}" aria-pressed="${on}" ${own || can ? "" : `aria-disabled="true"`} aria-label="${esc(it.n)}, ${own ? (on ? "wearing" : "owned") : fmtMoney(it.p) + (can ? "" : ", not enough money yet")}">${clThumb(me, part, i)}<b>${esc(it.n)}</b><small>${on ? "Wearing" : own ? "Wear" : can ? "Buy" : "Locked"}</small></button>`; };
   let panel = "";
-  const discBtn = i => { const d = DISCS[i], own = discOwned(me, i), on = me.look.disc === i, can = bal >= d.price;
+  const discBtn = i => { const d = DISCS[i], own = discOwned(me, i), on = me.look.disc === i, can = bal >= d.price && !prestigeLocked(d);
     return `<button class="dw-disc ${on ? "on" : ""} ${own ? "own" : can ? "" : "locked"} ${ui.discBuy === i ? "picked" : ""}" id="disc-${i}" data-act="disc" data-i="${i}" aria-pressed="${on}" ${own || can ? "" : `aria-disabled="true"`} aria-label="${esc(d.name)} disc, ${own ? (on ? "in use" : "owned") : fmtMoney(d.price) + (can ? "" : ", not enough money yet")}">${discSVG(i)}<b>${esc(d.name)}</b><small>${on ? "Using" : own ? "Use" : can ? "Buy" : "Locked"}</small></button>`; };
   const discIdx = DISCS.map((d, i) => i), owned = discIdx.filter(i => discOwned(me, i));
   // what is still for sale: bought discs come off the shelf
@@ -9576,128 +9805,6 @@ function careerPanelHTML(){
       <ul class="challenges">${ACHIEVEMENTS.map(x => `<li class="${a[x[0]] ? "done" : ""}"><span>${a[x[0]] ? "★" : "☆"}</span><span><b>${esc(x[1])}</b> ${esc(x[2])}</span><small>${a[x[0]] ? esc(fmtDate(a[x[0]])) : ""}</small></li>`).join("")}</ul>
     </details>
   </section>`;
-}
-
-/* ---------- Career ladder ----------
-   You earn your way up, like the real tour: Mini, C-tier, B-tier, A-tier, Jomez Series, DGPT, DGPT+, Major, DGPT Playoffs,
-   DGPT Championship, Worlds. Each event is a tournament against its own field. Finish high enough (the "up" place) to
-   earn your way into the next one; every tier you've earned stays open to play again.
-   - Mini, C-tier and B-tier fields are fictional local players, simulated from a rating (see localSeason).
-   - A-tier mixes locals with the lowest-rated current-year pros; from the Jomez Series up the fields are real
-     current-year pros, deeper into the ratings list the higher you climb.
-   - Your draft is capped: spins only include seasons rated at or under the tier's cap, so the pros you can draft get
-     better as you climb. Legends become draftable at the Playoffs (cap 1058) and GOATs only at Worlds (no cap). */
-const LADDER = [
-  {id: "mini",    name: "Mini",              rounds: 1, field: 23, first: 150,   local: [935, 995],  cap: 1014, up: 3},
-  {id: "c",       name: "C-Tier",            rounds: 2, field: 35, first: 500,   local: [955, 1005], cap: 1018, up: 3},
-  {id: "b",       name: "B-Tier",            rounds: 2, field: 47, first: 1500,  local: [975, 1015], cap: 1022, up: 3},
-  {id: "a",       name: "A-Tier",            rounds: 3, field: 59, first: 4000,  local: [985, 1015], pros: [100, 140], proShare: .4, cap: 1028, up: 3},
-  {id: "jomez",   name: "Jomez Series",      rounds: 3, field: 53, first: 8000,  depth: [70, 140], cap: 1038, up: 5},
-  {id: "dgpt",    name: "DGPT",              rounds: 3, field: 71, first: 16000, depth: [30, 120], cap: 1042, up: 5},
-  {id: "dgptp",   name: "DGPT+",             rounds: 4, field: 71, first: 20000, depth: [10, 100], cap: 1048, up: 5},
-  {id: "major",   name: "Major",             rounds: 4, field: 71, first: 40000, depth: [0, 80], cap: 1052, up: 10},
-  {id: "playoff", name: "DGPT Playoffs",     rounds: 3, field: 39, first: 30000, depth: [0, 48], cap: 1058, up: 5},
-  {id: "champ",   name: "DGPT Championship", rounds: 4, field: 23, first: 50000, depth: [0, 30], cap: 1058, up: 3},
-  {id: "worlds",  name: "Worlds",            rounds: 5, field: 89, first: 60000, depth: [0, 95], up: 1},
-];
-const LADDER_BY_ID = Object.fromEntries(LADDER.map((t, i) => [t.id, Object.assign(t, {level: i})]));
-
-/* Progress: highest tier earned, best finish per tier, titles, and the event in progress. */
-function ladderLoad(){
-  try { const v = JSON.parse(storeGet("18down.ladder") || "null"); if (v && typeof v.level === "number") return v; } catch (e) {}
-  return {level: 0, played: 0, best: {}, wins: {}, current: null};
-}
-function ladderSave(v){ storeSet("18down.ladder", JSON.stringify(v)); }
-function ladderKey(n, id){ return "c:" + n + ":" + id; }
-function ladderTierOf(key){ return typeof key === "string" && key.startsWith("c:") ? LADDER_BY_ID[key.split(":")[2]] || null : null; }
-
-/* The draft cap for the event you're in (null when there's none). */
-function careerCap(){ const t = state.mode === "tourney" && ladderTierOf(state.dateKey); return t && t.cap ? t.cap : null; }
-let POOL_CACHE = {cap: null, list: null};
-function poolSeasons(){
-  const cap = careerCap();
-  if (!cap) return SEASONS;
-  if (POOL_CACHE.cap !== cap || !POOL_CACHE.list) POOL_CACHE = {cap, list: SEASONS.filter(s => (s.pdga || PDGA_MID) <= cap)};
-  return POOL_CACHE.list;
-}
-
-/* Fictional local players. Stats come from a straight-line fit of every real season's stats against its rating, so a
-   local plays like a pro of his rating would. Names are made up: a first name and a last initial. */
-const LOCAL_FIRST = ["Tyler", "Josh", "Kyle", "Matt", "Ryan", "Cody", "Jake", "Nick", "Brandon", "Chris", "Derek", "Evan", "Garrett", "Hunter", "Ian", "Jordan", "Kevin", "Logan", "Mason", "Nate", "Owen", "Parker", "Quinn", "Reed", "Sam", "Trevor", "Wes", "Zach", "Austin", "Blake", "Caleb", "Dylan", "Eli", "Grant", "Jared", "Luke", "Miles", "Shane", "Travis", "Wyatt"];
-let LOCAL_FIT = null;
-function localFit(){
-  if (LOCAL_FIT) return LOCAL_FIT;
-  const R = SEASONS.filter(s => !s.legend && s.pdga && typeof s.bh === "number");
-  const fit = k => { const n = R.length, mx = R.reduce((a, s) => a + s.pdga - 1000, 0) / n, my = R.reduce((a, s) => a + s[k], 0) / n;
-    let sxy = 0, sxx = 0; for (const s of R){ sxy += (s.pdga - 1000 - mx) * (s[k] - my); sxx += (s.pdga - 1000 - mx) ** 2; }
-    const b = sxx ? sxy / sxx : 0; return {a: my - b * mx, b}; };
-  LOCAL_FIT = {bh: fit("bh"), fh: fit("fh"), c1: fit("c1"), c2: fit("c2")};
-  return LOCAL_FIT;
-}
-function localSeason(name, rating, i){
-  const F = localFit(), at = (k, lo, hi) => Math.max(lo, Math.min(hi, F[k].a + F[k].b * (rating - 1000)));
-  return {id: "local" + i, name, year: new Date().getFullYear(), sponsor: "Local", brand: "Local", short: name, pdga: rating,
-    bh: at("bh", 35, 95), fh: at("fh", 35, 95), c1: at("c1", 55, 92), c2: at("c2", 6, 40), tee: null, teeBase: null, stats: null, legend: null, local: true};
-}
-function localField(t, key, n){
-  const rng = mulberry32(hashStr("local|" + key)), used = new Set(), out = [];
-  for (let i = 0; out.length < n && i < n * 4; i++){
-    const name = LOCAL_FIRST[Math.floor(rng() * LOCAL_FIRST.length)] + " " + String.fromCharCode(65 + Math.floor(rng() * 26)) + ".";
-    if (used.has(name)) continue; used.add(name);
-    const r = Math.round(t.local[0] + (t.local[1] - t.local[0]) * Math.pow(rng(), 1.3));
-    const s = localSeason(name, r, out.length);
-    out.push({name, season: s, build: {bh: s, fh: s, c1: s, c2: s}});
-  }
-  return out;
-}
-/* The field for a career event. */
-function ladderField(t, key){
-  if (t.depth) return tourneyField(SEASONS, key, t);
-  if (t.pros){
-    const nPro = Math.round(t.field * t.proShare);
-    return tourneyField(SEASONS, key, {field: nPro, depth: t.pros}).concat(localField(t, key, t.field - nPro));
-  }
-  return localField(t, key, t.field);
-}
-
-/* Start (or resume) a career event at tier id. */
-function openCareerEvent(id){
-  const L = ladderLoad(), t = LADDER_BY_ID[id];
-  if (!t || t.level > L.level) return;
-  let key = L.current && ladderTierOf(L.current) === t ? L.current : null;
-  if (!key){ L.played = (L.played || 0) + 1; key = ladderKey(L.played, id); L.current = key; ladderSave(L); }
-  openTourney(key);
-}
-/* Called when a career event finishes. */
-function ladderResult(key, place){
-  const t = ladderTierOf(key); if (!t) return null;
-  const L = ladderLoad(), was = L.level;
-  L.best[t.id] = Math.min(L.best[t.id] || 999, place);
-  if (place === 1) L.wins[t.id] = (L.wins[t.id] || 0) + 1;
-  if (place <= t.up && t.level === L.level && L.level < LADDER.length - 1) L.level = t.level + 1;
-  if (L.current === key) L.current = null;
-  ladderSave(L);
-  return {up: L.level > was ? LADDER[L.level] : null, tier: t};
-}
-
-/* The career hub: the ladder, what each rung takes, and where you are. */
-function viewLadder(){
-  const L = ladderLoad(), cur = L.current && ladderTierOf(L.current);
-  const titles = Object.values(L.wins || {}).reduce((a, b) => a + b, 0);
-  return `<div class="wrap">
-    <div class="bar has-home"><span class="mark-wrap"><span class="mark">18 Down</span>${moneyChip()}</span><span class="where"><b>Career</b>Earn your way up</span></div>
-    <div class="ladder-head"><div><small>Level</small><b>${esc(LADDER[L.level].name)}</b></div><div><small>Wins</small><b class="tnum">${titles}</b></div><div><small>Events</small><b class="tnum">${L.played || 0}</b></div></div>
-    ${cur ? `<button class="btn primary full" data-act="careerEvent" data-id="${cur.id}">Resume ${esc(cur.name)}</button>` : ""}
-    <ol class="ladder">${LADDER.map(t => {
-      const open = t.level <= L.level, next = t.level === L.level, best = L.best[t.id], wins = (L.wins || {})[t.id] || 0;
-      const need = t.level === LADDER.length - 1 ? "Win it to be world champion" : `Top ${t.up} earns ${LADDER[t.level + 1].name}`;
-      return `<li class="rung${open ? " open" : ""}${next ? " next" : ""}">
-        <div class="rung-main"><b>${esc(t.name)}</b><small>${t.rounds} round${t.rounds > 1 ? "s" : ""} · ${t.field + 1} players · ${fmtMoney(t.first)} to win${t.cap ? ` · draft up to ${t.cap}` : ""}</small>
-          <small class="rung-need">${open ? need : "Locked"}${best ? ` · best ${fmtPlace(best)}` : ""}${wins ? ` · ${wins} win${wins > 1 ? "s" : ""}` : ""}</small></div>
-        ${open ? `<button class="btn small${next ? " primary" : ""}" data-act="careerEvent" data-id="${t.id}" ${cur && cur !== t ? "disabled" : ""}>${cur === t ? "Resume" : "Play"}</button>` : `<span class="rung-lock" aria-label="Locked">${ico("hidden")}</span>`}
-      </li>`; }).join("")}</ol>
-    <div class="row"><button class="btn small" data-act="go" data-screen="bulletin">Back to Tournaments</button></div>
-  </div>`;
 }
 
 /* ---------- Real greens, from the DGPT caddie books ----------
