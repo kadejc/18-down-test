@@ -2,7 +2,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="robots" content="noindex,nofollow">
-<!-- 18 Down test build: branch test-combined, commit fc928b3 -->
+<!-- 18 Down test build: branch test-combined, commit 280f492 -->
 <title>18 Down</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&family=Shrikhand&display=swap">
@@ -1441,6 +1441,17 @@ span.pips, .calls-h span.pips { display: inline-flex; gap: 4px; vertical-align: 
 .cl-ladder .venue b, .cl-ladder .venue small, .cl-ladder .venue span { color: var(--ink); line-height: 1.2; font-family: var(--body, inherit); }
 .cl-ladder .venue b { font-family: var(--label); font-size: 15px; font-weight: 700; }
 .cl-ladder .venue small { font-size: 11.5px; font-weight: 500; opacity: .7; }
+
+/* Home: slim career card */
+.hub-hero.slim { grid-template-columns: 1fr auto; align-items: center; gap: 8px 12px; padding: 10px 12px; }
+.hub-hero.slim .hub-steps { grid-column: 1 / -1; }
+.hub-hero.slim .hub-steps li { height: 5px; }
+.hub-hero.slim .btn.primary { min-height: 44px; font-size: 16px; padding-inline: 18px; }
+.hub-go { display: grid; gap: 1px; min-width: 0; text-align: left; padding: 0; border: 0; background: none; color: inherit; font: inherit; cursor: pointer; }
+.hub-go small { font-family: var(--label); font-weight: 700; font-size: 11px; letter-spacing: .06em; text-transform: uppercase; color: var(--band); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.hub-go b { font-family: var(--display); font-size: 22px; line-height: 1.1; color: var(--chalk); }
+.hub-go b::after { content: " \203A"; font-family: var(--label); color: var(--band); }
+.hub-go span { font-size: 12px; color: var(--mute); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 </style>
 <main id="app"></main>
 <script type="application/json" id="edits">{}</script>
@@ -9216,30 +9227,61 @@ function parkSVG(){
     return `<line x1="${xl}" y1="${y}" x2="${xr}" y2="${y}" stroke="var(--chalk)" stroke-opacity="${i ? .55 : .9}" stroke-width="${i ? 1.2 : 2}"/>${i ? `<text x="${xl + 4}" y="${y - 3}" font-family="var(--label)" font-weight="700" font-size="9" fill="var(--chalk)" fill-opacity=".85">${i * 100}</text>` : ""}`;
   }).join("");
   return `<svg class="park-map" viewBox="0 0 360 720" aria-hidden="true">
-  <defs><linearGradient id="pk-sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="var(--sky-top)"/><stop offset="1" stop-color="var(--sky-low)"/></linearGradient></defs>
+  <defs><linearGradient id="pk-sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="var(--sky-top)"/><stop offset="1" stop-color="var(--sky-low)"/></linearGradient>
+    <radialGradient id="pk-sun"><stop offset="0" stop-color="#ffe9a0" stop-opacity=".75"/><stop offset=".45" stop-color="#ffd23f" stop-opacity=".22"/><stop offset="1" stop-color="#ffd23f" stop-opacity="0"/></radialGradient>
+    <linearGradient id="pk-mf" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2b7a80"/><stop offset="1" stop-color="var(--mtn-far)"/></linearGradient>
+    <linearGradient id="pk-mn" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1f6168"/><stop offset="1" stop-color="var(--mtn-near)"/></linearGradient>
+    <linearGradient id="pk-haze" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="var(--sky-low)" stop-opacity="0"/><stop offset="1" stop-color="var(--sky-low)" stop-opacity=".45"/></linearGradient>
+    <linearGradient id="pk-grass" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1a5a44"/><stop offset=".12" stop-color="#2a7a55"/><stop offset=".55" stop-color="var(--grass)"/><stop offset="1" stop-color="#17573c"/></linearGradient>
+    <radialGradient id="pk-light" cx=".83" cy=".05" r=".8"><stop offset="0" stop-color="#ffe9a0" stop-opacity=".18"/><stop offset="1" stop-color="#ffe9a0" stop-opacity="0"/></radialGradient>
+    <linearGradient id="pk-field" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#45a46a"/><stop offset="1" stop-color="#37895a"/></linearGradient>
+    <radialGradient id="pk-green" cx=".38" cy=".32" r=".75"><stop offset="0" stop-color="#7cd08f"/><stop offset=".6" stop-color="#4fb070"/><stop offset="1" stop-color="#3a8c55"/></radialGradient>
+    <linearGradient id="pk-roof" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#94603a"/><stop offset="1" stop-color="#63391f"/></linearGradient>
+    <linearGradient id="pk-wall" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#f6ebd2"/><stop offset=".75" stop-color="#efe2c6"/><stop offset="1" stop-color="#cdbb98"/></linearGradient>
+    <linearGradient id="pk-board" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#d6a36a"/><stop offset="1" stop-color="#ad7a46"/></linearGradient>
+    <linearGradient id="pk-lot" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8b9698"/><stop offset="1" stop-color="#6c7678"/></linearGradient>
+    <radialGradient id="pk-vig" cx=".5" cy=".45" r=".75"><stop offset=".6" stop-color="#04181b" stop-opacity="0"/><stop offset="1" stop-color="#04181b" stop-opacity=".38"/></radialGradient>
+    <linearGradient id="pk-fade" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1a5a44" stop-opacity="0"/><stop offset="1" stop-color="#1a5a44"/></linearGradient>
+    <filter id="pk-soft" x="-30%" y="-80%" width="160%" height="260%"><feGaussianBlur stdDeviation="2.2"/></filter>
+  </defs>
   <rect width="360" height="130" fill="url(#pk-sky)"/>
-  <circle cx="300" cy="34" r="15" fill="var(--band)" fill-opacity=".9"/>
+  <circle cx="300" cy="34" r="46" fill="url(#pk-sun)"/>
+  <circle cx="300" cy="34" r="15" fill="#ffd23f"/><circle cx="296" cy="30" r="9" fill="#fff1a8" fill-opacity=".55"/>
   <g class="pk-cloud c1" fill="var(--chalk)" fill-opacity=".85"><ellipse cx="0" cy="26" rx="20" ry="7"/><ellipse cx="-9" cy="21" rx="10" ry="7"/><ellipse cx="7" cy="19" rx="12" ry="8"/></g>
   <g class="pk-cloud c2" fill="var(--chalk)" fill-opacity=".7"><ellipse cx="0" cy="52" rx="16" ry="5.5"/><ellipse cx="-6" cy="48" rx="8" ry="5.5"/><ellipse cx="6" cy="47" rx="9" ry="6"/></g>
   <g class="pk-cloud c3" fill="var(--chalk)" fill-opacity=".6"><ellipse cx="0" cy="14" rx="13" ry="4.5"/><ellipse cx="4" cy="10" rx="8" ry="5"/></g>
   <g class="pk-birds" fill="none" stroke="var(--ink)" stroke-width="1.2" stroke-linecap="round"><path d="M0 40 q3 -3 6 0 q3 -3 6 0"/><path d="M14 46 q2.5 -2.5 5 0 q2.5 -2.5 5 0"/></g>
-  <path d="M-10 118 L40 58 L74 92 L120 34 L168 96 L214 48 L262 100 L306 56 L370 112 L370 140 L-10 140 Z" fill="var(--mtn-far)"/>
+  <path d="M-10 118 L40 58 L74 92 L120 34 L168 96 L214 48 L262 100 L306 56 L370 112 L370 140 L-10 140 Z" fill="url(#pk-mf)"/>
+  <path d="M40 58 L74 92 L74 140 L48.5 140 Z M120 34 L168 96 L168 140 L132.0 140 Z M214 48 L262 100 L262 140 L226.0 140 Z M306 56 L370 112 L370 140 L322.0 140 Z" fill="#04181b" fill-opacity="0.22"/>
+  <rect y="70" width="360" height="70" fill="url(#pk-haze)"/>
   <path d="M120 34 L132 50 L124 48 L116 56 L108 50 Z M214 48 L226 64 L218 62 L210 70 L202 64 Z M306 56 L316 70 L308 68 L300 74 L294 70 Z" fill="var(--chalk)" fill-opacity=".85"/>
-  <path d="M-10 130 L50 104 L110 126 L180 100 L250 124 L310 102 L370 122 L370 200 L-10 200 Z" fill="var(--mtn-near)"/>
-  <rect y="186" width="360" height="534" fill="var(--grass)"/>
+  <path d="M-10 130 L50 104 L110 126 L180 100 L250 124 L310 102 L370 122 L370 200 L-10 200 Z" fill="url(#pk-mn)"/>
+  <path d="M50 104 L110 126 L110 200 L65.0 200 Z M180 100 L250 124 L250 200 L197.5 200 Z M310 102 L370 122 L370 200 L325.0 200 Z" fill="#04181b" fill-opacity="0.2"/>
+  <rect y="186" width="360" height="534" fill="url(#pk-grass)"/>
+  <rect y="150" width="360" height="40" fill="url(#pk-fade)"/>
+  <g fill="#fff" fill-opacity=".035">${[0, 1, 2, 3, 4, 5, 6, 7, 8, 9].map(i => `<rect y="${246 + i * 46}" width="360" height="23"/>`).join("")}</g>
+  <g fill="#04181b" fill-opacity=".28" filter="url(#pk-soft)">${PARK_TREES.map(([x, y, s]) => `<ellipse cx="${x + 5 * s}" cy="${y + 1}" rx="${10 * s}" ry="${2.6 * s}"/>`).join("")}</g>
   <g>${PARK_TREES.map(([x, y, s, p], i) => `<g class="pk-sway" style="animation-delay:${-(i % 7) * .6}s;transform-origin:${x}px ${y}px">${parkTree(x, y, s, p)}</g>`).join("")}</g>
   <!-- paths -->
-  <path d="M180 680 L180 600 C180 560 176 540 170 520 C160 486 196 470 190 430 C186 400 200 392 198 370 C196 330 182 300 196 262 C204 236 186 214 190 196" fill="none" stroke="#c9a66b" stroke-width="14" stroke-linecap="round"/>
-  <path d="M190 430 C150 432 120 438 96 446 M196 262 C226 270 246 278 262 290 M190 430 C230 436 252 440 270 452" fill="none" stroke="#c9a66b" stroke-width="10" stroke-linecap="round"/>
+  <g fill="none" stroke-linecap="round">
+    <path id="pk-main" d="M180 680 L180 600 C180 560 176 540 170 520 C160 486 196 470 190 430 C186 400 200 392 198 370 C196 330 182 300 196 262 C204 236 186 214 190 196" stroke="#8c6d3f" stroke-width="17"/>
+    <path d="M190 430 C150 432 120 438 96 446 M196 262 C226 270 246 278 262 290 M190 430 C230 436 252 440 270 452" stroke="#8c6d3f" stroke-width="13"/>
+    <path d="M180 680 L180 600 C180 560 176 540 170 520 C160 486 196 470 190 430 C186 400 200 392 198 370 C196 330 182 300 196 262 C204 236 186 214 190 196" stroke="#c9a66b" stroke-width="13"/>
+    <path d="M190 430 C150 432 120 438 96 446 M196 262 C226 270 246 278 262 290 M190 430 C230 436 252 440 270 452" stroke="#c9a66b" stroke-width="9"/>
+    <path d="M178 680 L178 600 C178 560 174 540 168 520 C158 486 194 470 188 430 C184 400 198 392 196 370 C194 330 180 300 194 262 C202 236 184 214 188 196" stroke="#e6cc94" stroke-opacity=".55" stroke-width="3"/>
+  </g>
   <!-- distance field -->
-  <path d="M20 384 L186 384 L164 228 L42 228 Z" fill="#3f9a63"/>
+  <path d="M24 390 L192 390 L168 232 L46 232 Z" fill="#04181b" fill-opacity=".25" filter="url(#pk-soft)"/>
+  <path d="M20 384 L186 384 L164 228 L42 228 Z" fill="url(#pk-field)"/>
+  <g fill="#fff" fill-opacity=".05">${[0, 2, 4].map(i => { const a = 384 - i * 31.2, b = a - 15.6, t1 = i / 10, t2 = (i + .5) / 10; return `<path d="M${20 + t1 * 220} ${a} L${186 - t1 * 220} ${a} L${186 - t2 * 220} ${b} L${20 + t2 * 220} ${b} Z"/>`; }).join("")}</g>
   <path d="M20 384 L186 384 L164 228 L42 228 Z" fill="none" stroke="var(--ob)" stroke-width="2" stroke-dasharray="5 4"/>
   ${lines}
   <rect x="94" y="384" width="18" height="10" fill="#8f7f6a" stroke="var(--ink)" stroke-width="1"/>
   <ellipse cx="88" cy="300" rx="4" ry="1.6" fill="var(--band)" stroke="var(--ink)" stroke-width=".6"/><ellipse cx="130" cy="262" rx="4" ry="1.6" fill="var(--tang)" stroke="var(--ink)" stroke-width=".6"/><ellipse cx="110" cy="276" rx="4" ry="1.6" fill="var(--water-edge)" stroke="var(--ink)" stroke-width=".6"/>
   <g class="pk-throw"><ellipse cx="103" cy="380" rx="4.5" ry="1.7" fill="var(--chalk)" stroke="var(--ink)" stroke-width=".7"/></g>
   <!-- putting green -->
-  <ellipse cx="282" cy="318" rx="70" ry="50" fill="#4fb070"/>
+  <ellipse cx="288" cy="326" rx="72" ry="50" fill="#04181b" fill-opacity=".3" filter="url(#pk-soft)"/>
+  <ellipse cx="282" cy="318" rx="70" ry="50" fill="url(#pk-green)"/>
   <ellipse cx="282" cy="318" rx="70" ry="50" fill="none" stroke="#3a8c55" stroke-width="3"/>
   <ellipse cx="282" cy="318" rx="34" ry="22" fill="none" stroke="var(--chalk)" stroke-opacity=".4" stroke-width="1.2" stroke-dasharray="3 3"/>
   <g stroke="var(--ink)" stroke-width="1.4">
@@ -9261,19 +9303,24 @@ function parkSVG(){
   </g>
   <ellipse class="pk-putt" cx="306" cy="326" rx="3.4" ry="1.3" style="fill:var(--me-disc, var(--band))" stroke="var(--ink)" stroke-width=".6"/>
   <!-- bulletin board -->
+  <ellipse cx="104" cy="516" rx="66" ry="6" fill="#04181b" fill-opacity=".35" filter="url(#pk-soft)"/>
   <rect x="44" y="452" width="5" height="62" fill="#5a3d2b"/><rect x="148" y="452" width="5" height="62" fill="#5a3d2b"/>
   <path d="M34 446 L163 446 L157 438 L40 438 Z" fill="#6b4a2f" stroke="var(--ink)" stroke-width="1.2"/>
-  <rect x="38" y="446" width="121" height="54" rx="2" fill="#c8925a" stroke="var(--ink)" stroke-width="1.6"/>
+  <rect x="38" y="446" width="121" height="54" rx="2" fill="url(#pk-board)" stroke="var(--ink)" stroke-width="1.6"/>
   <rect x="46" y="452" width="34" height="40" fill="var(--chalk)" transform="rotate(-4 63 472)"/>
   <rect x="84" y="451" width="32" height="42" fill="var(--band)" transform="rotate(3 100 472)"/>
   <rect x="120" y="454" width="32" height="38" fill="#f4ecd6" transform="rotate(-2 136 473)"/>
   <g fill="var(--ink)" fill-opacity=".45">${[[52, 464], [52, 470], [52, 476], [89, 465], [89, 471], [125, 466], [125, 472], [125, 478]].map(([x, y]) => `<rect x="${x}" y="${y}" width="${20 + (x % 7)}" height="2"/>`).join("")}</g>
+  <rect x="39" y="446.8" width="119" height="5" fill="#04181b" fill-opacity=".18"/>
   <circle cx="63" cy="452" r="2.4" fill="var(--ob)"/><circle cx="100" cy="451" r="2.4" fill="var(--water-edge)"/><circle cx="136" cy="454" r="2.4" fill="var(--birdie, #5ac46a)"/>
   <!-- pro shop -->
-  <rect x="210" y="444" width="132" height="86" fill="#efe2c6" stroke="var(--ink)" stroke-width="1.6"/>
-  <path d="M202 446 L350 446 L338 416 L214 416 Z" fill="#7a4a2b" stroke="var(--ink)" stroke-width="1.6"/>
+  <path d="M214 532 L346 532 L362 518 L360 452 L342 446 L342 530 Z" fill="#04181b" fill-opacity=".3" filter="url(#pk-soft)"/>
+  <rect x="210" y="444" width="132" height="86" fill="url(#pk-wall)" stroke="var(--ink)" stroke-width="1.6"/>
+  <path d="M202 446 L350 446 L338 416 L214 416 Z" fill="url(#pk-roof)" stroke="var(--ink)" stroke-width="1.6"/>
+  <path d="M206 446 L346 446 L342 437 L210 437 Z" fill="#fff" fill-opacity=".08"/>
   <rect x="236" y="422" width="80" height="16" rx="2" fill="var(--ink)"/>
   <text x="276" y="434" text-anchor="middle" font-family="var(--display)" font-size="11" fill="var(--band)">PRO SHOP</text>
+  <rect x="211" y="458" width="130" height="7" fill="#04181b" fill-opacity=".14"/>
   <g>${[0, 1, 2, 3, 4, 5, 6, 7].map(i => `<path d="M${206 + i * 18.5} 446 h18.5 v12 a9.25 6 0 0 1 -18.5 0 Z" fill="${i % 2 ? "var(--chalk)" : "var(--tang)"}" stroke="var(--ink)" stroke-width="1"/>`).join("")}</g>
   <line x1="330" y1="416" x2="330" y2="394" stroke="var(--ink)" stroke-width="1.6"/>
   <path class="pk-flag" d="M330 395 q6 -3 11 0 t11 0 v9 q-6 3 -11 0 t-11 0 z" fill="var(--tang)" stroke="var(--ink)" stroke-width="1"/>
@@ -9284,15 +9331,20 @@ function parkSVG(){
     <path d="M247 482 Q248 474 254 474 Q260 474 261 482 Z" style="fill:var(--me-cap, var(--band))" stroke="var(--ink)" stroke-width="1"/>
     <path d="M247 486 Q246 491 249 490 M261 486 Q262 491 259 490" fill="#3b2418"/>
   </g>
+  <path d="M224 470 L240 470 L226 492 L224 492 Z M246 470 L252 470 L230 510 L226 510 Z" fill="#fff" fill-opacity=".28"/>
   <line x1="254" y1="468" x2="254" y2="512" stroke="var(--ink)" stroke-width="1"/>
   <rect x="298" y="476" width="30" height="54" fill="#8a5a35" stroke="var(--ink)" stroke-width="1.6"/><circle cx="322" cy="504" r="2" fill="var(--band)"/>
 ${parkHangout()}
   <!-- parking -->
   <g transform="translate(0 120)">
-  <rect y="548" width="360" height="52" fill="#7f8a8c"/>
+  <rect y="548" width="360" height="52" fill="url(#pk-lot)"/>
+  <rect y="548" width="360" height="3" fill="#04181b" fill-opacity=".2"/>
+  <ellipse cx="83" cy="575" rx="15" ry="3" fill="#04181b" fill-opacity=".3"/><ellipse cx="303" cy="575" rx="15" ry="3" fill="#04181b" fill-opacity=".3"/>
   <g stroke="var(--chalk)" stroke-opacity=".7" stroke-width="1.5">${[20, 60, 100, 240, 280, 320].map(x => `<line x1="${x}" y1="552" x2="${x}" y2="580"/>`).join("")}</g>
   <rect x="68" y="556" width="26" height="18" rx="4" fill="var(--water-edge)" stroke="var(--ink)" stroke-width="1"/><rect x="288" y="556" width="26" height="18" rx="4" fill="var(--tang)" stroke="var(--ink)" stroke-width="1"/>
 </g>
+  <rect width="360" height="720" fill="url(#pk-light)" pointer-events="none"/>
+  <rect width="360" height="720" fill="url(#pk-vig)" pointer-events="none"/>
 </svg>`;
 }
 /* A small person for the map, standing with feet at (x, y), or sitting on a seat at (x, y). i picks the colors;
@@ -9320,6 +9372,8 @@ function parkHangout(){
       ${pts.slice(1, -1).map((p, i) => `<circle class="pk-bulb" style="animation-delay:${-i * .37}s" cx="${p[0]}" cy="${p[1] + 2.4}" r="2.2" fill="${["var(--band)", "var(--tang)", "var(--water-edge)", "#f2417f"][i % 4]}" stroke="var(--ink)" stroke-width=".4"/>`).join("")}`; };
   return `<!-- friends hangout -->
   <ellipse cx="70" cy="616" rx="64" ry="44" fill="#cdb98f" fill-opacity=".45"/>
+  <ellipse cx="74" cy="626" rx="40" ry="5" fill="#04181b" fill-opacity=".25" filter="url(#pk-soft)"/>
+  <ellipse cx="294" cy="626" rx="20" ry="5" fill="#04181b" fill-opacity=".25" filter="url(#pk-soft)"/>
   <ellipse cx="290" cy="616" rx="64" ry="44" fill="#cdb98f" fill-opacity=".45"/>
   ${lights(12, 128, 558)}${lights(232, 348, 558)}
   ${pkPerson(44, 603, 0, "stand", 1)}${pkPerson(60, 600, 1, "wave")}${pkPerson(80, 600, 2, "stand", -1)}${pkPerson(96, 603, 3, "stand", -1)}
@@ -9349,18 +9403,11 @@ function viewHome(){
   const nextBuy = SLOTS.map(k => me.levels[k] < ME_TIERS ? meCost(me.levels[k] + 1) : Infinity).reduce((a, b) => Math.min(a, b), Infinity);
   return `<div class="wrap park-wrap hub">
     <header class="park-head">${moneyChip()}<h1>18 Down</h1></header>
-    ${lvl ? `<section class="hub-hero compact" aria-label="Career">
-      <div class="hub-row"><div class="hub-top"><small>Career${P ? ` · ★${P}` : ""} · ${(L.fans || 0).toLocaleString("en-US")} fans${L.sponsor ? ` · ${esc(L.sponsor.name)}` : ""}</small><b>${esc(lvl.name)}</b><span>${esc(cur ? `${cur.name} in progress` : need)}</span></div>
-        <button class="btn primary" id="hub-play" data-act="careerEvent" data-id="${(cur || lvl).id}">${cur ? "Resume" : lvl.home ? "Play" : "Venues"}</button></div>
+    ${lvl ? `<section class="hub-hero slim" aria-label="Career">
+      <button class="hub-go" id="hub-ladder" data-act="go" data-screen="ladder"><small>Career${P ? ` · ★${P}` : ""} · ${(L.fans || 0).toLocaleString("en-US")} fans</small><b>${esc(lvl.name)}</b><span>${esc(cur ? `${cur.name} in progress` : need)}</span></button>
+      <button class="btn primary" id="hub-play" data-act="careerEvent" data-id="${(cur || lvl).id}">${cur ? "Resume" : lvl.home ? "Play" : "Venues"}</button>
       <ol class="hub-steps" aria-label="Rung ${lvl.level + 1} of ${LADDER.length}">${LADDER.map((t, i) => `<li class="${i < L.level ? "done" : i === L.level ? "now" : ""}" title="${esc(t.name)}"></li>`).join("")}</ol>
-      <button class="linkish" id="hub-ladder" data-act="go" data-screen="ladder">See the ladder</button>
     </section>` : ""}
-    <button class="shop-hero" id="shop-hero" data-act="me" aria-label="Pro Shop: ${esc(meName(me))}, rated ${meRating(me)}">
-      <span class="shop-fig" style="${lookStyle(me)}">${typeof clFigure === "function" ? clFigure(lookFull(me.look), "8 -4 104 204") : ""}</span>
-      <span class="shop-info"><small>Pro Shop</small><b>${esc(meName(me))}</b><span class="shop-rating">Rated <b class="tnum">${meRating(me)}</b>${P ? ` · ★${P}` : ""}</span>
-        <span class="shop-cta">${bal >= nextBuy ? `${ico("prize")} You can afford an upgrade` : `${ico("prize")} Skills, gear and discs`}</span></span>
-      <span class="shop-go">Shop</span>
-    </button>
     <section class="park" style="${lookStyle(me)}" aria-label="The park. Pick where to go.">
       ${parkSVG()}
       ${spot("runner", "runner", "s-woods", "Disc Runner", n.runner)}
