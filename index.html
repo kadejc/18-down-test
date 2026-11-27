@@ -2,7 +2,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="robots" content="noindex,nofollow">
-<!-- 18 Down test build: branch test-combined, commit e70f89f -->
+<!-- 18 Down test build: branch test-combined, commit a54f7be -->
 <title>18 Down</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&family=Shrikhand&display=swap">
@@ -1523,17 +1523,19 @@ html, body { margin: 0; }
 .pk-row .cell b { font-size: 17px; }
 .pk-row .cell.pub::after { top: 3px; right: 3px; width: 6px; height: 6px; }
 
-/* Draft picks, premium: one color for every spot, a soft gradient, a light top edge and a real shadow */
+/* Draft picks, premium: each button is solid in its spot's color, with a gradient, a light top edge and a real shadow */
 .pk-row .cell, .pk-row .cell[class*=" s-"] {
-  background: linear-gradient(180deg, #fffdf3 0%, #f2efd8 55%, #ddd8b8 100%);
-  border: 1px solid rgba(16, 39, 42, .18);
+  background: linear-gradient(180deg, color-mix(in srgb, var(--sc, #f2efd8) 62%, white) 0%, var(--sc, #f2efd8) 52%, color-mix(in srgb, var(--sc, #f2efd8) 82%, black) 100%);
+  border: 1px solid color-mix(in srgb, var(--sc, #f2efd8) 55%, black);
   border-radius: 7px;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .95), inset 0 -2px 0 rgba(16, 39, 42, .08), 0 2px 0 #b8b190, 0 4px 9px rgba(0, 0, 0, .32);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .6), inset 0 -2px 0 rgba(0, 0, 0, .12), 0 2px 0 color-mix(in srgb, var(--sc, #f2efd8) 50%, black), 0 4px 9px rgba(0, 0, 0, .35);
 }
-.pk-row .cell > small, .pk-row .cell[class*=" s-"] > small { background: none !important; color: var(--ink-mute) !important; padding: 0 !important; font-size: 10px !important; letter-spacing: .05em; text-transform: uppercase; }
-.pk-row .cell b { color: var(--ink); text-shadow: 0 1px 0 rgba(255, 255, 255, .7); }
-.pk-row .cell:hover:not(:disabled) { background: linear-gradient(180deg, #fffef8 0%, #fff4c4 55%, #f3df8c 100%); transform: translateY(-1px); }
-.pk-row .cell:active:not(:disabled) { transform: translateY(2px); box-shadow: inset 0 1px 3px rgba(0, 0, 0, .25), 0 0 0 #b8b190, 0 1px 2px rgba(0, 0, 0, .25); }
+.pk-row .cell > small, .pk-row .cell[class*=" s-"] > small { background: none !important; color: var(--ink) !important; opacity: .75; padding: 0 !important; font-size: 10px !important; letter-spacing: .05em; text-transform: uppercase; }
+.pk-row .cell b { color: var(--ink); text-shadow: 0 1px 0 rgba(255, 255, 255, .45); }
+.pk-row .cell.est b { border-bottom-color: rgba(16, 39, 42, .55); }
+.pk-row .cell:hover:not(:disabled) { background: linear-gradient(180deg, color-mix(in srgb, var(--sc, #f2efd8) 45%, white) 0%, color-mix(in srgb, var(--sc, #f2efd8) 85%, white) 52%, var(--sc, #f2efd8) 100%); transform: translateY(-1px); }
+.pk-row .cell:active:not(:disabled) { transform: translateY(2px); box-shadow: inset 0 1px 3px rgba(0, 0, 0, .3), 0 1px 2px rgba(0, 0, 0, .25); }
+.pk-row .cell.pub::after { background: #fff; box-shadow: 0 0 0 1.5px var(--birdie); }
 </style>
 <main id="app"></main>
 <script type="application/json" id="edits">{}</script>
