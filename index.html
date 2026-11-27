@@ -2,7 +2,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="robots" content="noindex,nofollow">
-<!-- 18 Down test build: branch test-combined, commit bfe897d -->
+<!-- 18 Down test build: branch test-combined, commit f19b2b6 -->
 <title>18 Down</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&family=Shrikhand&display=swap">
@@ -1537,6 +1537,9 @@ html, body { margin: 0; }
 .pk-row .cell:hover:not(:disabled) { background: var(--sc, var(--card)); transform: translate(-1px, -1px); box-shadow: 3px 3px 0 var(--ink); }
 .pk-row .cell:active:not(:disabled) { transform: translate(2px, 2px); box-shadow: 0 0 0 var(--ink); }
 .pk-row .cell.pub::after { background: var(--chalk); box-shadow: 0 0 0 1.5px var(--ink); }
+/* Spot-only pick buttons: the label is the whole button */
+.pk-row .cell { min-height: 38px; }
+.pk-row .cell > small, .pk-row .cell[class*=" s-"] > small { font-size: 15px !important; font-weight: 700; opacity: 1; letter-spacing: .04em; }
 </style>
 <main id="app"></main>
 <script type="application/json" id="edits">{}</script>
@@ -3954,14 +3957,12 @@ function pickerPoolHTML(){
   const hide = hidden();
   const best = s => Math.max(...open.map(k => (s[k] - MED[k]) / SPREAD[k]));
   if (hide) pool.sort((x, y) => x.name.localeCompare(y.name)); else pool.sort((x, y) => best(y) - best(x));
-  return `<div class="key">${hide ? `${hardKey()}` : `<span><i class="pub-dot" style="background:var(--birdie)"></i>Real stat</span><span><i class="est-dot"></i>Estimate</span>`}</div>
+  // Kade, 2026-11-27: "Don't put their stats on it": the spot buttons show the spot only
+  return `${hide ? `<div class="key">${hardKey()}</div>` : ""}
   <div class="pool picker-pool" id="pool">${pool.map(s => {
-    const sub = [s.sponsor !== s.brand && s.brand !== "Unconfirmed sponsor" ? s.brand : "", hide ? "" : refText(s)].filter(Boolean).join(", ");
+    const sub = s.sponsor !== s.brand && s.brand !== "Unconfirmed sponsor" ? s.brand : "";
     return `<div class="pk-row"><div class="pr-who"><strong>${esc(s.name)}${legendTag(s)}</strong>${sub ? `<small>${esc(sub)}</small>` : ""}</div>
-      <div class="cells" style="grid-template-columns:repeat(${open.length},minmax(0,1fr))">${open.map(k => false
-        ? `<button class="cell s-${k}" disabled aria-label="${esc(SLOT_NAME[k])} ${heldForMe(k) ? "is held for My Player" : "is filled"}"><small>${SLOT_LABEL[k]}</small><b>${heldForMe(k) ? "Me" : "–"}</b></button>`
-        : hide ? `<button class="cell s-${k}" id="pick-${s.id}-${k}" data-act="pick" data-id="${s.id}" data-slot="${k}" aria-label="${esc("Put " + s.name + " " + s.year + " at " + SLOT_NAME[k])}"><small>${SLOT_LABEL[k]}</small>${tierBadge(s, k)}</button>`
-        : `<button class="cell s-${k} ${s.src[k] === "published" ? "pub" : s.src[k] === "placeholder" ? "est" : ""}" id="pick-${s.id}-${k}" data-act="pick" data-id="${s.id}" data-slot="${k}" title="${esc(SLOT_NAME[k] + ": " + fmtSlot(k, s[k]) + ", " + sourceNote(s, k))}" aria-label="${esc("Put " + s.name + " " + s.year + " at " + SLOT_NAME[k] + ", " + fmtSlot(k, s[k]))}"><small>${SLOT_LABEL[k]}</small><b>${fmtSlot(k, s[k])}</b></button>`).join("")}</div></div>`;
+      <div class="cells" style="grid-template-columns:repeat(${open.length},minmax(0,1fr))">${open.map(k => `<button class="cell s-${k}" id="pick-${s.id}-${k}" data-act="pick" data-id="${s.id}" data-slot="${k}" aria-label="${esc("Put " + s.name + " " + s.year + " at " + SLOT_NAME[k])}"><small>${SLOT_LABEL[k]}</small></button>`).join("")}</div></div>`;
   }).join("")}</div>`;
 }
 /* Each slot has its own color and plain-English name so it's always clear what you're drafting for. */
