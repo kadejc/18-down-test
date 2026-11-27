@@ -2,7 +2,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="robots" content="noindex,nofollow">
-<!-- 18 Down test build: branch test-combined, commit f19b2b6 -->
+<!-- 18 Down test build: branch test-combined, commit 749231d -->
 <title>18 Down</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&family=Shrikhand&display=swap">
@@ -1118,10 +1118,6 @@ summary { cursor: pointer; font-family: var(--label); font-weight: 700; font-siz
 /* Focus putts and big moments */
 .calls-row.two { grid-template-columns: 1fr 1fr; }
 .calls-row.one { grid-template-columns: 1fr; }
-.focus-bar { position: relative; height: 22px; border-radius: 11px; background: var(--pond-2); border: 2px solid var(--ink); overflow: hidden; }
-.focus-sweet { position: absolute; left: 42%; width: 16%; top: 0; bottom: 0; background: var(--birdie); opacity: .85; }
-.focus-mark { position: absolute; top: -2px; bottom: -2px; width: 6px; margin-left: -3px; background: var(--chalk); box-shadow: 0 0 0 2px var(--ink); }
-.focus-done b { font-size: 20px; }
 .big-moment { display: block; margin-top: 4px; color: var(--band); font-weight: 700; }
 
 /* Hard-mode tier badges */
@@ -1170,22 +1166,11 @@ summary { cursor: pointer; font-family: var(--label); font-weight: 700; font-siz
 .plan-row .btn.on { background: var(--sc); color: var(--ink); border-color: var(--ink); }
 
 /* 3D hole view */
-.hole3d { position: relative; border-radius: 8px; overflow: hidden; border: 2px solid var(--ink); background: #0b1c1f; aspect-ratio: 16 / 9; }
-.h3-wait { display: none; position: absolute; inset: 0; z-index: 4; place-items: center; padding: 12px; background: rgba(11,28,31,.86); color: var(--chalk); font-family: var(--display); font-size: clamp(24px, 7vw, 40px); text-align: center; letter-spacing: .02em; pointer-events: none; }
-.hole3d.waiting .h3-wait { display: grid; }
-.hole3d .h3-canvas { display: block; width: 100%; height: auto; }
-.h3-ctrls { position: absolute; right: 8px; bottom: 8px; display: flex; gap: 6px; opacity: .88; z-index: 3; }
-.h3-stamp { position: absolute; left: 50%; top: 38%; transform: translate(-50%, -50%) scale(.6) rotate(-6deg); font-family: var(--display); font-size: clamp(34px, 11vw, 64px); color: var(--chalk); text-shadow: 3px 3px 0 var(--ink), -1px -1px 0 var(--ink); opacity: 0; pointer-events: none; z-index: 2; letter-spacing: .02em; }
-.h3-stamp.good { color: var(--band); }
-.h3-stamp.bad { color: #ff8a7a; }
-.h3-stamp.on { animation: h3stamp 1.4s ease-out forwards; }
-@keyframes h3stamp { 0% { opacity: 0; transform: translate(-50%, -50%) scale(1.8) rotate(-6deg); } 15% { opacity: 1; transform: translate(-50%, -50%) scale(1) rotate(-6deg); } 75% { opacity: 1; } 100% { opacity: 0; transform: translate(-50%, -60%) scale(1) rotate(-6deg); } }
-.h3-cap { white-space: pre-line; max-width: 75%; position: absolute; left: 8px; top: 8px; padding: 4px 10px; border-radius: 6px; background: rgba(4,24,27,.72); color: var(--chalk); font-family: var(--label); font-weight: 700; font-size: 14px; z-index: 3; }
 
 /* Compact plan and focus inputs */
 .calls { gap: 6px; padding: 8px 10px; }
 .calls .calls-h { font-size: 14px; }
-.plan-top, .focus-ask { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.plan-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
 .plan-top .btn { padding: 6px 14px; min-height: 0; }
 #plan-rows { gap: 4px; }
 .plan-row { grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 8px; padding: 5px 8px; }
@@ -1216,7 +1201,6 @@ summary { cursor: pointer; font-family: var(--label); font-weight: 700; font-siz
 .tog.on { opacity: 1; background: var(--band); color: var(--ink); }
 span.pips, .calls-h span.pips { display: inline-flex; gap: 4px; vertical-align: middle; font-size: inherit; color: inherit; }
 .pips i { display: block; flex: none; width: 10px; height: 10px; border-radius: 50%; border: 2px solid currentColor; }
-.focus-why > span { display: inline-flex; }
 .pips i.on { background: var(--band); border-color: var(--band); }
 .respin-note { display: flex; align-items: center; gap: 8px; margin: 0; color: var(--mute); }
 .icon-btn { display: inline-grid; place-items: center; min-width: 44px; }
@@ -1227,10 +1211,6 @@ span.pips, .calls-h span.pips { display: inline-flex; gap: 4px; vertical-align: 
 .plan-info { display: inline-flex; gap: 10px; align-items: center; }
 .plan-info span { display: inline-flex; align-items: center; gap: 3px; }
 .plan-info .ob { color: #ff8a7a; }
-.focus-why { display: flex; align-items: center; gap: 8px; }
-.focus-why .ico { width: 22px; height: 22px; color: var(--band); }
-.focus-done { display: flex; justify-content: center; }
-.focus-done .pips i { width: 18px; height: 18px; }
 .lede .ico { color: var(--band); }
 .tier-key { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; color: var(--mute); }
 .tier-key .tier { min-width: 22px; height: 22px; font-size: 14px; margin-left: 4px; }
@@ -1239,10 +1219,6 @@ span.pips, .calls-h span.pips { display: inline-flex; gap: 4px; vertical-align: 
 .icon-btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; }
 .seg.icons button { display: flex; flex-direction: column; align-items: center; gap: 1px; min-width: 46px; padding: 4px 6px; font-size: 11px; line-height: 1.1; }
 .seg.icons .ico { width: 17px; height: 17px; }
-.focus-ask { flex-wrap: wrap; }
-.seg.focus-btns { display: grid; grid-template-columns: 1fr 1fr; width: 100%; }
-.seg.focus-btns button { display: flex; align-items: center; justify-content: center; gap: 8px; min-height: 52px; font-size: 17px; padding: 8px 12px; }
-.seg.focus-btns .ico { width: 26px; height: 26px; }
 #call-release { min-height: 52px; font-size: 17px; }
 #call-release .ico { width: 24px; height: 24px; }
 
@@ -1262,31 +1238,6 @@ span.pips, .calls-h span.pips { display: inline-flex; gap: 4px; vertical-align: 
 .top-actions .btn { flex: 1 1 140px; }
 
 /* Focus result: the marker holds for a second with a verdict */
-.focus-fb { position: relative; margin: 0; text-align: center; font-family: var(--display); font-size: 24px; line-height: 1.1; color: var(--chalk); }
-.focus-fb.close { color: var(--band); }
-.focus-fb.off { color: #ffb36b; }
-.focus-fb.way-off { color: #ff8a7a; }
-.focus-fb.perfect { color: var(--band); animation: fbPop .6s cubic-bezier(.2, 1.6, .4, 1) both, fbGlow 1s ease-in-out .3s; }
-@keyframes fbPop { 0% { transform: scale(.4) rotate(-8deg); opacity: 0; } 60% { transform: scale(1.25) rotate(2deg); opacity: 1; } 100% { transform: scale(1) rotate(-3deg); } }
-@keyframes fbGlow { 0%, 100% { text-shadow: 0 0 0 transparent; } 50% { text-shadow: 0 0 14px var(--band), 0 0 28px var(--band); } }
-.focus-result.perfect .focus-sweet { animation: fbSweet .5s ease-in-out 2; }
-@keyframes fbSweet { 50% { opacity: 1; filter: brightness(1.8); box-shadow: 0 0 12px var(--band); } }
-.focus-result.perfect .focus-mark { background: var(--band); }
-.fb-burst { position: absolute; left: 50%; top: 50%; width: 0; height: 0; pointer-events: none; }
-.fb-burst b { position: absolute; width: 8px; height: 8px; margin: -4px; border-radius: 50%; background: var(--band); animation: fbRay .8s ease-out forwards; }
-.fb-burst b:nth-child(even) { background: var(--chalk); width: 6px; height: 6px; margin: -3px; }
-.fb-burst b:nth-child(1) { --a: 0deg; }
-.fb-burst b:nth-child(2) { --a: 36deg; }
-.fb-burst b:nth-child(3) { --a: 72deg; }
-.fb-burst b:nth-child(4) { --a: 108deg; }
-.fb-burst b:nth-child(5) { --a: 144deg; }
-.fb-burst b:nth-child(6) { --a: 180deg; }
-.fb-burst b:nth-child(7) { --a: 216deg; }
-.fb-burst b:nth-child(8) { --a: 252deg; }
-.fb-burst b:nth-child(9) { --a: 288deg; }
-.fb-burst b:nth-child(10) { --a: 324deg; }
-@keyframes fbRay { 0% { transform: rotate(var(--a)) translateX(10px) scale(1); opacity: 1; } 100% { transform: rotate(var(--a)) translateX(90px) scale(.3); opacity: 0; } }
-@media (prefers-reduced-motion: reduce) { .focus-fb.perfect, .fb-burst b, .focus-result.perfect .focus-sweet { animation: none; } }
 
 /* Draft grade: collapsed by default */
 .grade-box { margin-bottom: 14px; }
@@ -2562,7 +2513,7 @@ function teeRates(p){
 }
 
 /* Putts use each season's real make rate (Kade, 2026-11-26: "use real rates"). Day form, the rating edge, nerves,
-   shot calls, focus and the legend boost are small shifts around it, each kept to about a real season-to-season spread
+   shot calls and the legend boost are small shifts around it, each kept to about a real season-to-season spread
    (C1X ±3.7, C2 ±4.7 points) or less. PUTT_WEIGHT above 1 would stretch the gaps between putters again. */
 const PUTT_WEIGHT = 1;
 const FIELD_C1 = 84;
@@ -2585,14 +2536,6 @@ const PUTT_CALLS = {
   jam: {make: 1.18, back: 0.4, backMake: 0.8},   // about +5 points on an average C2 putt; pays for good C2 putters
   lag: {make: 0.85, back: 0, backMake: 1},       // about -4 points; pays when the C1 putter is shaky
 };
-
-/* Focus putt: the player times a tap (Kade, 2026-11-26: "only make it if it lands in the green; if it lands in the
-   green you should always make it"). call.focus is 1 for a tap in the green, 0 for a miss. The putter's skill shows in
-   the meter instead: a better make chance gives a bigger green and a slower bar (see focusHard in ui.js). */
-function focusP(p, call){
-  if (!call || typeof call.focus !== "number") return p;
-  return call.focus >= 1 ? 1 : 0;
-}
 
 function teeWeights(q, course, hole, k, call, base, qRef){
   const steady = k || 1;
@@ -2692,12 +2635,12 @@ function playRound(course, build, seed, opts){
       else if (h.par > 3 && uFlair < 0.1){ r.rel = -2; r.flair = "eagle"; }
     } else if (lie === "c1"){
       r.feet = 12 + Math.floor(uFeet * 22);
-      const made = uPutt < focusP(c1Pct, call);
+      const made = uPutt < c1Pct;
       r.putt = {kind: "c1", made, by: build.c1, p: c1Pct};
       r.rel = made ? -1 : 0;
     } else if (lie === "c2"){
       r.feet = 34 + Math.floor(uFeet * 33);
-      const p2 = pc ? clamp01(c2Pct * pc.make) : c2Pct, made = uPutt < focusP(p2, call);
+      const p2 = pc ? clamp01(c2Pct * pc.make) : c2Pct, made = uPutt < p2;
       r.putt = {kind: "c2", made, by: build.c2, p: p2};
       if (pc) r.putt.call = call.putt;
       if (made) r.rel = -1;
@@ -2712,7 +2655,7 @@ function playRound(course, build, seed, opts){
       else if (uSave < 0.19){ r.rel = 1; r.save = "miss"; }
       else if (uSave2 < 0.5){ r.rel = 0; r.save = "tapin"; }
       else {
-        const made = uParPutt < focusP(c1Pct, call);
+        const made = uParPutt < c1Pct;
         r.putt = {kind: "c1", made, by: build.c1, forPar: true, p: c1Pct};
         r.parFeet = 12 + Math.floor(uParFeet * 22);
         r.rel = made ? 0 : 1;
@@ -4014,9 +3957,7 @@ function spinBtns(n){
 }
 function shotCallsToggle(){
   const on = callsOn();
-  const v3 = storeGet("18down.view3d") !== "0";
-  return `<div class="toggles"><button class="btn small tog${on ? " on" : ""}" id="shot-calls" data-act="shotCalls" aria-pressed="${on}" aria-label="Shot calls: ${on ? "on" : "off"}" title="Plan each nine, focus putts">${ico("calls")}<span>Calls</span></button>
-    <button class="btn small tog${v3 ? " on" : ""}" id="view-3d" data-act="view3d" aria-pressed="${v3}" aria-label="3D view: ${v3 ? "on" : "off"}" title="3D putts">${ico("cube")}<span>3D</span></button></div>`;
+  return `<div class="toggles"><button class="btn small tog${on ? " on" : ""}" id="shot-calls" data-act="shotCalls" aria-pressed="${on}" aria-label="Shot calls: ${on ? "on" : "off"}" title="Plan your round">${ico("calls")}<span>Calls</span></button></div>`;
 }
 function skipBtn(kind, id, act, label, alt){
   if (dailyFair()){ const left = respinsLeft(); return `<button class="btn small" id="${id}" data-act="${act}" ${alt && left > 0 ? "" : "disabled"}>${label}: free</button>`; }
@@ -4329,7 +4270,6 @@ function viewRound(){
     <div class="bar"><span class="mark-wrap"><span class="mark">18 Down</span>${moneyChip()}</span><span class="where"><b>${esc(c.name)}</b>${hidden() ? "Hard mode" : "Par " + c.par}</span></div>
     <section class="loader" aria-label="Round in progress">
       <p class="ld-title">${esc(title)}${tc && state.tour.pressure ? `<span>${state.tour.pressure === 2 ? "Lead card" : "Chase card"}</span>` : ""}</p>
-      ${typeof h3BoxHTML === "function" ? h3BoxHTML() : ""}
       <div class="calls" id="calls" hidden></div>
       <div class="ld-total"><b class="total tnum" id="total">E</b><span class="thru" id="thru">Thru 0</span></div>
       <div class="ld-prog" aria-hidden="true"><i id="ld-prog"></i></div>
@@ -4615,9 +4555,7 @@ function roundRecalc(){ const sp = state.round.spec; const r = playRound(course(
 let callWait = null;
 const OB_WORD = ["Open", "OB in play", "Tight: OB all around"];
 function callPanel(html){ const el = document.getElementById("calls"); if (!el) return false; el.innerHTML = html; el.hidden = !html; return true; }
-/* While the game waits on a plan or a focus putt, the 3D view says so; the inputs sit right below it. */
-let callPreview = false;   // the 3D view is showing the putt (focus screen), so it doesn't need the notice
-function callWaiting(on){ const b = document.getElementById("hole3d"); if (b) b.classList.toggle("waiting", on && !callPreview); }
+function callWaiting(on){}
 function pickCall(html, token){
   return new Promise(res => { if (!callPanel(html)) return res(null); callWaiting(true); callWait = v => { callWait = null; callWaiting(false); res(token === playToken ? v : null); }; });
 }
@@ -4659,95 +4597,16 @@ async function askNine(from, token){
   callsSave(); roundRecalc();
   return true;
 }
-/* Why a putt is critical, or "" if it isn't. Only critical putts offer focus. */
-function criticalWhy(n, h){
-  if (!h.putt) return "";
-  if (n >= BIG_FROM) return "Closing stretch";
-  if (h.putt.forPar) return "Par save";
-  const thru = n > 1 ? state.round.holes[n - 2].running : 0;
-  if (state.mode === "daily" && n >= 10 && thru <= -8 && !h.putt.forPar) return "Prize on the line";
-  if (state.mode === "tourney" && state.tour && n >= 10){
-    const ctx = tourneyCtx(state.dateKey), r = state.tour.scores.length;
-    if (r === ctx.t.rounds - 1){
-      const lead = Math.min(...ctx.rows.map(x => x.scores.reduce((a, b) => a + b, 0)));
-      const mine = state.tour.scores.reduce((a, b) => a + b, 0) + thru;
-      if (Math.abs(mine - lead) <= 2) return "Chasing the lead";
-    }
-  }
-  return "";
-}
 async function askCalls(i, token){
   const sp = state.round.spec, n = i + 1;
-  callPreview = false;
   if (n === 1 && !(sp.calls[n] && sp.calls[n].plan)){   // one plan, set before hole 1, for the whole round
     if (!(await askNine(n, token))) return false;
     if (sp.auto) return true;
   }
-  const hp = state.round.holes[i], why = criticalWhy(n, hp);
-  if (why && !("focus" in (sp.calls[n] || {})) && focusLeft() > 0){
-    sp.calls[n] = sp.calls[n] || {};
-    callPreview = typeof h3Preview === "function" && await h3Preview(hp, token);
-    if (token !== playToken){ callPreview = false; return false; }
-    const left = focusLeft();
-    const v = await pickCall(`<div class="focus-ask"><p class="calls-h focus-why" title="${esc(why)}">${ico(WHY_ICON[why] || "flag", why)}<b>${hp.putt.kind === "c2" ? hp.feet : hp.parFeet || hp.feet} ft</b><span role="img" aria-label="${left} focus left" title="Focus putts left">${pips(left, FOCUS_PER_ROUND)}</span></p><div class="seg focus-btns"><button type="button" class="on" id="call-focus" data-act="call" data-call="focus" aria-label="Focus: time the stroke" title="Focus: time the stroke">${ico("focus")}<span>Focus</span></button><button type="button" id="call-just" data-act="call" data-call="just" aria-label="Just putt" title="Just putt">${ico("putt")}<span>Putt</span></button></div></div>`, token);
-    if (v === null) return false;
-    if (v === "focus"){
-      const q = await focusMeter(token, hp.putt.p);
-      if (q === null) return false;
-      sp.calls[n].focus = q;
-    } else sp.calls[n].focus = null;
-    callPreview = false;
-    roundRecalc(); callsSave();
-  }
   callPanel("");
   return true;
 }
-const WHY_ICON = {"Closing stretch": "flag", "Par save": "par", "Prize on the line": "prize", "Chasing the lead": "crown"};
-/* Focus: three timed putts a round. A marker swings across the bar; tap Putt when it's in the middle. */
-const FOCUS_PER_ROUND = 3, BIG_FROM = 16;
-function focusLeft(){ const c = (state.round && state.round.spec && state.round.spec.calls) || {}; return FOCUS_PER_ROUND - Object.values(c).filter(x => x && typeof x.focus === "number").length; }
-/* How hard a focus putt is, from the putter's own make chance p on it (0 to 1): a good putter gets a wide green and a
-   slow bar, a long or shaky putt a thin green and a fast one. band is the half-width of the green, as a share of the bar.
-   About: a 90% C1 putt gets a 31%-wide green at 1.6 s a sweep; a 25% C2 putt a 7%-wide green at 1 s. */
-function focusHard(p){
-  p = Math.max(0, Math.min(1, typeof p === "number" ? p : .6));
-  return {p, band: .025 + .16 * p * p, period: (750 + 950 * p) * (REDUCED ? 1.7 : 1)};
-}
-function focusMeter(token, p){
-  const H = focusHard(p), period = H.period, t0 = performance.now();
-  const phase = t => ((t - t0) % period) / period, pos = t => (1 - Math.cos(2 * Math.PI * phase(t))) / 2;
-  callPanel(`    <div class="focus-bar" aria-hidden="true"><i class="focus-sweet" style="left:${((.5 - H.band) * 100).toFixed(1)}%;width:${(H.band * 200).toFixed(1)}%"></i><i class="focus-mark" id="focus-mark"></i></div>
-    <div class="calls-row one"><button class="btn primary icon-btn" id="call-release" data-act="call" data-call="release" aria-label="Putt" title="Putt">${ico("putt")}<span>Putt</span></button></div>`);
-  // what the player sees: the marker as last drawn. Taps are judged against this, not against where it has moved since.
-  let raf = 0, shown = {x: .5, rising: true};
-  const draw = () => { const m = document.getElementById("focus-mark"); if (!m) return; const t = performance.now(); shown = {x: pos(t), rising: phase(t) < .5}; m.style.left = (shown.x * 100).toFixed(1) + "%"; raf = requestAnimationFrame(draw); };
-  draw();
-  callWaiting(true);
-  // judge the moment the finger goes down, not when the click arrives (phones deliver it later)
-  const btn0 = document.getElementById("call-release");
-  if (btn0) btn0.addEventListener("pointerdown", e => { if (e.button > 0) return; e.preventDefault(); if (callWait) callWait("release"); }, {once: true});
-  return new Promise(res => { callWait = v => {
-    callWait = null; callWaiting(false); cancelAnimationFrame(raf);
-    if (token !== playToken || v !== "release") return res(null);
-    const x = shown.x, off = Math.abs(x - .5), q = off <= H.band ? 1 : 0;   // in the green it drops, outside it misses
-    // the marker stops where you tapped; say how far off it was, hold it for a second, then putt
-    const early = shown.rising ? x < .5 : x > .5, fb = focusFeedback(off, early, H.band);
-    const panel = document.getElementById("calls"), btn = document.getElementById("call-release");
-    if (btn) btn.disabled = true;
-    if (panel){ panel.classList.add("focus-result", fb.cls); panel.insertAdjacentHTML("afterbegin", `<p class="focus-fb ${fb.cls}" role="status">${fb.text}${fb.cls === "perfect" ? `<i class="fb-burst" aria-hidden="true">${"<b></b>".repeat(10)}</i>` : ""}</p>`); }
-    sfx(fb.cls === "perfect" ? "chains" : "pick");
-    setTimeout(() => { if (panel) panel.classList.remove("focus-result", fb.cls); res(token === playToken ? q : null); }, 1000);
-  }; });
-}
-/* In the green is a make: "Perfect!" near the middle, "Good" toward its edges. Outside it: a little, plain or very early/late. */
-function focusFeedback(off, early, band){
-  band = band || .08;
-  if (off < band * .5) return {text: "Perfect!", cls: "perfect"};
-  if (off <= band) return {text: "Good", cls: "close"};
-  const how = off < band * 1.6 ? "A little " : off < band * 3 ? "" : "Very ";
-  const word = early ? "early" : "late";
-  return {text: how + (how ? word : word[0].toUpperCase() + word.slice(1)), cls: off < band * 3 ? "off" : "way-off"};
-}
+const BIG_FROM = 16;   // the last three holes land slower
 /* The last holes: say what's riding on them. */
 function bigMomentText(n){
   if (n < BIG_FROM || !state.round) return "";
@@ -4767,7 +4626,6 @@ async function playFrom(step){
     state.step = i;
     const cur = document.getElementById("lc-" + i); if (cur) cur.classList.add("now");
     if (callsLive() && !(await askCalls(i, token))) return;
-    if (typeof h3Hole === "function" && !(await h3Hole(state.round.holes[i], token))) return;   // the 3D view plays the hole out, if it's on
     if (!(await wait(LOAD_MS * (i === 0 ? .6 : i >= BIG_FROM - 1 ? 3 : 1), token))) return;   // the last holes land slower
     loadHole(state.round.holes[i]);
     updateRoundCard(i + 1);
@@ -4860,7 +4718,6 @@ function startRound(){
   const saved = callsLoad();   // calls already made in this Classic or tournament round stay made
   if (saved && saved.calls){ state.round.spec.calls = saved.calls; state.round.spec.auto = !!saved.auto; roundRecalc(); }
   state.breakdown = null;
-  if (typeof h3RoundStart === "function") h3RoundStart();
   state.screen = "round";
   state.step = 0;
   render();
@@ -6059,16 +5916,6 @@ app.addEventListener("click", ev => {
     window.scrollTo({top: 0, behavior: REDUCED ? "auto" : "smooth"});
   } else if (act === "play"){
     startRound();
-  } else if (act === "h3Speed"){
-    if (typeof h3SpeedCycle === "function") h3SpeedCycle();
-  } else if (act === "h3Skip"){
-    if (typeof h3SkipNow === "function") h3SkipNow();
-    // Skip plays out the rest of the round on its own: no more plans or focus putts
-    if (state.round && state.round.spec && state.round.spec.calls){ state.round.spec.auto = true; callsSave(); }
-    if (callWait) callWait(document.getElementById("call-release") ? "release" : document.getElementById("call-just") ? "just" : "auto");
-  } else if (act === "view3d"){
-    storeSet("18down.view3d", storeGet("18down.view3d") === "0" ? "1" : "0");
-    render("view-3d");
   } else if (act === "callpick"){
     if (callDraft && el.dataset.k in callDraft){
       callDraft[el.dataset.k] = el.dataset.v;
@@ -10119,8 +9966,6 @@ const CHALLENGES = [
     tourney: (c, place) => place <= c.k},
   {id: "under", make: r => { const n = 4 + Math.floor(r() * 3); return {n, text: `Shoot under par in ${n} rounds this week (any mode)`}; },
     count: x => x.total < 0},
-  {id: "focus", make: () => ({text: "Make all 3 focus putts in one round"}),
-    round: (c, x) => { const calls = (x.spec && x.spec.calls) || {}, used = Object.keys(calls).filter(n => calls[n] && typeof calls[n].focus === "number"); return used.length === 3 && used.every(n => { const h = x.holes[n - 1]; return h && h.putt && h.putt.made; }); }},
   {id: "nobrand", make: r => { const b = ["Innova", "Discraft", "Discmania", "MVP"][Math.floor(r() * 4)]; return {b, text: `Shoot under par with no ${b} pros`}; },
     round: (c, x) => x.total < 0 && SLOTS.every(k => { const s = x.build[k]; return s && (s.me || s.sponsor !== c.b); })},
   {id: "finish", make: () => ({text: "Birdie (or better) the last three holes of a round"}),
@@ -10289,7 +10134,6 @@ const ACHIEVEMENTS = [
   ["win", "Winner", "Win a daily tournament"],
   ["major", "Major champion", "Win a Major or the World Championships"],
   ["agrade", "Straight A", "Get an A or A+ draft grade"],
-  ["pure", "Pure", "Make a focus putt with a perfect tap"],
   ["week", "Clean sweep", "Finish all three weekly challenges"],
   ["tourcard", "Tour Card", "Earn your Tour Card"],
   ["elitecard", "Elite", "Earn the Elite Card"],
@@ -10313,7 +10157,6 @@ function careerRound(x){
   if (x.holes.some((h, i) => i >= 2 && h.rel < 0 && x.holes[i - 1].rel < 0 && x.holes[i - 2].rel < 0)) achieve("birdies3");
   if (x.holes.every(h => h.rel <= 0)) achieve("clean");
   const calls = (x.spec && x.spec.calls) || {};
-  if (Object.keys(calls).some(n => calls[n] && calls[n].focus > .85 && x.holes[n - 1] && x.holes[n - 1].putt && x.holes[n - 1].putt.made)) achieve("pure");
   if (state.mode !== "ctc") collAdd(SLOTS.map(k => state.picks[k]));
 }
 function careerTourney(place, tierName){
@@ -10332,963 +10175,5 @@ function careerPanelHTML(){
       <ul class="challenges">${ACHIEVEMENTS.map(x => `<li class="${a[x[0]] ? "done" : ""}"><span>${a[x[0]] ? "★" : "☆"}</span><span><b>${esc(x[1])}</b> ${esc(x[2])}</span><small>${a[x[0]] ? esc(fmtDate(a[x[0]])) : ""}</small></li>`).join("")}</ul>
     </details>
   </section>`;
-}
-
-/* ---------- Real greens, from the DGPT caddie books ----------
-   What surrounds each basket on the two courses whose 2021 DGPT caddie books the game already uses for hole lengths:
-   Pickard Park (Des Moines Challenge) and Toboggan (Great Lakes Open). Facts only, in our own words: which side the OB
-   is on and what marks it, water, landscaping, and how far the basket sits above or below the tee. Positions are
-   approximate (read off the hole maps); distances are feet from the basket. Keyed by the game's hole number, which for
-   Pickard starts at the book's hole 10.
-   Directions are as you face the basket from the fairway: long = beyond the basket, short = in front of it.
-   Feature kinds: line (painted OB line with stakes), grass (marked tall grass, OB), creek (wet), dry (dry creek bed),
-   fence, parking, ties (railroad ties), pond, ring (OB line circling the green), hex (landscaped hexagon green),
-   bunker (tree bunker), woods (thick trees close to the green).
-   slope: rise from the putting area up to the basket, as a grade (0.1 = 1 ft up every 10 ft). From the books'
-   elevation profiles for Toboggan; Pickard is flat. */
-const GREENS = {
-  pickard: {
-    1:  {note: "Mowed island in tall grass, creek short", f: [["grass", "around", 38], ["creek", "short", 48]]},
-    2:  {note: "Water far right plays casual", f: [["pond", "right", 70]]},
-    3:  {note: "Dry creek bed short-right is OB", f: [["dry", "shortright", 22]]},
-    4:  {note: "Tree bunker short-left is OB", f: [["bunker", "shortleft", 28]]},
-    5:  {note: "Creek crosses the fairway", f: [["dry", "short", 85]]},
-    6:  {note: "OB right and long", f: [["grass", "right", 30], ["line", "long", 32]]},
-    7:  {note: "OB along the creek long", f: [["dry", "long", 30]]},
-    8:  {note: "", f: []},
-    9:  {note: "OB left and long", f: [["grass", "left", 32], ["line", "long", 35]]},
-    10: {note: "Parking lot left, OB long and right", f: [["parking", "left", 48], ["ties", "left", 26], ["line", "long", 30], ["line", "right", 36]]},
-    11: {note: "OB right and long", f: [["line", "right", 30], ["line", "long", 36]]},
-    12: {note: "OB long", f: [["line", "long", 30]]},
-    13: {note: "Pond short-left, tall grass long", f: [["pond", "shortleft", 55], ["grass", "long", 36]]},
-    14: {note: "Island green", f: []},
-    15: {note: "OB line circles the green", f: [["grass", "left", 40], ["ring", "around", 42]]},
-    16: {note: "Hexagon green: off it is a hazard", f: [["hex", "around", 30]]},
-    17: {note: "Fence left and long, creek beyond", f: [["fence", "left", 30], ["fence", "long", 34], ["creek", "long", 48]]},
-    18: {note: "OB line behind the basket", f: [["grass", "left", 42], ["grass", "right", 42], ["line", "long", 24]]},
-  },
-  toboggan: {
-    1:  {note: "Basket 57 ft above the tee", slope: .13, f: [["woods", "around", 0]]},
-    2:  {note: "Basket 31 ft above the tee", slope: .08, f: [["woods", "around", 0]]},
-    3:  {note: "Basket 51 ft above the tee", slope: .14, f: [["woods", "around", 0]]},
-    4:  {note: "Basket 69 ft below the tee", slope: -.13, f: [["woods", "around", 0]]},
-    5:  {note: "Basket 50 ft above the tee", slope: .07, f: [["woods", "around", 0]]},
-    6:  {note: "Dips, then climbs to the basket", slope: .05, f: [["woods", "around", 0]]},
-    7:  {note: "Basket 18 ft below the tee", slope: -.05, f: [["woods", "around", 0]]},
-    8:  {note: "Climbs 26 ft to the basket, OB left", slope: .1, f: [["woods", "around", 0], ["line", "left", 30]]},
-    9:  {note: "Basket 52 ft above the tee, fence OB left", slope: .15, f: [["woods", "around", 0], ["fence", "left", 28]]},
-    10: {note: "Basket 60 ft below the tee, OB left", slope: -.13, f: [["woods", "around", 0], ["line", "left", 30]]},
-    11: {note: "Basket 76 ft above the tee", slope: .11, f: [["woods", "around", 0]]},
-    12: {note: "Big drop, then up 12 ft to the basket", slope: .06, f: [["woods", "around", 0]]},
-    13: {note: "Basket 20 ft above the tee", slope: .035, f: [["woods", "around", 0]]},
-    14: {note: "", slope: 0, f: [["woods", "around", 0]]},
-    15: {note: "", slope: 0, f: [["woods", "around", 0]]},
-    16: {note: "Dips, then climbs 23 ft to the basket", slope: .1, f: [["woods", "around", 0]]},
-    17: {note: "Basket 54 ft above the tee", slope: .11, f: [["woods", "around", 0]]},
-    18: {note: "Basket 64 ft below the tee", slope: -.14, f: [["woods", "around", 0]]},
-  },
-
-  /* The other courses: what the game's own hole notes say about the green (those notes come from each course's
-     linked map or UDisc layout). Where a note gives no side, the position is a reasonable guess. */
-  maple: {1: {f: [["peninsula", "around", 0]]}},
-  brewster: {
-    1: {f: [["road", "long", 34]]},
-    2: {f: [["wall", "right", 32]]},
-    5: {f: [["wall", "left", 30]]},
-    12: {f: [["line", "long", 30], ["line", "left", 32]]},
-  },
-  foxrun: {
-    2: {f: [["line", "right", 30], ["line", "long", 32]]}, 3: {f: [["line", "right", 30], ["line", "long", 32]]},
-    4: {f: [["line", "left", 34]]}, 5: {f: [["line", "right", 34]]}, 9: {f: [["line", "long", 34]]}, 10: {f: [["line", "left", 32]]},
-    11: {f: [["line", "right", 34]]}, 12: {f: [["line", "left", 36]]}, 13: {f: [["line", "long", 32]]}, 18: {f: [["line", "right", 36]]},
-  },
-  hornets: {18: {f: [["spare", "right", 30]]}},
-  heaven: {14: {f: [["pond", "right", 60]]}, 16: {f: [["fencering", "around", 34]]}},
-  idlewild: {
-    2: {f: [["pond", "left", 50]]}, 4: {f: [["pond", "left", 50], ["pond", "right", 70]]},
-    5: {f: [["pond", "shortleft", 50], ["road", "long", 40], ["path", "right", 28]]},
-    6: {f: [["creek", "short", 60]]}, 7: {f: [["creek", "short", 60]]}, 17: {f: [["creek", "short", 45]]},
-    18: {f: [["fence", "long", 28]]},
-  },
-  ale: {18: {f: [["hazard", "around", 32]]}},
-  kippa: {
-    2: {f: [["road", "long", 32]]}, 3: {f: [["road", "left", 32], ["fence", "right", 30]]}, 4: {f: [["fence", "long", 30]]},
-    5: {f: [["line", "left", 30]]}, 8: {f: [["line", "long", 30]]}, 10: {f: [["pit", "right", 36], ["line", "long", 30]]},
-    12: {f: [["line", "left", 34]]}, 13: {f: [["line", "right", 34]]}, 14: {f: [["line", "left", 32]]},
-    15: {f: [["haybale", "around", 0], ["line", "left", 36], ["line", "right", 36]]},
-    16: {f: [["line", "left", 32], ["line", "right", 32], ["line", "long", 30]]},
-    18: {f: [["line", "left", 32], ["line", "right", 32], ["line", "long", 30], ["sand", "short", 18]]},
-  },
-  beast: {17: {f: [["pond", "left", 45]]}, 18: {f: [["pond", "right", 50]]}},
-  champions: {16: {note: "The island green", f: [["island", "around", 0]]}},
-  winthrop: Object.assign(Object.fromEntries([1, 2, 6, 7, 8, 9, 10, 11, 12, 13, 14, 16].map(n => [n, {f: [["line", "left", 34], ["line", "right", 34]]}])),
-    {17: {f: [["island", "around", 0]]}, 18: {f: [["pond", "left", 50]]}}),
-};
-/* Course terrain and cover, from each course's UDisc page (elevation rating: flat, hilly, very hilly, extremely hilly)
-   and descriptions. hills sets how steep greens can tilt; cover is woods, open, mixed or bayou (water and cypress). */
-const GREENS_COURSE = {
-  pickard: {hills: 0, cover: "open"}, toboggan: {hills: 3, cover: "woods"},
-  maple: {hills: 2, cover: "woods"}, brewster: {hills: 2, cover: "open"}, foxrun: {hills: 1, cover: "open"},
-  hornets: {hills: 1, cover: "woods"}, heaven: {hills: 3, cover: "woods"}, parc: {hills: 0, cover: "bayou"},
-  ivy: {hills: 1, cover: "woods"}, idlewild: {hills: 3, cover: "mixed"}, ale: {hills: 3, cover: "woods"},
-  kippa: {hills: 3, cover: "woods"}, beast: {hills: 0, cover: "mixed"}, champions: {hills: 1, cover: "open"},
-  nokia: {hills: 2, cover: "woods"}, winthrop: {hills: 0, cover: "mixed"},
-};
-/* The green for a hole: the caddie-book or note facts above, plus the course's cover, and a slope where none is known
-   (its steepness follows the course's elevation rating; its direction is picked per hole). */
-function greenFor(courseId, n){
-  const g = GREENS[courseId] && GREENS[courseId][n], cc = GREENS_COURSE[courseId];
-  if (!g && !cc) return null;
-  const out = Object.assign({note: "", f: []}, g || {}, {f: ((g && g.f) || []).slice()});
-  if (cc){
-    out.cover = cc.cover;
-    if (cc.cover === "woods" && !out.f.some(x => x[0] === "woods")) out.f.push(["woods", "around", 0]);
-    if (cc.cover === "bayou") out.f.push(["bayou", "around", 0]);
-    if (out.slope === undefined && cc.hills){
-      const r = mulberry32(hashStr("slope|" + courseId + "|" + n));
-      out.slope = (r() < .5 ? -1 : 1) * (.015 + r() * .03 * cc.hills);
-    }
-  }
-  return out;
-}
-
-/* ---------- 3D hole view (three.js) ----------
-   A "hole cam" above the scorecard. Each hole is built from its own facts (par, length, OB, backhand or forehand, the
-   course's difficulty) with a look of its own (season and time of day, picked from the course and hole), and the round's
-   result for that hole is played out: a quick flyover, the thrower winds up, the drive flies to where the result says it
-   finished, then the putts. It only draws results; scores come from the engine exactly as before.
-   three.js loads from a CDN the first time a round starts. With no WebGL or no connection, the round plays on the
-   scorecard alone, as it always has. */
-const H3 = {
-  THREE: null, status: "idle", renderer: null, scene: null, camera: null, canvas: null, world: null,
-  raf: 0, last: 0, tasks: [], skip: false, timeScale: 1, fps: [], lowQuality: false,
-};
-const H3_URL = "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.min.js";
-const H3FT = 0.3;   // world units per foot: a 6 ft player is 1.8 units tall
-const H3_GREEN = 33 * 0.3 * 1.25;   // green radius, a little past circle 1
-
-function h3Wanted(){ return !REDUCED; }   // the 3D view is always on (the switch was removed); Skip still jumps past it
-function h3Load(){
-  if (H3.status !== "idle") return H3.loading || Promise.resolve(H3.status === "ready");
-  H3.status = "loading";
-  H3.loading = import(H3_URL).then(T => {
-    H3.THREE = T;
-    const test = document.createElement("canvas");
-    if (!(test.getContext("webgl2") || test.getContext("webgl"))) throw new Error("no WebGL");
-    H3.status = "ready"; return true;
-  }).catch(() => { H3.status = "failed"; return false; });
-  return H3.loading;
-}
-
-/* ----- Looks: a season per course and a time of day per hole ----- */
-const H3_SEASONS = {
-  summer: {grass: [0x4f8a3a, 0x5b9642, 0x467f33], fairway: [0x7cba55, 0x6fae4b], green: 0x8cc861, trees: [0x2f6b33, 0x3f7f35, 0x2a5e2c, 0x4d8a3b]},
-  autumn: {grass: [0x6b8a3a, 0x7a9142, 0x5e7d33], fairway: [0x8fb55a, 0x83a94f], green: 0x96c262, trees: [0xc8421c, 0xe08a1e, 0xd9a514, 0x2f6b33, 0x8a4b20]},
-  spring: {grass: [0x5a9a3f, 0x66a648, 0x518f39], fairway: [0x86c95c, 0x79bd52], green: 0x95d36a, trees: [0x3f8f3d, 0x5aa646, 0x2f6b33, 0xe9a3c4]},
-};
-const H3_TIMES = {
-  noon:   {sky: [0x6fb6e6, 0xd6eef8], sun: 0xfff6e0, sunI: 2.4, hemi: 1.1, pos: [-25, 60, 15]},
-  golden: {sky: [0x5a8fd0, 0xf6c98b], sun: 0xffc27a, sunI: 2.1, hemi: .85, pos: [-60, 22, 10]},
-  morning:{sky: [0x7cb8e0, 0xf1e4d0], sun: 0xffe7c4, sunI: 2.0, hemi: .95, pos: [50, 30, 30]},
-};
-function h3Look(c, n){
-  const r = mulberry32(hashStr("look|" + c.id));
-  const season = ["summer", "summer", "autumn", "spring"][Math.floor(r() * 4)];
-  const time = ["noon", "noon", "morning", "golden"][Math.floor(mulberry32(hashStr("time|" + c.id + "|" + Math.floor((n - 1) / 6)))() * 4)];
-  return {S: H3_SEASONS[season], Tm: H3_TIMES[time], season, time};
-}
-
-/* ----- Renderer, scene, frame loop ----- */
-function h3Setup(){
-  const T = H3.THREE;
-  if (H3.renderer) return;
-  const r = new T.WebGLRenderer({antialias: true, powerPreference: "high-performance"});
-  r.setPixelRatio(Math.min(2, window.devicePixelRatio || 1));
-  r.shadowMap.enabled = true; r.shadowMap.type = T.PCFSoftShadowMap;
-  r.outputColorSpace = T.SRGBColorSpace; r.toneMapping = T.ACESFilmicToneMapping; r.toneMappingExposure = 1.05;
-  H3.renderer = r; H3.canvas = r.domElement; H3.canvas.className = "h3-canvas";
-  H3.scene = new T.Scene();
-  H3.camera = new T.PerspectiveCamera(48, 16 / 9, 0.1, 500);
-  H3.hemi = new T.HemisphereLight(0xdff4ff, 0x3d6b2c, 1.0); H3.scene.add(H3.hemi);
-  const sun = new T.DirectionalLight(0xfff1d6, 2.2);
-  sun.castShadow = true; sun.shadow.mapSize.set(1024, 1024); sun.shadow.bias = -0.0005;
-  Object.assign(sun.shadow.camera, {left: -60, right: 60, top: 60, bottom: -60, near: 1, far: 200});
-  H3.sun = sun; H3.scene.add(sun); H3.scene.add(sun.target);
-  H3.sky = h3Sky(); H3.scene.add(H3.sky);
-}
-function h3Mount(){
-  const box = document.getElementById("hole3d"); if (!box || !H3.renderer) return false;
-  if (H3.canvas.parentElement !== box) box.prepend(H3.canvas);
-  const w = box.clientWidth || 340, h = Math.round(w * 9 / 16);
-  H3.renderer.setSize(w, h, false); H3.canvas.style.width = "100%"; H3.canvas.style.height = "auto";
-  H3.camera.aspect = w / h; H3.camera.updateProjectionMatrix();
-  return true;
-}
-function h3Loop(t){
-  H3.raf = requestAnimationFrame(h3Loop);
-  const raw = (t - (H3.last || t)) / 1000; H3.last = t;
-  const dt = Math.min(0.05, raw);
-  // Slow phones: after a couple of seconds under ~28 fps, drop shadows and render at 1x
-  if (raw > 0 && !H3.lowQuality){ H3.fps.push(1 / raw); if (H3.fps.length > 90){ const avg = H3.fps.reduce((a, b) => a + b, 0) / H3.fps.length; H3.fps = []; if (avg < 28){ H3.lowQuality = true; H3.renderer.setPixelRatio(1); H3.renderer.shadowMap.enabled = false; H3.scene.traverse(o => { if (o.material) [].concat(o.material).forEach(m => { m.needsUpdate = true; }); }); h3Mount(); } } }
-  H3.tasks = H3.tasks.filter(fn => fn(dt) !== false);
-  if (H3.canvas && H3.canvas.isConnected) H3.renderer.render(H3.scene, H3.camera);
-}
-function h3Start(){ if (!H3.raf){ H3.last = 0; H3.raf = requestAnimationFrame(h3Loop); } }
-function h3Stop(){ cancelAnimationFrame(H3.raf); H3.raf = 0; H3.tasks = []; }
-/* Run fn(k from 0 to 1) over ms of game time. Resolves false if the round moved on or the player skipped. */
-const H3_PACE = 1.65;   // every 3D animation runs this much faster (putts take about 60% of the old time)
-function h3Tween(ms, fn, token){
-  return new Promise(res => {
-    if (H3.skip || token !== playToken){ res(false); return; }
-    let el = 0;
-    H3.tasks.push(dt => {
-      if (H3.skip || token !== playToken){ res(false); return false; }
-      el += dt * 1000 * (typeof SPEED === "number" ? SPEED : 1) * H3.timeScale * h3Speed() * H3_PACE;
-      const k = Math.min(1, el / ms); fn(k);
-      if (k >= 1){ res(true); return false; }
-    });
-  });
-}
-/* Something that runs every frame until the hole is torn down (clouds drifting, particles). */
-function h3Every(fn){ const id = H3.worldId; H3.tasks.push(dt => (H3.worldId === id ? fn(dt) : false)); }
-/* Playback speed for the 3D view: 1x, 2x or 3x, remembered on this phone. 2x unless changed. */
-function h3Speed(){ const v = +storeGet("18down.h3speed"); return v === 1 || v === 3 ? v : 2; }
-function h3SpeedCycle(){ const n = h3Speed() === 1 ? 2 : h3Speed() === 2 ? 3 : 1; storeSet("18down.h3speed", String(n)); const b = document.getElementById("h3-speed"); if (b) b.textContent = n + "×"; }
-const h3Ease = t => t < .5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
-const h3Smooth = (a, b, x) => { const t = Math.max(0, Math.min(1, (x - a) / (b - a))); return t * t * (3 - 2 * t); };
-
-/* ----- Sky dome with a gradient, sun glow and drifting clouds ----- */
-function h3Sky(){
-  const T = H3.THREE;
-  const mat = new T.ShaderMaterial({side: T.BackSide, depthWrite: false, fog: false,
-    uniforms: {top: {value: new T.Color(0x6fb6e6)}, bottom: {value: new T.Color(0xd6eef8)}, sunDir: {value: new T.Vector3(0, 1, 0)}, sunCol: {value: new T.Color(0xffffff)}},
-    vertexShader: "varying vec3 vP; void main(){ vP = normalize(position); gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }",
-    fragmentShader: "uniform vec3 top; uniform vec3 bottom; uniform vec3 sunDir; uniform vec3 sunCol; varying vec3 vP; void main(){ float h = max(vP.y, 0.0); vec3 c = mix(bottom, top, pow(h, 0.6)); float s = max(dot(vP, normalize(sunDir)), 0.0); c += sunCol * (pow(s, 600.0) * 1.2 + pow(s, 12.0) * 0.18); gl_FragColor = vec4(c, 1.0); }"});
-  const sky = new T.Mesh(new T.SphereGeometry(300, 32, 16), mat);
-  return sky;
-}
-let H3_CLOUD_TEX = null;
-function h3CloudTex(){
-  if (H3_CLOUD_TEX) return H3_CLOUD_TEX;
-  const c = document.createElement("canvas"); c.width = c.height = 128; const g = c.getContext("2d");
-  for (let i = 0; i < 7; i++){ const x = 30 + Math.random() * 68, y = 50 + Math.random() * 28, r = 18 + Math.random() * 20, gr = g.createRadialGradient(x, y, 0, x, y, r); gr.addColorStop(0, "rgba(255,255,255,.95)"); gr.addColorStop(1, "rgba(255,255,255,0)"); g.fillStyle = gr; g.fillRect(0, 0, 128, 128); }
-  H3_CLOUD_TEX = new H3.THREE.CanvasTexture(c); return H3_CLOUD_TEX;
-}
-let H3_DOT_TEX = null;
-function h3DotTex(){
-  if (H3_DOT_TEX) return H3_DOT_TEX;
-  const c = document.createElement("canvas"); c.width = c.height = 64; const g = c.getContext("2d"), gr = g.createRadialGradient(32, 32, 0, 32, 32, 32);
-  gr.addColorStop(0, "rgba(255,255,255,1)"); gr.addColorStop(1, "rgba(255,255,255,0)"); g.fillStyle = gr; g.fillRect(0, 0, 64, 64);
-  H3_DOT_TEX = new H3.THREE.CanvasTexture(c); return H3_DOT_TEX;
-}
-
-/* ----- Building a hole ----- */
-function h3Mat(color, extra){ return new H3.THREE.MeshStandardMaterial(Object.assign({color, roughness: .9, metalness: 0}, extra || {})); }
-function h3Clear(){
-  const T = H3.THREE;
-  if (H3.world){ H3.scene.remove(H3.world); H3.world.traverse(o => { if (o.geometry) o.geometry.dispose(); if (o.material){ [].concat(o.material).forEach(m => { if (m.map && m.map !== H3_CLOUD_TEX && m.map !== H3_DOT_TEX) m.map.dispose(); m.dispose(); }); } }); }
-  H3.worldId = (H3.worldId || 0) + 1;
-  H3.tasks = H3.tasks.filter(() => false);
-  H3.world = new T.Group(); H3.scene.add(H3.world);
-}
-/* The hole's centerline: tee at the origin, basket down -z, bent to one side. */
-function h3Path(len, bend){ return t => ({x: bend * Math.sin(Math.PI * t) * (0.6 + 0.4 * t), z: -len * t}); }
-/* Rolling ground: gentle hills, flattened at the tee and the green, a dip for water. */
-function h3Terrain(seed, end, water, bumpy){
-  const r = mulberry32(seed), p = [r() * 6, r() * 6, r() * 6, r() * 6], amp = (.9 + r() * 1.3) * (bumpy === undefined ? 1 : bumpy);
-  const raw = (x0, z0) => { const x = x0 * .4, z = z0 * .4; return (Math.sin(x * .045 + p[0]) * Math.cos(z * .038 + p[1]) * 1.6 + Math.sin(x * .12 + z * .09 + p[2]) * .5 + Math.cos(z * .15 - p[3] + x * .03) * .3) * amp * 1.6; };
-  const tee = raw(0, 1), green = raw(end.x, end.z);
-  return (x, z) => {
-    let y = raw(x, z);
-    const dt = Math.hypot(x, z - 1), dg = Math.hypot(x - end.x, z - end.z);
-    y = y + (tee - y) * (1 - h3Smooth(3, 9, dt));
-    if (water){ const dw = water.island ? dg : Math.hypot(x - water.x, z - water.z); const inR = water.island ? H3_GREEN + 1.5 : water.r, outR = water.island ? H3_GREEN + 28 : water.r + 8;
-      if (water.island){ if (dg > inR) y = Math.min(y, water.y - .6 * (1 - h3Smooth(outR - 4, outR, dg)) + (y - water.y + .6) * h3Smooth(outR - 4, outR + 6, dg)); }
-      else if (dw < outR) y = Math.min(y, water.y - .5 + (y - water.y + .5) * h3Smooth(inR - 2, outR, dw)); }
-    const flatTo = water && water.island ? H3_GREEN + 1.2 : H3_GREEN * 1.9;   // islands drop into the lake right at their edge
-    y = y + (green - y) * (1 - h3Smooth(H3_GREEN, flatTo, dg));   // last, so nothing digs into the green
-    return y - tee;
-  };
-}
-function h3BuildHole(h, c){
-  const T = H3.THREE;
-  h3Clear();
-  const W = H3.world, rng = mulberry32(hashStr(c.id + "|h3|" + h.n)), look = h3Look(c, h.n), Tm = look.Tm;
-  const G = typeof greenFor === "function" ? greenFor(c.id, h.n) : null, has = k => !!(G && G.f.some(f => f[0] === k));
-  // bayou courses: cypress greens and gray trunks, darker swampy grass
-  const S = G && G.cover === "bayou" ? Object.assign({}, look.S, {trees: [0x5f7a4a, 0x6b8452, 0x55703f, 0x7a8c5a], grass: [0x4c7336, 0x557d3c, 0x45692f]}) : look.S;
-  const len = 30;   // putts only: just the approach and the green, not the whole hole
-  const bend = (rng() - .5) * len * 0.35 + (h.shot === "FH" ? 2 : -2);
-  const P = h3Path(len, bend), end = P(1);
-  const fwHalf = (h.ob ? 4.2 : 5.5 + (5 - c.diff) * 0.5) * 2;
-
-  // Water: island greens get a lake all around; some OB holes get a pond along one side
-  let water = null;
-  if (h.ob === 2 || has("island") || has("peninsula")) water = {island: true, x: end.x, z: end.z, peninsula: has("peninsula")};
-  else if (h.ob && rng() < .55){
-    // a pond beside the approach, kept well clear of the green
-    const side = bend > 0 ? -1 : 1, r = 9 + rng() * 5, p = P(.15 + rng() * .2);
-    water = {x: p.x + side * (fwHalf + r + 3), z: p.z, r};
-    const d = Math.hypot(water.x - end.x, water.z - end.z), need = H3_GREEN * 1.9 + r + 10;
-    if (d < need){ water.x = end.x + (water.x - end.x) / (d || 1) * need; water.z = end.z + (water.z - end.z) / (d || 1) * need; }
-  }
-  // how rolling the ground is follows the course's elevation rating (flat bayou to extremely hilly)
-  const cc = typeof GREENS_COURSE !== "undefined" ? GREENS_COURSE[c.id] : null;
-  const bumpy = !cc ? 1 : cc.cover === "bayou" ? .12 : [.45, .85, 1.15, 1.4][cc.hills] || 1;
-  const ground0 = h3Terrain(hashStr(c.id + "|t|" + h.n), end, null, bumpy);
-  if (water) water.y = (water.island ? ground0(end.x, end.z) : ground0(water.x, water.z)) - .15;
-  // the approach direction (from the basket back toward the fairway) and the slope up to the basket
-  const back9 = P(.9), uL = Math.hypot(back9.x - end.x, back9.z - end.z) || 1, U = {x: (back9.x - end.x) / uL, z: (back9.z - end.z) / uL};
-  const wet = water || has("pond") || has("creek") || has("bayou");   // water lies level, so holes with water don't tilt
-  const flat = h3Terrain(hashStr(c.id + "|t|" + h.n), end, water, bumpy), grade = wet ? 0 : (G && G.slope) || 0;
-  const ht = grade ? (x, z) => flat(x, z) - grade * ((x - end.x) * U.x + (z - end.z) * U.z) : flat;
-  H3.height = ht;
-
-  // Sky, light and fog for the time of day
-  H3.sky.material.uniforms.top.value.set(Tm.sky[0]); H3.sky.material.uniforms.bottom.value.set(Tm.sky[1]);
-  H3.sky.material.uniforms.sunDir.value.set(Tm.pos[0], Tm.pos[1], Tm.pos[2]).normalize(); H3.sky.material.uniforms.sunCol.value.set(Tm.sun);
-  H3.scene.fog = new T.Fog(Tm.sky[1], 90, 260);
-  H3.sun.color.set(Tm.sun); H3.sun.intensity = Tm.sunI; H3.hemi.intensity = Tm.hemi;
-  H3.sun.position.set(end.x * .5 + Tm.pos[0], Tm.pos[1], -len * .5 + Tm.pos[2]); H3.sun.target.position.set(end.x * .5, 0, -len * .5);
-
-  // Ground with color variation
-  const GS = 90, gsize = 220, gg = new T.PlaneGeometry(gsize, gsize, GS, GS); gg.rotateX(-Math.PI / 2); gg.translate(end.x * .5, 0, -len * .5);
-  const gp = gg.attributes.position, gcol = [], cA = new T.Color(S.grass[0]), cB = new T.Color(S.grass[1]), cC = new T.Color(S.grass[2]), tmp = new T.Color();
-  for (let i = 0; i < gp.count; i++){ const x = gp.getX(i), z = gp.getZ(i); gp.setY(i, ht(x, z)); const n = (Math.sin(x * .3 + z * .21) + Math.sin(x * .07 - z * .13)) * .25 + .5; tmp.copy(cA).lerp(n > .5 ? cB : cC, Math.abs(n - .5) * 1.6); gcol.push(tmp.r, tmp.g, tmp.b); }
-  gg.setAttribute("color", new T.Float32BufferAttribute(gcol, 3)); gg.computeVertexNormals();
-  const ground = new T.Mesh(gg, h3Mat(0xffffff, {vertexColors: true})); ground.receiveShadow = true; W.add(ground);
-
-  // Fairway ribbon with mowing stripes, following the ground
-  const N = 60, pos = [], idx = [], col = [], s1 = new T.Color(S.fairway[0]), s2 = new T.Color(S.fairway[1]);
-  for (let i = 0; i <= N; i++){
-    const t = i / N, a = P(t), b = P(Math.min(1, t + .01)), dx = b.x - a.x, dz = b.z - a.z, L = Math.hypot(dx, dz) || 1;
-    const nx = -dz / L, nz = dx / L, w = fwHalf * (t > .85 ? 1.25 : 1) * (1 + .08 * Math.sin(t * 9));
-    for (const s of [1, -1]){ const x = a.x + nx * w * s, z = a.z + nz * w * s; pos.push(x, ht(x, z) + .04, z); }
-    const stripe = Math.floor(t * 14) % 2 ? s1 : s2; col.push(stripe.r, stripe.g, stripe.b, stripe.r, stripe.g, stripe.b);
-    if (i < N) idx.push(i * 2, i * 2 + 1, i * 2 + 2, i * 2 + 1, i * 2 + 3, i * 2 + 2);
-  }
-  const fg = new T.BufferGeometry(); fg.setAttribute("position", new T.Float32BufferAttribute(pos, 3)); fg.setAttribute("color", new T.Float32BufferAttribute(col, 3)); fg.setIndex(idx); fg.computeVertexNormals();
-  const fairway = new T.Mesh(fg, h3Mat(0xffffff, {vertexColors: true, side: T.DoubleSide})); fairway.receiveShadow = true; W.add(fairway);
-
-  // Green and the circle 1 (33 ft) ring
-  const gy = ht(end.x, end.z);
-  const hug = (geo, lift) => { geo.rotateX(-Math.PI / 2); geo.translate(end.x, 0, end.z); const a = geo.attributes.position; for (let i = 0; i < a.count; i++) a.setY(i, ht(a.getX(i), a.getZ(i)) + lift); geo.computeVertexNormals(); return geo; };
-  const green = new T.Mesh(hug(new T.CircleGeometry(H3_GREEN, 64, 0), .05), h3Mat(S.green)); green.receiveShadow = true; W.add(green);
-  const ring = new T.Mesh(hug(new T.RingGeometry(33 * H3FT - .07, 33 * H3FT + .07, 96), .07), new T.MeshBasicMaterial({color: 0xf2efd8, transparent: true, opacity: .6}));
-  W.add(ring);
-
-  // Water surface, gently shimmering
-  if (water){
-    const wg = water.island ? new T.RingGeometry(H3_GREEN + .1, H3_GREEN + 40, 64) : new T.CircleGeometry(water.r + 1.5, 40);
-    const wm = new T.MeshStandardMaterial({color: 0x2f7fa8, roughness: .08, metalness: .25, transparent: true, opacity: .9});
-    const wmesh = new T.Mesh(wg, wm); wmesh.rotation.x = -Math.PI / 2; wmesh.position.set(water.island ? end.x : water.x, water.y, water.island ? end.z : water.z); W.add(wmesh);
-    h3Every(() => { wm.color.setHSL(.555, .55, .41 + Math.sin(performance.now() / 900) * .015); });
-  }
-  H3.water = water;
-  if (water && water.peninsula){   // a peninsula: land runs out to the green from the fairway side
-    const pts = []; for (let t = .45; t <= 1.001; t += .05) pts.push(P(t));
-    const pos = [], idx = [];
-    pts.forEach((a, i) => { const b = pts[Math.min(i + 1, pts.length - 1)], o = pts[Math.max(i - 1, 0)], dx = b.x - o.x, dz = b.z - o.z, L = Math.hypot(dx, dz) || 1, w = 7;
-      for (const sg of [1, -1]){ const x = a.x - dz / L * w * sg, z = a.z + dx / L * w * sg; pos.push(x, Math.max(ht(x, z), water.y) + .06, z); }
-      if (i < pts.length - 1) idx.push(i * 2, i * 2 + 1, i * 2 + 2, i * 2 + 1, i * 2 + 3, i * 2 + 2); });
-    const bg = new T.BufferGeometry(); bg.setAttribute("position", new T.Float32BufferAttribute(pos, 3)); bg.setIndex(idx); bg.computeVertexNormals();
-    const bridge = new T.Mesh(bg, h3Mat(S.green, {side: T.DoubleSide})); bridge.receiveShadow = true; W.add(bridge);
-  }
-  // OB stakes on OB holes
-  if (h.ob === 1){
-    const stake = new T.CylinderGeometry(.05, .05, 1.1, 6), white = h3Mat(0xffffff);
-    for (let i = 6; i < 14; i++){ const a = P(i / 14); for (const s of [-1, 1]){ const x = a.x + s * (fwHalf + 2.5); const m = new T.Mesh(stake, white); m.position.set(x, ht(x, a.z) + .55, a.z); m.castShadow = true; W.add(m); } }
-  }
-
-  // Tee pad and a tee sign
-
-  // Trees: three kinds, colors from the season, thicker on harder courses
-  const woods = has("woods"), open = !!(G && G.cover === "open");
-  const keepOut = G ? h3GreenFeatures(W, {end, U, ht, rng, S, P, fwHalf}, G) : [];
-  h3Trees(W, P, end, woods ? fwHalf * .55 : fwHalf, ht, water, S, rng, (90 + c.diff * 15) * (woods ? 1.7 : open ? .45 : 1), keepOut, woods);
-  // Bushes along the fairway edge
-  const nB = 18, bush = new T.InstancedMesh(new T.IcosahedronGeometry(.7, 0), h3Mat(S.trees[0], {flatShading: true}), nB), d = new T.Object3D();
-  for (let i = 0; i < nB; i++){ const t = rng(), a = P(t), side = rng() < .5 ? -1 : 1, x = a.x + side * (fwHalf + 2 + rng() * 4), z = a.z + (rng() - .5) * 3, s = (.6 + rng() * .7) * 1.6; d.position.set(x, ht(x, z) + .3 * s, z); d.scale.set(s, s * .8, s); d.rotation.y = rng() * 6; d.updateMatrix(); bush.setMatrixAt(i, d.matrix); }
-  bush.castShadow = true; W.add(bush);
-
-  // Clouds drifting
-  for (let i = 0; i < 9; i++){
-    const cm = new T.Sprite(new T.SpriteMaterial({map: h3CloudTex(), transparent: true, opacity: .85, depthWrite: false, fog: false}));
-    const s = 30 + rng() * 40; cm.scale.set(s, s * .45, 1); cm.position.set((rng() - .5) * 260, 55 + rng() * 30, -len * .5 - 60 - rng() * 140);
-    W.add(cm); const v = .6 + rng() * .8; h3Every(dt => { cm.position.x += v * dt; if (cm.position.x > 160) cm.position.x = -160; });
-  }
-
-  // Basket
-  const basket = h3Basket(); basket.position.set(end.x, gy, end.z); W.add(basket);
-  const chains = basket.userData.chains;
-
-  // The disc and its trail
-  const disc = new T.Mesh(new T.CylinderGeometry(.11, .11, .03, 28), h3Mat(0xffd23f, {roughness: .4}));
-  const rim = new T.Mesh(new T.TorusGeometry(.105, .012, 6, 28), h3Mat(0xffffff, {roughness: .4})); rim.rotation.x = Math.PI / 2; disc.add(rim);
-  disc.castShadow = true; W.add(disc);
-  const trailN = 48, trailGeo = new T.BufferGeometry(), trailPos = new Float32Array(trailN * 3);
-  trailGeo.setAttribute("position", new T.BufferAttribute(trailPos, 3)); trailGeo.setDrawRange(0, 0);
-  const trail = new T.Line(trailGeo, new T.LineBasicMaterial({color: 0xffffff, transparent: true, opacity: .55})); trail.frustumCulled = false; W.add(trail);
-
-  // The player
-  const player = h3Person(); W.add(player);
-
-  return {P, len, end, gy, fwHalf, basket, chains, disc, trail, trailPos, trailN, player, rng, ht, G, U};
-}
-/* ----- What surrounds a real green (from greens.js) ----- */
-function h3GreenFeatures(W, ctx, G){
-  const T = H3.THREE, {end, U, ht, rng} = ctx, F = H3FT, keep = [];
-  const fwd = {x: -U.x, z: -U.z}, left = {x: fwd.z, z: -fwd.x};
-  const norm = v => { const l = Math.hypot(v.x, v.z) || 1; return {x: v.x / l, z: v.z / l}; };
-  const DIR = {long: fwd, short: {x: -fwd.x, z: -fwd.z}, left, right: {x: -left.x, z: -left.z},
-    shortleft: norm({x: -fwd.x + left.x, z: -fwd.z + left.z}), shortright: norm({x: -fwd.x - left.x, z: -fwd.z - left.z})};
-  const at = (v, dFt, lat) => { const perp = {x: v.z, z: -v.x}; return {x: end.x + v.x * dFt * F + perp.x * (lat || 0) * F, z: end.z + v.z * dFt * F + perp.z * (lat || 0) * F}; };
-  // a ribbon along a polyline, hugging the ground
-  const ribbon = (pts, width, mat, lift) => {
-    const pos = [], idx = [];
-    pts.forEach((p, i) => { const q = pts[Math.min(i + 1, pts.length - 1)], o = pts[Math.max(i - 1, 0)], dx = q.x - o.x, dz = q.z - o.z, L = Math.hypot(dx, dz) || 1, nx = -dz / L * width / 2, nz = dx / L * width / 2;
-      for (const sg of [1, -1]){ const x = p.x + nx * sg, z = p.z + nz * sg; pos.push(x, ht(x, z) + lift, z); }
-      if (i < pts.length - 1) idx.push(i * 2, i * 2 + 1, i * 2 + 2, i * 2 + 1, i * 2 + 3, i * 2 + 2); });
-    const g = new T.BufferGeometry(); g.setAttribute("position", new T.Float32BufferAttribute(pos, 3)); g.setIndex(idx); g.computeVertexNormals();
-    const m = new T.Mesh(g, mat); m.receiveShadow = true; W.add(m); return m;
-  };
-  const across = (v, dFt, halfFt, wobble) => { const pts = []; for (let i = -halfFt; i <= halfFt; i += 6) pts.push(at(v, dFt + (wobble ? Math.sin(i * .09) * wobble : 0), i)); return pts; };
-  const circle = (rFt, n) => { const pts = []; for (let i = 0; i <= (n || 72); i++){ const a = i / (n || 72) * Math.PI * 2; pts.push({x: end.x + Math.cos(a) * rFt * F, z: end.z + Math.sin(a) * rFt * F}); } return pts; };
-  const white = new T.MeshBasicMaterial({color: 0xf4f1e6}), stakeM = h3Mat(0xffffff), stakeTop = h3Mat(0xd8342a);
-  const stakes = pts => pts.forEach((p, i) => { if (i % 3) return; const y = ht(p.x, p.z), st = new T.Mesh(new T.CylinderGeometry(.03, .03, .9, 6), stakeM); st.position.set(p.x, y + .45, p.z); st.castShadow = true; W.add(st); const tp = new T.Mesh(new T.CylinderGeometry(.032, .032, .12, 6), stakeTop); tp.position.set(p.x, y + .85, p.z); W.add(tp); });
-  const tallGrass = (cx, cz, place, n) => {
-    const blade = new T.ConeGeometry(.05, 1, 4), im = new T.InstancedMesh(blade, h3Mat(0xffffff, {flatShading: true}), n), d = new T.Object3D(), col = new T.Color();
-    for (let i = 0; i < n; i++){ const p = place(); const hgt = .5 + rng() * .6; d.position.set(p.x, ht(p.x, p.z) + hgt / 2, p.z); d.scale.set(1, hgt, 1); d.rotation.set((rng() - .5) * .3, rng() * 6, (rng() - .5) * .3); d.updateMatrix(); im.setMatrixAt(i, d.matrix); im.setColorAt(i, col.setHSL(.15 + rng() * .08, .45, .45 + rng() * .15)); }
-    im.instanceColor.needsUpdate = true; im.castShadow = true; W.add(im);
-  };
-  for (const [kind, dir, dFt] of G.f){
-    const v = DIR[dir] || fwd;
-    if (kind === "line"){ const pts = across(v, dFt, 70); ribbon(pts, .12, white, .07); stakes(pts); }
-    else if (kind === "grass"){
-      if (dir === "around"){ const pts = circle(dFt); ribbon(pts, .12, white, .07); stakes(pts); tallGrass(0, 0, () => { const a = rng() * Math.PI * 2, r = (dFt + 4 + rng() * 45) * F; return {x: end.x + Math.cos(a) * r, z: end.z + Math.sin(a) * r}; }, 1400); }
-      else { const pts = across(v, dFt, 70); ribbon(pts, .12, white, .07); stakes(pts); tallGrass(0, 0, () => at(v, dFt + 3 + rng() * 45, (rng() - .5) * 140), 700); }
-    }
-    else if (kind === "creek" || kind === "dry"){
-      const pts = across(v, dFt, 80, 6), wet = kind === "creek";
-      ribbon(pts, 14 * F, wet ? new T.MeshStandardMaterial({color: 0x3d7f9e, roughness: .1, metalness: .2, transparent: true, opacity: .92}) : h3Mat(0x8b7556), .06);
-      ribbon(pts, 18 * F, h3Mat(0x6e6650), .04);
-      const rock = new T.IcosahedronGeometry(.18, 0), rm = h3Mat(0x8d8f8a, {flatShading: true});
-      for (let i = 0; i < 40; i++){ const p = pts[Math.floor(rng() * pts.length)], o = (rng() - .5) * 16 * F, a = Math.atan2(-(v.x), v.z); const st = new T.Mesh(rock, rm); const x = p.x + v.x * o, z = p.z + v.z * o; st.position.set(x, ht(x, z) + .05, z); st.scale.setScalar(.5 + rng()); st.rotation.set(rng() * 3, rng() * 3, 0); st.castShadow = true; W.add(st); }
-      stakes(across(v, dFt - 9, 70));
-    }
-    else if (kind === "fence"){
-      const pts = across(v, dFt, 60), wood = h3Mat(0x7a5a3a);
-      pts.forEach((p, i) => { const y = ht(p.x, p.z), post = new T.Mesh(new T.BoxGeometry(.12, 1.3, .12), wood); post.position.set(p.x, y + .65, p.z); post.castShadow = true; W.add(post);
-        const q = pts[i + 1]; if (!q) return; const yq = ht(q.x, q.z), L = Math.hypot(q.x - p.x, q.z - p.z);
-        for (const hy of [.55, 1.05]){ const rail = new T.Mesh(new T.BoxGeometry(L, .08, .05), wood); rail.position.set((p.x + q.x) / 2, (y + yq) / 2 + hy, (p.z + q.z) / 2); rail.rotation.y = -Math.atan2(q.z - p.z, q.x - p.x); rail.castShadow = true; W.add(rail); } });
-    }
-    else if (kind === "ties"){
-      const pts = across(v, dFt, 60), tie = h3Mat(0x5b4129);
-      for (let i = 0; i < pts.length - 1; i++){ const p = pts[i], q = pts[i + 1], y = ht(p.x, p.z), L = Math.hypot(q.x - p.x, q.z - p.z); const b = new T.Mesh(new T.BoxGeometry(L * .98, .2, .3), tie); b.position.set((p.x + q.x) / 2, y + .1, (p.z + q.z) / 2); b.rotation.y = -Math.atan2(q.z - p.z, q.x - p.x); b.castShadow = true; b.receiveShadow = true; W.add(b); }
-    }
-    else if (kind === "parking"){
-      const c0 = at(v, dFt + 35, 0), y = ht(c0.x, c0.z), lot = new T.Mesh(new T.PlaneGeometry(130 * F, 70 * F), h3Mat(0x3b3f44, {roughness: .95}));
-      lot.rotation.x = -Math.PI / 2; lot.rotation.z = Math.atan2(v.x, v.z); lot.position.set(c0.x, y + .05, c0.z); lot.receiveShadow = true; W.add(lot);
-      for (let i = -6; i <= 6; i++){ const a = at(v, dFt + 12, i * 10), st = new T.Mesh(new T.PlaneGeometry(.1, 18 * F), white); st.rotation.x = -Math.PI / 2; st.rotation.z = Math.atan2(v.x, v.z); st.position.set(a.x + v.x * 9 * F, y + .06, a.z + v.z * 9 * F); W.add(st); }
-      ribbon(across(v, dFt, 65), .25, h3Mat(0xb9b5aa), .12);
-      keep.push({x: c0.x, z: c0.z, r: 75 * F});
-    }
-    else if (kind === "pond"){
-      const c0 = at(v, dFt, 0), y = ht(c0.x, c0.z), pond = new T.Mesh(new T.CircleGeometry(24 * F, 48), new T.MeshStandardMaterial({color: 0x2f7fa8, roughness: .08, metalness: .25, transparent: true, opacity: .9}));
-      pond.rotation.x = -Math.PI / 2; pond.position.set(c0.x, y + .04, c0.z); W.add(pond);
-      keep.push({x: c0.x, z: c0.z, r: 30 * F});
-    }
-    else if (kind === "ring"){ const pts = circle(dFt); ribbon(pts, .12, white, .08); stakes(pts); }
-    else if (kind === "hex"){
-      const hex = new T.CircleGeometry(dFt * F, 6); hex.rotateX(-Math.PI / 2); hex.translate(end.x, 0, end.z);
-      const a = hex.attributes.position; for (let i = 0; i < a.count; i++) a.setY(i, ht(a.getX(i), a.getZ(i)) + .09); hex.computeVertexNormals();
-      const bed = new T.Mesh(hex, h3Mat(0x9c7148)); bed.receiveShadow = true; W.add(bed);
-      const stone = h3Mat(0xb9b5aa);
-      for (let k = 0; k < 6; k++){ const a0 = k / 6 * Math.PI * 2, a1 = (k + 1) / 6 * Math.PI * 2, x0 = end.x + Math.cos(a0) * dFt * F, z0 = end.z + Math.sin(a0) * dFt * F, x1 = end.x + Math.cos(a1) * dFt * F, z1 = end.z + Math.sin(a1) * dFt * F, L = Math.hypot(x1 - x0, z1 - z0);
-        const e = new T.Mesh(new T.BoxGeometry(L, .14, .22), stone); e.position.set((x0 + x1) / 2, ht((x0 + x1) / 2, (z0 + z1) / 2) + .07, (z0 + z1) / 2); e.rotation.y = -Math.atan2(z1 - z0, x1 - x0); e.castShadow = true; W.add(e); }
-      const shrub = new T.IcosahedronGeometry(.45, 0), sm = h3Mat(0x4d7f3a, {flatShading: true});
-      for (let k = 0; k < 6; k++){ const a0 = k / 6 * Math.PI * 2, r = dFt * F * .93, x = end.x + Math.cos(a0) * r, z = end.z + Math.sin(a0) * r, sh = new T.Mesh(shrub, sm); sh.position.set(x, ht(x, z) + .3, z); sh.castShadow = true; W.add(sh); }
-      keep.push({x: end.x, z: end.z, r: dFt * F + 2});
-    }
-    else if (kind === "road" || kind === "path"){
-      const road = kind === "road", pts = across(v, dFt + (road ? 11 : 3), 90, 3);
-      ribbon(pts, (road ? 22 : 6) * F, h3Mat(road ? 0x45494e : 0xb8a888, {roughness: .95}), .05);
-      if (road){ for (let i = 0; i < pts.length - 1; i += 2){ const p = pts[i], q = pts[i + 1], L = Math.hypot(q.x - p.x, q.z - p.z), d = new T.Mesh(new T.PlaneGeometry(L * .6, .12), new T.MeshBasicMaterial({color: 0xf2c230})); d.rotation.x = -Math.PI / 2; d.rotation.z = -Math.atan2(q.z - p.z, q.x - p.x); d.position.set((p.x + q.x) / 2, ht((p.x + q.x) / 2, (p.z + q.z) / 2) + .07, (p.z + q.z) / 2); W.add(d); }
-        stakes(across(v, dFt, 70)); }
-      pts.forEach(p => keep.push({x: p.x, z: p.z, r: (road ? 16 : 6) * F}));
-    }
-    else if (kind === "wall"){
-      const pts = across(v, dFt, 60), rock = new T.DodecahedronGeometry(.45, 0), rm = h3Mat(0x8a8780, {flatShading: true});
-      for (let i = 0; i < pts.length - 1; i++) for (let k = 0; k < 3; k++){ const t = k / 3, x = pts[i].x + (pts[i + 1].x - pts[i].x) * t, z = pts[i].z + (pts[i + 1].z - pts[i].z) * t, st = new T.Mesh(rock, rm);
-        st.position.set(x, ht(x, z) + .3 + (k % 2) * .25, z); st.scale.set(1 + rng() * .4, .7 + rng() * .4, .8 + rng() * .3); st.rotation.set(rng() * 3, rng() * 3, rng() * 3); st.castShadow = true; W.add(st); }
-    }
-    else if (kind === "fencering"){
-      const pts = circle(dFt, 36), wood = h3Mat(0x7a5a3a);
-      pts.forEach((p, i) => { const q = pts[i + 1]; const y = ht(p.x, p.z); const post = new T.Mesh(new T.BoxGeometry(.12, 1.3, .12), wood); post.position.set(p.x, y + .65, p.z); post.castShadow = true; W.add(post);
-        if (!q) return; const L = Math.hypot(q.x - p.x, q.z - p.z);
-        for (const hy of [.55, 1.05]){ const rail = new T.Mesh(new T.BoxGeometry(L, .08, .05), wood); rail.position.set((p.x + q.x) / 2, (y + ht(q.x, q.z)) / 2 + hy, (p.z + q.z) / 2); rail.rotation.y = -Math.atan2(q.z - p.z, q.x - p.x); rail.castShadow = true; W.add(rail); } });
-    }
-    else if (kind === "spare"){ const c0 = at(v, dFt, 0), b = h3Basket(); b.position.set(c0.x, ht(c0.x, c0.z), c0.z); W.add(b); keep.push({x: c0.x, z: c0.z, r: 2}); }
-    else if (kind === "hazard"){
-      const pts = circle(dFt); ribbon(pts, .12, new T.MeshBasicMaterial({color: 0xf2c230}), .08);
-      const outer = new T.RingGeometry(dFt * F, (dFt + 40) * F, 64); outer.rotateX(-Math.PI / 2); outer.translate(end.x, 0, end.z);
-      const a = outer.attributes.position; for (let i = 0; i < a.count; i++) a.setY(i, ht(a.getX(i), a.getZ(i)) + .03); outer.computeVertexNormals();
-      W.add(new T.Mesh(outer, h3Mat(0x6f7a3e)));
-    }
-    else if (kind === "pit"){
-      const c0 = at(v, dFt + 20, 0), y = ht(c0.x, c0.z), pit = new T.Mesh(new T.CircleGeometry(26 * F, 40), h3Mat(0x5a4632)); pit.rotation.x = -Math.PI / 2; pit.position.set(c0.x, y + .03, c0.z); W.add(pit);
-      const inner = new T.Mesh(new T.CircleGeometry(18 * F, 40), h3Mat(0x3f3122)); inner.rotation.x = -Math.PI / 2; inner.position.set(c0.x, y + .04, c0.z); W.add(inner);
-      stakes(across(v, dFt, 50)); keep.push({x: c0.x, z: c0.z, r: 28 * F});
-    }
-    else if (kind === "haybale"){
-      const bale = new T.BoxGeometry(1.2, .6, .7), bm = h3Mat(0xd9b65a, {roughness: 1}), ring = 7;
-      for (let k = 0; k < ring; k++){ const a = k / ring * Math.PI * 2, x = end.x + Math.cos(a) * 1.2, z = end.z + Math.sin(a) * 1.2, b = new T.Mesh(bale, bm); b.position.set(x, ht(x, z) + .3, z); b.rotation.y = -a; b.castShadow = true; b.receiveShadow = true; W.add(b); }
-      const pts = circle(24); ribbon(pts, .12, white, .08); stakes(pts);
-    }
-    else if (kind === "sand"){
-      const c0 = at(v, dFt, 0), y = ht(c0.x, c0.z), bunker = new T.Mesh(new T.CircleGeometry(14 * F, 32), h3Mat(0xe2cf9a, {roughness: 1})); bunker.rotation.x = -Math.PI / 2; bunker.scale.set(1.6, 1, 1); bunker.rotation.z = Math.atan2(v.x, v.z) + Math.PI / 2; bunker.position.set(c0.x, y + .05, c0.z); W.add(bunker);
-    }
-    else if (kind === "bayou"){   // standing water scattered around, kept off the putting lane
-      for (const [dir2, d2, lat] of [["left", 44 + rng() * 14, (rng() - .5) * 30], ["right", 46 + rng() * 14, (rng() - .5) * 30], ["long", 48 + rng() * 12, (rng() - .5) * 40]]){
-        const c0 = at(DIR[dir2], d2, lat), y = ht(c0.x, c0.z), r = (16 + rng() * 14) * F, pond = new T.Mesh(new T.CircleGeometry(r, 40), new T.MeshStandardMaterial({color: 0x3a7275, roughness: .06, metalness: .3, transparent: true, opacity: .9}));
-        pond.rotation.x = -Math.PI / 2; pond.scale.set(1.4, 1, 1); pond.position.set(c0.x, y + .04, c0.z); W.add(pond); keep.push({x: c0.x, z: c0.z, r: r * 1.3});
-      }
-    }
-    else if (kind === "bunker"){
-      const c0 = at(v, dFt, 0), trunk = new T.CylinderGeometry(.2, .3, 3, 7), crown = new T.IcosahedronGeometry(2.2, 0), tm = h3Mat(0x5a3b22), cm = h3Mat(0x356f32, {flatShading: true});
-      const patch = new T.Mesh(new T.CircleGeometry(22 * F, 32), h3Mat(0x6b5a3e)); patch.rotation.x = -Math.PI / 2; patch.position.set(c0.x, ht(c0.x, c0.z) + .04, c0.z); W.add(patch);
-      const edge = []; for (let i = 0; i <= 48; i++){ const a = i / 48 * Math.PI * 2; edge.push({x: c0.x + Math.cos(a) * 24 * F, z: c0.z + Math.sin(a) * 24 * F}); }
-      ribbon(edge, .12, white, .07); stakes(edge);
-      for (let k = 0; k < 7; k++){ const a = rng() * Math.PI * 2, r = rng() * 16 * F, x = c0.x + Math.cos(a) * r, z = c0.z + Math.sin(a) * r, y = ht(x, z), sc = .8 + rng() * .5;
-        const t1 = new T.Mesh(trunk, tm); t1.position.set(x, y + 1.5 * sc, z); t1.scale.setScalar(sc); t1.castShadow = true; W.add(t1);
-        const c1 = new T.Mesh(crown, cm); c1.position.set(x, y + 4 * sc, z); c1.scale.setScalar(sc); c1.castShadow = true; W.add(c1); }
-      keep.push({x: c0.x, z: c0.z, r: 26 * F});
-    }
-  }
-  return keep;
-}
-function h3Trees(W, P, end, fwHalf, ht, water, S, rng, n, keepOut, woods){
-  const T = H3.THREE, d = new T.Object3D();
-  const trunks = new T.InstancedMesh(new T.CylinderGeometry(.13, .2, 1.8, 6), h3Mat(0x5a3b22), n);
-  const pines = new T.InstancedMesh(new T.ConeGeometry(1.3, 4.2, 7), h3Mat(0xffffff, {flatShading: true}), n);
-  const rounds = new T.InstancedMesh(new T.IcosahedronGeometry(1.6, 0), h3Mat(0xffffff, {flatShading: true}), n);
-  const tops = new T.InstancedMesh(new T.ConeGeometry(.9, 2.4, 7), h3Mat(0xffffff, {flatShading: true}), n);
-  let tr = 0, pi = 0, ro = 0, to = 0; const col = new T.Color();
-  // the approach direction, so the backdrop ring of trees leaves the putting lane open
-  const bk = P(.9), bl = Math.hypot(bk.x - end.x, bk.z - end.z) || 1, ua = Math.atan2(bk.z - end.z, bk.x - end.x);
-  for (let i = 0; i < n * 3 && tr < n; i++){
-    let x, z;
-    if (rng() < (woods ? .5 : .3)){   // a backdrop all around the green, except toward the fairway
-      let a = rng() * Math.PI * 2, da = Math.atan2(Math.sin(a - ua), Math.cos(a - ua));
-      if (Math.abs(da) < .9) a += Math.sign(da || 1) * .9;
-      const r = H3_GREEN + (woods ? 2 : 6) + Math.pow(rng(), 1.3) * (woods ? 26 : 38);
-      x = end.x + Math.cos(a) * r; z = end.z + Math.sin(a) * r;
-    } else {
-      const t = rng() * 1.2 - .08, p = P(Math.max(0, Math.min(1, t))), side = rng() < .5 ? -1 : 1;
-      x = p.x + side * (fwHalf + 3 + Math.pow(rng(), 1.5) * (woods ? 30 : 45)); z = p.z + (rng() - .5) * 8;
-    }
-    if (Math.hypot(x - end.x, z - end.z) < H3_GREEN + (woods ? 1.5 : 3)) continue;
-    if (keepOut && keepOut.some(k => Math.hypot(x - k.x, z - k.z) < k.r)) continue;
-    if (water && (water.island ? Math.hypot(x - end.x, z - end.z) < H3_GREEN + 30 : Math.hypot(x - water.x, z - water.z) < water.r + 3)) continue;
-    const s = (.7 + rng() * .8) * 2.4, y = ht(x, z), kind = rng();
-    d.rotation.set(0, rng() * 6, (rng() - .5) * .06); d.scale.set(s, s, s);
-    d.position.set(x, y + .9 * s, z); d.updateMatrix(); trunks.setMatrixAt(tr++, d.matrix);
-    col.set(S.trees[Math.floor(rng() * S.trees.length)]).offsetHSL(0, 0, (rng() - .5) * .06);
-    if (kind < .45){ d.position.y = y + 3.4 * s; d.updateMatrix(); pines.setMatrixAt(pi, d.matrix); pines.setColorAt(pi++, col.clone().lerp(new T.Color(0x2a5e2c), .55)); d.position.y = y + 5 * s; d.scale.multiplyScalar(.8); d.updateMatrix(); tops.setMatrixAt(to, d.matrix); tops.setColorAt(to++, col.clone().lerp(new T.Color(0x2a5e2c), .45)); }
-    else { d.position.y = y + 3 * s; d.scale.set(s, s * (.85 + rng() * .3), s); d.updateMatrix(); rounds.setMatrixAt(ro, d.matrix); rounds.setColorAt(ro++, col); }
-  }
-  trunks.count = tr; pines.count = pi; rounds.count = ro; tops.count = to;
-  for (const m of [trunks, pines, rounds, tops]){ m.castShadow = true; if (m.instanceColor) m.instanceColor.needsUpdate = true; W.add(m); }
-}
-/* A disc golf basket at real size (about 4.5 ft tall): pole, yellow chain support band, two rings of chains that droop
-   and gather toward a collar on the pole, and a wire catch tray. Each chain is its own mesh, pivoting where it hangs. */
-function h3Basket(){
-  const T = H3.THREE, g = new T.Group();
-  const steel = h3Mat(0xd4d8dc, {metalness: .85, roughness: .28}), chainM = h3Mat(0xe6e9ec, {metalness: .9, roughness: .22});
-  const band = h3Mat(0xf2c230, {roughness: .45, metalness: .1}), dark = h3Mat(0x6c7178, {metalness: .7, roughness: .4});
-  const add = (geo, mat, y, rx) => { const m = new T.Mesh(geo, mat); m.position.y = y; if (rx) m.rotation.x = rx; m.castShadow = true; g.add(m); return m; };
-  const torus = (r, tube, y, mat) => add(new T.TorusGeometry(r, tube, 8, 48), mat || steel, y, Math.PI / 2);
-  // pole and base
-  add(new T.CylinderGeometry(.024, .024, 1.4, 12), steel, .7);
-  add(new T.CylinderGeometry(.06, .07, .03, 16), dark, .015);
-  // chain support: a yellow band with rolled edges and a cap on top
-  add(new T.CylinderGeometry(.32, .32, .1, 48, 1, true), band, 1.29);
-  torus(.32, .012, 1.34, band); torus(.32, .012, 1.24, band);
-  add(new T.CylinderGeometry(.05, .06, .04, 16), dark, 1.36);
-  for (let i = 0; i < 4; i++){ const arm = add(new T.BoxGeometry(.6, .015, .02), steel, 1.33); arm.rotation.y = i * Math.PI / 4; }
-  // chains: outer ring from the band edge, inner ring from closer in, all gathering at a collar on the pole
-  const chains = new T.Group(); g.add(chains);
-  const collarY = .8;
-  torus(.06, .012, collarY, steel);
-  for (const [r0, cnt, sag, off] of [[.3, 24, .055, 0], [.19, 12, .035, .13]]){
-    for (let i = 0; i < cnt; i++){
-      const ang = i / cnt * Math.PI * 2 + off, cx = Math.cos(ang), cz = Math.sin(ang);
-      const top = new T.Vector3(cx * r0, 1.24, cz * r0), bot = new T.Vector3(cx * .065, collarY, cz * .065);
-      const mid = top.clone().lerp(bot, .5); mid.x += cx * sag; mid.z += cz * sag; mid.y -= .03;   // a little droop outward
-      const curve = new T.QuadraticBezierCurve3(new T.Vector3(0, 0, 0), mid.sub(top), bot.sub(top));
-      const ch = new T.Mesh(new T.TubeGeometry(curve, 10, .0055, 4, false), chainM);
-      ch.position.copy(top); ch.castShadow = true; ch.userData.base = [0, 0]; chains.add(ch);
-    }
-  }
-  // catch tray: rims, a middle ring, vertical bars and a mesh floor
-  torus(.36, .013, .72); torus(.335, .009, .62); torus(.3, .012, .52);
-  for (let i = 0; i < 20; i++){
-    const ang = i / 20 * Math.PI * 2, bar = new T.Mesh(new T.CylinderGeometry(.006, .006, .205, 4), steel);
-    bar.position.set(Math.cos(ang) * .33, .62, Math.sin(ang) * .33); bar.rotation.z = -Math.cos(ang) * .29; bar.rotation.x = Math.sin(ang) * .29; bar.castShadow = true; g.add(bar);
-  }
-  add(new T.CircleGeometry(.3, 32), new T.MeshStandardMaterial({color: 0x7d838a, metalness: .6, roughness: .5, side: T.DoubleSide}), .52, -Math.PI / 2);
-  for (let i = -2; i <= 2; i++){ const w = new T.Mesh(new T.BoxGeometry(.6 * Math.cos(Math.asin(Math.abs(i) / 3)), .006, .008), dark); w.position.set(0, .525, i * .1); g.add(w); const w2 = w.clone(); w2.rotation.y = Math.PI / 2; w2.position.set(i * .1, .525, 0); g.add(w2); }
-  g.userData.chains = chains;
-  return g;
-}
-function h3Sign(h, x, y, z){
-  const T = H3.THREE, c = document.createElement("canvas"); c.width = 256; c.height = 160; const g = c.getContext("2d");
-  g.fillStyle = "#0b3a40"; g.fillRect(0, 0, 256, 160); g.strokeStyle = "#f2efd8"; g.lineWidth = 8; g.strokeRect(6, 6, 244, 148);
-  g.fillStyle = "#f2efd8"; g.font = "bold 64px sans-serif"; g.textAlign = "center"; g.fillText(String(h.n), 128, 74);
-  g.font = "bold 30px sans-serif"; g.fillText(`Par ${h.par}${h.ft ? " · " + h.ft + " ft" : ""}`, 128, 122);
-  const tex = new T.CanvasTexture(c); tex.colorSpace = T.SRGBColorSpace;
-  const grp = new T.Group();
-  const board = new T.Mesh(new T.PlaneGeometry(1.3, .8), new T.MeshStandardMaterial({map: tex, roughness: .8})); board.position.y = 1.4; grp.add(board);
-  const post = new T.Mesh(new T.CylinderGeometry(.05, .05, 1.1, 6), h3Mat(0x5a3b22)); post.position.y = .55; grp.add(post);
-  grp.position.set(x, y, z); grp.rotation.y = .35; grp.traverse(o => { if (o.isMesh) o.castShadow = true; });
-  return grp;
-}
-/* The putter is always your own My Player, dressed in your Pro Shop outfit: cap style and color, jersey art, shorts
-   (or long pants), skin, black socks and gray shoes, like the 2D figure. About 6 ft tall. arm is the putting arm. */
-const H3_TEX = new Map();
-function h3Tex(uri, repeatX){
-  const key = uri + "|" + repeatX; if (H3_TEX.has(key)) return H3_TEX.get(key);
-  const T = H3.THREE, t = new T.TextureLoader().load(uri);
-  t.colorSpace = T.SRGBColorSpace; t.wrapS = T.RepeatWrapping; t.repeat.x = repeatX || 1; t.offset.x = .5; t.anisotropy = 4;
-  H3_TEX.set(key, t); return t;
-}
-/* Putting motion (right-handed straddle pendulum putt), from Kade's reference video:
-   aim:    wide, square stance, knees soft, upright; putting arm straight out at chest height toward the basket; the left
-           hand rests on the left hip the whole time;
-   drop:   the straight arm swings down as the knees start to bend;
-   load:   deep, wide squat, chest over the disc, disc low by the right shin;
-   back:   the disc swings a little back past the right hip as the legs start to rise;
-   finish: legs drive up, the disc leaves around waist height, and the arm finishes high toward the basket.
-   Angles in radians. Shoulders: x below 0 swings the arm forward and up. Elbows: below 0 folds the forearm forward.
-   Hips: below 0 swings the thigh forward; spread opens the legs sideways. Knees: above 0 bends the shin back.
-   The putter stands 45 degrees open, right side toward the basket (the chest faces 45 degrees left of the line). The putting
-   arm starts pointed at the basket, swings down and across to the left side of the stomach (shoulder z above 0, elbow out in
-   front and the forearm wrapped across so it clears the body), then back out toward the basket. The figure's right side is -x. */
-const H3_HAND_ON_HIP = {offX: .25, offZ: .55, offElbow: -.35, offElbowZ: -1.35};
-const H3_POSES = {
-  aim:    Object.assign({lean: .08, turn: 0, drop: .05, neck: -.06, look: -.75, spread: .2, armX: -1.45, armZ: -.75, elbow: -.06, rHip: -.18, rKnee: .32, lHip: -.18, lKnee: .32}, H3_HAND_ON_HIP),
-  drop:   Object.assign({lean: .3, turn: 0, drop: .1, neck: -.25, look: -.6, spread: .22, armX: -.6, armZ: -.1, elbow: 0, elbowZ: .6, rHip: -.42, rKnee: .8, lHip: -.42, lKnee: .8}, H3_HAND_ON_HIP),
-  load:   Object.assign({lean: .55, turn: 0, drop: .19, neck: -.45, look: -.5, spread: .3, armX: -.9, armZ: .3, elbow: -.3, elbowZ: 1.2, rHip: -.8, rKnee: 1.45, lHip: -.8, lKnee: 1.45}, H3_HAND_ON_HIP),
-  back:   Object.assign({lean: .48, turn: .1, drop: .14, neck: -.4, look: -.55, spread: .28, armX: -1.05, armZ: .42, elbow: -.25, elbowZ: 1.0, rHip: -.6, rKnee: 1.1, lHip: -.6, lKnee: 1.1}, H3_HAND_ON_HIP),
-  finish: Object.assign({lean: -.02, turn: -.05, drop: .01, neck: .04, look: -.75, spread: .18, armX: -1.75, armZ: -.75, elbow: -.04, rHip: -.02, rKnee: .06, lHip: -.02, lKnee: .06}, H3_HAND_ON_HIP),
-};
-H3_POSES.set = H3_POSES.aim;   // the stance the putter holds while you decide
-function h3Person(){
-  const T = H3.THREE, me = typeof meLoad === "function" ? meLoad() : null;
-  const L = typeof lookFull === "function" ? lookFull(me && me.look) : {cap: "#ff6a2b", shirt: "#19a7a1", pants: "#10272a", skin: "#c98b5e", disc: "#ffd23f"};
-  const g = new T.Group(), m = (c, extra) => h3Mat(c, Object.assign({roughness: .8}, extra || {}));
-  const skin = m(L.skin, {roughness: .62}), sock = m(0x1d1d1f), shoe = m(0x9aa0a6, {roughness: .55}), sole = m(0xf2f0ea, {roughness: .7});
-  const dark = m(0x1b1410), hairMat = m(0x2b1d14, {roughness: .9}), lips = m(new T.Color(L.skin).multiplyScalar(.78));
-  let shirtMat = m(L.shirt), shortsMat = m(L.pants);
-  try { if (L.shirtS && typeof clShirtURI === "function") shirtMat = new T.MeshStandardMaterial({map: h3Tex(clShirtURI(L.shirtS, L.shirt, L.skin, true), 2), roughness: .8}); } catch (e) {}
-  try { if (L.pantsS && typeof clShortsURI === "function") shortsMat = new T.MeshStandardMaterial({map: h3Tex(clShortsURI(L.pantsS, L.pants), 2), roughness: .8}); } catch (e) {}
-  const full = typeof clFull === "function" && L.pantsS && clFull(L.pantsS);
-  const add = (parent, geo, mat, x, y, z, sx, sy, sz) => { const o = new T.Mesh(geo, mat); o.position.set(x, y, z); if (sx) o.scale.set(sx, sy, sz); o.castShadow = true; parent.add(o); return o; };
-  // a turned shape from a side profile: [[radius, height], ...], bottom to top
-  const lathe = (pts, segs) => new T.LatheGeometry(pts.map(([r, y]) => new T.Vector2(r, y)), segs || 20);
-  const cap = (r, len) => new T.CapsuleGeometry(r, len, 6, 14);
-  const HIP = .86, KNEE = .44;
-
-  // legs: hip joint, a thigh that tapers to the knee, a knee joint, a shin with a calf, sock and shoe
-  const legs = [-.1, .1].map(sx => {
-    const hip = new T.Group(); hip.position.set(sx, HIP, 0); g.add(hip);
-    add(hip, lathe([[.054, -(HIP - KNEE)], [.06, -.32], [.07, -.2], [.078, -.08], [.08, 0]]), full ? shortsMat : skin, 0, 0, 0);
-    if (!full) add(hip, lathe([[.086, -.2], [.09, -.1], [.092, .02]]), shortsMat, 0, 0, 0);
-    const knee = new T.Group(); knee.position.set(0, -(HIP - KNEE), 0); hip.add(knee);
-    add(knee, new T.SphereGeometry(.055, 14, 10), full ? shortsMat : skin, 0, 0, 0);
-    add(knee, lathe([[.036, -.33], [.04, -.28], [.052, -.17], [.057, -.1], [.052, -.02], [.05, 0]]), full ? shortsMat : skin, 0, 0, 0);
-    add(knee, lathe([[.041, -.4], [.042, -.3], [.04, -.27]]), sock, 0, 0, 0);
-    // shoe: a rounded upper on a flat sole, toe pointing forward
-    add(knee, cap(.045, .15), shoe, 0, -KNEE + .05, .035, 1, .72, 1).rotation.x = Math.PI / 2;
-    add(knee, new T.BoxGeometry(.095, .022, .25), sole, 0, -KNEE + .011, .035);
-    hip.userData.knee = knee;
-    return hip;
-  });
-
-  // everything above the hips turns and leans as one piece
-  const upper = new T.Group(); upper.position.set(0, HIP, 0); g.add(upper);
-  // pelvis and the top of the shorts
-  add(upper, new T.SphereGeometry(.175, 20, 12), shortsMat, 0, -.02, 0, 1, .62, .8);
-  add(upper, lathe([[.17, -.06], [.168, .04], [.158, .12]]), shortsMat, 0, 0, 0, 1, 1, .8);
-  // torso: waist, belly, chest, then the shoulders rounding in; a little flatter front to back than side to side
-  add(upper, lathe([[.155, .1], [.15, .2], [.158, .3], [.175, .42], [.185, .52], [.19, .58], [.175, .63], [.13, .665], [.07, .685], [0, .69]], 24), shirtMat, 0, 0, 0, 1, 1, .74);
-  // shoulder caps, in the shirt
-  for (const sx of [-.2, .2]) add(upper, new T.SphereGeometry(.064, 14, 10), shirtMat, sx, .605, 0, 1.05, .8, .85);
-
-  // neck and head: an oval skull, jaw, nose, ears, eyes, brows and hair at the back
-  const neck = new T.Group(); neck.position.set(0, 1.6 - HIP, 0); upper.add(neck);
-  add(neck, cap(.047, .03), skin, 0, .005, -.008);   // a short neck: most of it hides under the collar and the jaw
-  const head = add(neck, new T.SphereGeometry(.113, 24, 18), skin, 0, .12, 0, .9, 1.05, .98);
-  add(neck, new T.SphereGeometry(.07, 18, 12), skin, 0, .07, .022, .98, .74, .95);   // jaw and chin, tucked into the skull
-  add(neck, new T.ConeGeometry(.017, .05, 10), skin, 0, .098, .118).rotation.x = Math.PI / 2 - .25;   // nose
-  for (const ex of [-.1, .1]) add(neck, new T.SphereGeometry(.023, 10, 8), skin, ex, .115, 0, .5, 1, .8);   // ears
-  for (const ex of [-.035, .035]){
-    add(neck, new T.SphereGeometry(.014, 10, 8), m(0xf4f1ea, {roughness: .4}), ex, .12, .103, 1, .8, .6);   // eyes: whites
-    add(neck, new T.SphereGeometry(.008, 10, 8), dark, ex, .12, .111);          // and pupils
-    add(neck, new T.BoxGeometry(.032, .008, .012), hairMat, ex, .14, .108).rotation.z = ex < 0 ? .08 : -.08;   // brows
-  }
-  add(neck, new T.BoxGeometry(.036, .007, .01), lips, 0, .066, .101);            // mouth
-  add(neck, new T.SphereGeometry(.116, 20, 14, 0, Math.PI * 2, 0, Math.PI * .52), hairMat, 0, .127, -.014, .93, 1.02, 1).rotation.x = -.75;   // hair: from the hairline over the top and down the back
-  const hat = new T.Group(); h3Hat(hat, L, m); hat.position.y = -1.6; neck.add(hat);
-
-  // arms: shoulder joint, sleeve and upper arm, elbow joint, forearm, then a hand with a thumb.
-  // The right (putting) arm is on the -x side.
-  const mkArm = x => {
-    const sh = new T.Group(); sh.position.set(x, 1.48 - HIP, 0); upper.add(sh);
-    add(sh, lathe([[.05, -.2], [.058, -.12], [.064, -.02], [.06, .03]]), shirtMat, 0, 0, 0);   // short sleeve
-    add(sh, lathe([[.036, -.31], [.042, -.24], [.048, -.12], [.047, -.05]]), skin, 0, 0, 0);    // upper arm
-    const el = new T.Group(); el.position.set(0, -.31, 0); sh.add(el);
-    add(el, new T.SphereGeometry(.038, 12, 10), skin, 0, 0, 0);
-    add(el, lathe([[.026, -.27], [.03, -.2], [.04, -.08], [.037, 0]]), skin, 0, 0, 0);        // forearm
-    add(el, new T.SphereGeometry(.034, 12, 10), skin, 0, -.31, .005, .75, 1.25, .5);          // palm and fingers
-    add(el, cap(.011, .035), skin, x < 0 ? .024 : -.024, -.29, .022).rotation.z = x < 0 ? -.5 : .5;   // thumb
-    sh.userData.elbow = el;
-    return sh;
-  };
-  const arm = mkArm(-.25), off = mkArm(.25);   // shoulders wide enough for the arm to cross the body cleanly
-  g.userData = {arm, off, torso: head, head, neck, upper, legs, disc: L.disc};
-  h3Address(g);
-  return g;
-}
-/* Put the body in a pose, or partway between two poses (k from 0 to 1). */
-function h3Pose(player, A, B, k){
-  const u = player.userData, v = key => { const a = A[key] || 0; return B ? a + ((B[key] || 0) - a) * k : a; };
-  u.upper.rotation.set(v("lean"), v("turn"), 0);
-  u.neck.rotation.set(v("neck"), v("look") - v("turn") * .6, 0);   // the head turns to watch the basket off the left shoulder
-  u.arm.rotation.set(v("armX"), 0, v("armZ")); u.arm.userData.elbow.rotation.set(v("elbow"), 0, v("elbowZ"));   // elbowZ wraps the forearm around the front of the body
-  u.off.rotation.set(v("offX"), 0, v("offZ")); u.off.userData.elbow.rotation.set(v("offElbow"), 0, A.offElbowZ || 0);
-  u.legs[0].rotation.set(v("rHip"), 0, -v("spread")); u.legs[0].userData.knee.rotation.set(v("rKnee"), 0, 0);
-  u.legs[1].rotation.set(v("lHip"), 0, v("spread")); u.legs[1].userData.knee.rotation.set(v("lKnee"), 0, 0);
-  // keep the feet flat on the ground: a spread, bent leg is shorter, so the hips come down to meet it
-  const legLen = l => .42 * Math.cos(l.rotation.x) * Math.cos(l.rotation.z) + .44 * Math.cos(l.rotation.x + l.userData.knee.rotation.x) * Math.cos(l.rotation.z);
-  const sink = .86 - Math.max(legLen(u.legs[0]), legLen(u.legs[1]));
-  u.legs.forEach(l => { l.position.y = .86 - sink; }); u.upper.position.y = .86 - sink;
-}
-function h3Address(player){ h3Pose(player, H3_POSES.set); }
-function h3Hat(g, L, m){
-  const T = H3.THREE, c = m(L.cap), t = L.capS || "cap", y = 1.75;
-  const add = (geo, mat, x, yy, z, rx) => { const o = new T.Mesh(geo, mat); o.position.set(x, yy, z); if (rx) o.rotation.x = rx; o.castShadow = true; g.add(o); return o; };
-  const dome = (h) => add(new T.SphereGeometry(.122, 18, 10, 0, Math.PI * 2, 0, Math.PI / 2), c, 0, y, 0).scale.set(1, h || 1, 1);
-  if (t === "beanie"){ dome(1.25); add(new T.CylinderGeometry(.125, .125, .04, 18), c, 0, y + .005, 0); }
-  else if (t === "visor"){ add(new T.TorusGeometry(.118, .018, 6, 24), c, 0, y + .02, 0, Math.PI / 2); add(new T.CylinderGeometry(.1, .1, .012, 18, 1, false, -Math.PI / 2, Math.PI), c, 0, y + .01, .09); }
-  else if (t === "bucket"){ dome(1.1); add(new T.CylinderGeometry(.2, .22, .03, 24), c, 0, y - .01, 0); }
-  else if (t === "cowboy" || t === "sombrero"){ const hc = m(t === "cowboy" ? 0x8a5a35 : 0xe8c36a), wide = t === "sombrero" ? .34 : .25; add(new T.CylinderGeometry(.09, .11, .16, 18), hc, 0, y + .07, 0); add(new T.CylinderGeometry(wide, wide, .02, 28), hc, 0, y, 0); }
-  else if (t === "santa"){ add(new T.ConeGeometry(.12, .3, 18), m(0xc8102e), 0, y + .14, -.03).rotation.x = -.35; add(new T.TorusGeometry(.12, .025, 8, 20), m(0xfbf8ee), 0, y + .005, 0, Math.PI / 2); add(new T.SphereGeometry(.035, 10, 8), m(0xfbf8ee), 0, y + .27, -.12); }
-  else if (t === "viking"){ dome(1); for (const sd of [-1, 1]) add(new T.ConeGeometry(.03, .16, 10), m(0xf4ecd6), sd * .13, y + .06, 0).rotation.z = -sd * .9; }
-  else { dome(.9); add(new T.CylinderGeometry(.1, .1, .014, 18, 1, false, -Math.PI / 2, Math.PI), c, 0, y + .005, .1); }   // plain cap with a brim
-}
-/* ----- Effects ----- */
-function h3Puff(pos, color, count, up, ms){
-  const T = H3.THREE, W = H3.world;
-  for (let i = 0; i < count; i++){
-    const s = new T.Sprite(new T.SpriteMaterial({map: h3DotTex(), color, transparent: true, opacity: .8, depthWrite: false}));
-    s.position.set(pos.x, pos.y + .1, pos.z); s.scale.setScalar(.2); W.add(s);
-    const v = new T.Vector3((Math.random() - .5) * 2.2, up * (.6 + Math.random()), (Math.random() - .5) * 2.2);
-    let el = 0;
-    h3Every(dt => { el += dt * 1000; const k = el / ms; s.position.addScaledVector(v, dt); v.y -= 4 * dt * (up > 1 ? 1 : .2); s.scale.setScalar(.2 + k * .9); s.material.opacity = .8 * (1 - k); if (k >= 1){ W.remove(s); s.material.dispose(); return false; } });
-  }
-}
-function h3Confetti(at){
-  const T = H3.THREE, W = H3.world, cols = [0xff6a2b, 0xf2417f, 0xffc93c, 0x19a7a1, 0x7a4fd0];
-  for (let i = 0; i < 60; i++){
-    const p = new T.Mesh(new T.PlaneGeometry(.12, .08), new T.MeshBasicMaterial({color: cols[i % 5], side: T.DoubleSide}));
-    p.position.set(at.x + (Math.random() - .5) * 2, at.y + 2.5 + Math.random() * 1.5, at.z + (Math.random() - .5) * 2); W.add(p);
-    const v = new T.Vector3((Math.random() - .5) * 3, 1 + Math.random() * 2, (Math.random() - .5) * 3), spin = Math.random() * 8;
-    let el = 0;
-    h3Every(dt => { el += dt; p.position.addScaledVector(v, dt); v.y -= 3 * dt; v.multiplyScalar(.99); p.rotation.x += spin * dt; p.rotation.y += spin * .7 * dt; if (el > 2.4){ W.remove(p); p.geometry.dispose(); p.material.dispose(); return false; } });
-  }
-}
-function h3Shake(chains, ms, amt, token){
-  return h3Tween(ms, k => { const a = Math.sin(k * 30) * (1 - k) * amt; chains.children.forEach((c, i) => { c.rotation.x = c.userData.base[0] + a * Math.sin(i * 1.3); c.rotation.z = c.userData.base[1] + a * Math.cos(i * 1.7); }); }, token);
-}
-function h3Stamp(text, cls){
-  const el = document.getElementById("h3-stamp"); if (!el) return;
-  el.textContent = text; el.className = "h3-stamp " + cls; void el.offsetWidth; el.classList.add("on");
-}
-
-/* ----- Camera helpers ----- */
-const H3V = () => new H3.THREE.Vector3();
-function h3CamTo(pos, look){ H3.camera.position.copy(pos); H3.camera.lookAt(look); H3.look = (H3.look || new H3.THREE.Vector3()).copy(look); }
-function h3LookNow(){ return H3.look ? H3.look.clone() : H3.camera.position.clone().add(new H3.THREE.Vector3(0, 0, -5)); }
-function h3CamMove(from, to, lookFrom, lookTo, ms, token, ease){
-  const p = H3V(), l = H3V();
-  return h3Tween(ms, k => { const e = (ease || h3Ease)(k); p.lerpVectors(from, to, e); l.lerpVectors(lookFrom, lookTo, e); h3CamTo(p, l); }, token);
-}
-function h3V(x, y, z){ return new H3.THREE.Vector3(x, y, z); }
-
-/* ----- Playing a hole out ----- */
-function h3Spot(hole, distFt, rng){
-  const {end, P, ht} = hole, back = P(.9), dx = back.x - end.x, dz = back.z - end.z, L = Math.hypot(dx, dz) || 1, ang = (rng() - .5) * 1.4;
-  const ux = dx / L, uz = dz / L, cx = ux * Math.cos(ang) - uz * Math.sin(ang), cz = ux * Math.sin(ang) + uz * Math.cos(ang), d = distFt * H3FT;
-  const x = end.x + cx * d, z = end.z + cz * d;
-  return {x, y: ht(x, z) + .04, z};
-}
-function h3TrailReset(hole){ hole.trailCount = 0; hole.trail.geometry.setDrawRange(0, 0); }
-function h3TrailPush(hole, p){
-  const a = hole.trailPos, n = hole.trailN;
-  if (hole.trailCount < n) hole.trailCount++; else a.copyWithin(0, 3);
-  const i = (hole.trailCount - 1) * 3; a[i] = p.x; a[i + 1] = p.y; a[i + 2] = p.z;
-  hole.trail.geometry.attributes.position.needsUpdate = true; hole.trail.geometry.setDrawRange(0, hole.trailCount);
-}
-async function h3Fly(hole, from, to, peak, fade, ms, token, follow){
-  const {disc} = hole, dx = to.x - from.x, dz = to.z - from.z, L = Math.hypot(dx, dz) || 1, nx = -dz / L, nz = dx / L;
-  const cam = H3V(), look = H3V(); h3TrailReset(hole);
-  return h3Tween(ms, k => {
-    const e = 1 - Math.pow(1 - k, 1.5), s = Math.sin(Math.PI * e);
-    const lat = fade * L * .1 * s * (1 - .6 * e) - fade * L * .035 * e * e;   // turns over early, fades late
-    disc.position.set(from.x + dx * e + nx * lat, from.y + (to.y - from.y) * e + peak * s, from.z + dz * e + nz * lat);
-    disc.rotation.y += .7; disc.rotation.z = fade * .35 * (1 - e) - fade * .25 * e;
-    h3TrailPush(hole, disc.position);
-    if (follow){
-      cam.set(disc.position.x - dx / L * 6 + nx * 2, disc.position.y + 2.4, disc.position.z - dz / L * 6 + nz * 2);
-      H3.camera.position.lerp(cam, .1);
-      look.set(disc.position.x + dx / L * 3, disc.position.y * .6 + to.y * .4, disc.position.z + dz / L * 3); H3.camera.lookAt(look);
-    }
-  }, token);
-}
-/* Walk the player to a spot, facing the basket. */
-function h3Stand(hole, at){ const {player, end} = hole; player.position.set(at.x, hole.ht(at.x, at.z), at.z); player.lookAt(end.x, player.position.y, end.z); player.rotateY(Math.PI / 4); h3Address(player); }   // 45 degrees open: halfway between square and side-on, right side toward the basket
-/* The TV putting shot: over the putter's left shoulder at the basket, zoomed in a little on longer putts. The more it
-   zooms, the further back it stands, so the putter stays in frame. */
-function h3ShoulderCam(hole, from){
-  const {end, gy} = hole, dist = Math.hypot(end.x - from.x, end.z - from.z) || 1;
-  const ux = (end.x - from.x) / dist, uz = (end.z - from.z) / dist, rx = -uz, rz = ux;   // forward, and the putter's right
-  const fov = Math.max(24, 46 - dist * 1.1), back = 2.1 * 46 / fov, lat = back * Math.tan(fov * Math.PI / 360 * .55);
-  const x = from.x - ux * back - rx * lat, z = from.z - uz * back - rz * lat;
-  return {fov, pos: h3V(x, Math.max(hole.ht(x, z), hole.ht(from.x, from.z)) + 1.75, z), look: h3V(end.x, gy + .75, end.z)};
-}
-function h3ShoulderNow(hole, from){ const c = h3ShoulderCam(hole, from); H3.camera.fov = c.fov; H3.camera.updateProjectionMatrix(); h3CamTo(c.pos, c.look); }
-async function h3Putt(hole, from, made, token, why){
-  const {disc, end, chains, gy, player} = hole;
-  h3Stand(hole, {x: from.x + (from.x - end.x) * .04, z: from.z + (from.z - end.z) * .04});
-  const dist = Math.hypot(end.x - from.x, end.z - from.z);
-  const top = {x: end.x, y: gy + 1.0, z: end.z};
-  const to = made ? top : {x: end.x + (end.x - from.x) / (dist || 1) * (1.2 + Math.random() * 1.5) + (Math.random() - .5), y: gy + .04, z: end.z + (end.z - from.z) / (dist || 1) * (1.2 + Math.random() * 1.5)};
-  const cam = h3ShoulderCam(hole, from);
-  H3.camera.fov = cam.fov; H3.camera.updateProjectionMatrix();
-  // the camera only moves on slow-motion (clutch) putts; otherwise it holds the shot over the shoulder
-  if (why) await h3CamMove(H3.camera.position.clone(), cam.pos, h3LookNow(), cam.look, 380, token); else h3CamTo(cam.pos, cam.look);
-  // Aim, then the pendulum: drop and load into the squat, swing back past the hip, then drive up and through
-  const PS = H3_POSES, el = player.userData.arm.userData.elbow, handAt = new H3.THREE.Vector3();
-  const hand = () => { player.updateMatrixWorld(true); return el.localToWorld(handAt.set(.02, -.33, .07)); };
-  const legs = (A, B, ms) => h3Tween(ms, k => { h3Pose(player, A, B, h3Ease(k)); disc.position.copy(hand()); }, token);
-  h3Pose(player, PS.aim); disc.position.copy(hand()); disc.rotation.set(0, 0, 0);
-  if (!(await legs(PS.aim, PS.drop, 220))) return false;
-  if (!(await legs(PS.drop, PS.load, 240))) return false;
-  if (!(await legs(PS.load, PS.back, 200))) return false;
-  if (why) H3.timeScale = .6;   // clutch putts in slow motion
-  h3TrailReset(hole);
-  const REL = .26, SWING = .6, start = new H3.THREE.Vector3();
-  const ok = await h3Tween(Math.max(650, Math.min(1300, dist * 170)), k => {
-    h3Pose(player, PS.back, PS.finish, h3Ease(Math.min(1, k / SWING)));   // legs drive up, the arm swings through and finishes high
-    if (k < REL){ disc.position.copy(hand()); start.copy(disc.position); return; }
-    const e = h3Ease((k - REL) / (1 - REL));
-    disc.position.set(start.x + (to.x - start.x) * e, start.y + (to.y - start.y) * e + Math.sin(Math.PI * e) * Math.min(1.1, dist * .11), start.z + (to.z - start.z) * e);
-    disc.rotation.y += .3; h3TrailPush(hole, disc.position);
-  }, token);
-  H3.timeScale = 1;
-  if (!ok) return false;
-  if (made){ sfx("chains"); disc.position.set(end.x, gy + .58, end.z); h3Puff(top, 0xffffff, 6, .4, 500); await h3Shake(chains, 800, .35, token); }
-  else { sfx("clank"); h3Puff(to, 0xd9cfb0, 5, .3, 500); await h3Tween(350, () => {}, token); }
-  return true;
-}
-/* The putts on a hole, in order: [{feet, made, what}]. Holes with no putt (aces, tap-ins, throw-ins, misses from
-   outside) show nothing in 3D; the scorecard tells those. */
-function h3PuttsFor(h){
-  const out = [];
-  if (h.putt && (h.lie === "c1" || h.lie === "c2")){
-    out.push({feet: h.feet, made: h.putt.made, what: "for birdie"});
-    if (!h.putt.made && h.comeback) out.push({feet: 10 + (h.n * 7) % 14, made: h.comeback.made, what: "for par"});
-  } else if (h.putt && h.putt.forPar) out.push({feet: h.parFeet || h.feet || 20, made: h.putt.made, what: "for par"});
-  return out;
-}
-function h3Caption(text){ const el = document.getElementById("h3-cap"); if (el){ el.textContent = text; el.hidden = !text; } }
-/* Play hole h of the round: only its putts. Resolves when done (or skipped). */
-async function h3PlayHole(h, token){
-  const putts = h3PuttsFor(h), pre = H3.preview; H3.preview = null;
-  if (!putts.length) return true;
-  if (!h3Mount()) return false;
-  h3Start();
-  // reuse the hole the focus screen already set up, if it's this hole and the same putt
-  const reuse = pre && pre.n === h.n && pre.feet === putts[0].feet && pre.worldId === H3.worldId;
-  const c = course(), hole = reuse ? pre.hole : h3BuildHole(h, c), {disc, end, gy, rng} = hole;
-  disc.material.color.set(hole.player.userData.disc || "#ffd23f");   // your player, your disc
-  const stamp = document.getElementById("h3-stamp"); if (stamp) stamp.className = "h3-stamp";
-  const why = typeof criticalWhy === "function" && state.round && state.round.holes ? criticalWhy(h.n, h) : "";
-  for (let i = 0; i < putts.length; i++){
-    const p = putts[i], from = reuse && i === 0 ? pre.from : h3Spot(hole, Math.max(4, p.feet), rng);
-    h3Caption(`${h.n} · ${p.feet} ft`);
-    // over the putter's left shoulder, looking down the line at the basket
-    const bx = from.x - end.x, bz = from.z - end.z, bl = Math.hypot(bx, bz) || 1;
-    h3Stand(hole, {x: from.x + bx / bl * .3, z: from.z + bz / bl * .3});
-    disc.position.set(from.x, hole.ht(from.x, from.z) + 1, from.z);
-    h3ShoulderNow(hole, from);
-    if (!(await h3Tween(i === 0 ? 700 : 400, () => {}, token))) return false;
-    if (!(await h3Putt(hole, from, p.made, token, i === 0 ? why : ""))) return false;
-  }
-  h3Caption("");
-  const label = h.rel <= -2 ? "EAGLE!" : h.rel === -1 ? "BIRDIE!" : h.rel === 0 ? "PAR" : h.rel === 1 ? "BOGEY" : "DOUBLE";
-  h3Stamp(label, h.rel < 0 ? "good" : h.rel === 0 ? "par" : "bad");
-  if (why){   // clutch putts only: swing round to the basket for the result
-    H3.camera.fov = 48; H3.camera.updateProjectionMatrix();
-    const pl = hole.player, px = pl.position.x - end.x, pz = pl.position.z - end.z, pd = Math.hypot(px, pz) || 1;
-    await h3CamMove(H3.camera.position.clone(), h3V(end.x - px / pd * 4 + pz / pd * 1.5, gy + 2.1, end.z - pz / pd * 4 - px / pd * 1.5), h3LookNow(), h3V(end.x + px / pd * 1.5, gy + .9, end.z + pz / pd * 1.5), 450, token);
-  }
-  await h3Tween(h.rel < 0 ? 700 : 400, () => {}, token);
-  return true;
-}
-
-/* ----- Hooks the round screen uses ----- */
-function h3BoxHTML(){
-  if (!h3Wanted() || H3.status === "failed") return "";
-  return `<div class="hole3d" id="hole3d"><div class="h3-wait" id="h3-wait">Make Selection Below</div><div class="h3-stamp" id="h3-stamp" aria-hidden="true"></div><div class="h3-cap" id="h3-cap" hidden></div><div class="h3-ctrls"><button class="btn small" id="h3-speed" data-act="h3Speed" aria-label="Playback speed">${h3Speed()}×</button><button class="btn small icon-btn" id="h3-skip" data-act="h3Skip" aria-label="Skip to the scorecard" title="Skip to the scorecard">${ico("ff")}</button></div></div>`;
-}
-/* Called once per hole by playFrom. Returns false if the round was abandoned. */
-async function h3Hole(h, token){
-  if (!h3Wanted() || H3.skip || H3.status === "failed") return true;
-  const ok = await h3Load();
-  if (!ok || token !== playToken){ const box = document.getElementById("hole3d"); if (box) box.remove(); return token === playToken; }
-  h3Setup();
-  await h3PlayHole(h, token);
-  return token === playToken;
-}
-function h3RoundStart(){ H3.skip = false; H3.timeScale = 1; H3.preview = null; }
-/* The focus screen: build hole h and stand the putter over the first putt, seen from behind, while you decide.
-   Returns true if the 3D view is showing it. h3PlayHole picks up from here. */
-async function h3Preview(h, token){
-  if (!h3Wanted() || H3.skip || H3.status === "failed") return false;
-  const putts = h3PuttsFor(h); if (!putts.length) return false;
-  if (!(await h3Load()) || token !== playToken) return false;
-  h3Setup();
-  if (!h3Mount()) return false;
-  h3Start();
-  const hole = h3BuildHole(h, course()), {disc, end, gy, rng} = hole, p = putts[0];
-  disc.material.color.set(hole.player.userData.disc || "#ffd23f");
-  const from = h3Spot(hole, Math.max(4, p.feet), rng);
-  const bx = from.x - end.x, bz = from.z - end.z, bl = Math.hypot(bx, bz) || 1;
-  h3Stand(hole, {x: from.x + bx / bl * .3, z: from.z + bz / bl * .3});
-  disc.position.set(from.x, hole.ht(from.x, from.z) + 1, from.z);
-  h3ShoulderNow(hole, from);
-  const stamp = document.getElementById("h3-stamp"); if (stamp) stamp.className = "h3-stamp";
-  h3Caption(`${h.n} · ${p.feet} ft`);
-  H3.preview = {n: h.n, feet: p.feet, hole, from, worldId: H3.worldId};
-  return true;
-}
-function h3SkipNow(){
-  H3.skip = true; H3.timeScale = 1;
-  // let every animation that's waiting see the skip and finish, so the round moves on; then stop the loop
-  for (const t of H3.tasks.slice()) { try { t(0); } catch (e) {} }
-  h3Stop();
-  const box = document.getElementById("hole3d"); if (box) box.hidden = true;
 }
 </script>
