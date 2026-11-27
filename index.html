@@ -2,7 +2,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="robots" content="noindex,nofollow">
-<!-- 18 Down test build: branch test-combined, commit fd2aa63 -->
+<!-- 18 Down test build: branch test-combined, commit 1a9016e -->
 <title>18 Down</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&family=Shrikhand&display=swap">
@@ -4416,8 +4416,7 @@ function viewResult(){
         <div class="fin-score"><b class="total tnum ${r.total < 0 ? "under" : r.total > 0 ? "over" : ""}">${fmtTotal(r.total)}</b><span class="thru">${esc(title)}${best !== null ? " · Best " + fmtTotal(+best) : ""}</span></div>
         <div class="fin-side"><h1 class="verdict">${esc(v.name)}</h1>${pay ? `<p class="fin-pay"><span>${pay.label}</span><b class="tnum">${fmtMoney(pay.amt)}</b></p>` : ""}</div>
       </div>
-      <div class="fin-actions">${daily ? `<button class="btn small primary" id="classic-again" data-act="classicAgain">Play again</button>` : ""}<button class="btn small${daily ? "" : " primary"}" id="again" data-act="go" data-screen="bulletin">Tournaments</button><button class="btn small" id="copy" data-act="copy" ${daily ? `title="The Classic result leaves out your picks, so it won’t spoil the round for your group."` : ""}>${ui.copied ? "Copied" : "Copy"}</button></div>
-      ${ui.shareFail ? `<textarea class="share-fallback" id="share-text" readonly aria-label="Select the text and copy it">${esc(shareText())}</textarea>` : ""}
+      <div class="fin-actions">${daily ? `<button class="btn small primary" id="classic-again" data-act="classicAgain">Play again</button>` : ""}<button class="btn small${daily ? "" : " primary"}" id="again" data-act="go" data-screen="bulletin">Tournaments</button></div>
       ${typeof habitNewsHTML === "function" ? habitNewsHTML() : ""}
       ${resTabs("res", [
         ["card", "Card", `<div class="ld-grid">${r.holes.slice(0, 9).map(cell).join("")}</div><div class="ld-grid">${r.holes.slice(9).map(cell).join("")}</div>`],
@@ -4698,8 +4697,7 @@ function viewTFinal(){
         <div class="fin-score"><b class="total tnum">${fmtPlace(T.place, T.tied)}</b><span class="thru">of ${t.field + 1} · ${fmtTotal(me.total)}${T.playoff ? (T.playoff.result === "won" ? " · won playoff" : " · lost playoff") : ""}</span></div>
         <div class="fin-side"><h1 class="verdict">${esc(t.name)}</h1><p class="fin-pay"><span>Payout</span><b class="tnum">${fmtMoney(T.pay)}</b></p></div>
       </div>
-      <div class="fin-actions"><button class="btn small primary" id="again" data-act="go" data-screen="bulletin">Tournaments</button><button class="btn small" id="copy" data-act="copy">${ui.copied ? "Copied" : "Copy"}</button><button class="btn small" id="earnings" data-act="earnings">History</button></div>
-      ${ui.shareFail ? `<textarea class="share-fallback" id="share-text" readonly aria-label="Select the text and copy it">${esc(shareText())}</textarea>` : ""}
+      <div class="fin-actions"><button class="btn small primary" id="again" data-act="go" data-screen="bulletin">Tournaments</button><button class="btn small" id="earnings" data-act="earnings">History</button></div>
       ${typeof habitNewsHTML === "function" ? habitNewsHTML() : ""}
       ${resTabs("tfin", [
         ["board", "Leaderboard", (() => {   // the top 5 and your own row; the rest folds away
