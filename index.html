@@ -2,7 +2,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="robots" content="noindex,nofollow">
-<!-- 18 Down test build: branch test-combined, commit c95fc82 -->
+<!-- 18 Down test build: branch test-combined, commit b7aff7d -->
 <title>18 Down</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&family=Shrikhand&display=swap">
@@ -1490,6 +1490,15 @@ html, body { margin: 0; }
 .park.compact .spot .sign small { display: none; }
 .park.compact .s-field .sign { left: 40%; }
 .park.compact .s-green .sign { left: 58%; }
+
+/* Home is the park: the map fills the screen edge to edge, and the title and career card float on its sky */
+.wrap.park-wrap.hub { position: relative; height: 100dvh; padding: 0; gap: 0; display: block; overflow: hidden; }
+.park-wrap .park-box { position: absolute; inset: 0; z-index: 0; display: block; }
+.park-wrap .park-box .park { width: 100%; height: 100%; border: 0; border-radius: 0; box-shadow: none; }
+.park-wrap .park-box .park-map { width: 100%; height: 100%; }
+.park-wrap .park-head { position: relative; z-index: 2; margin: 0; padding: max(10px, env(safe-area-inset-top)) 16px 0; }
+.park-wrap .hub-hero { position: relative; z-index: 2; margin: 8px 16px 0; background: rgba(8, 44, 49, .62); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); border-color: rgba(255, 210, 63, .85); box-shadow: 0 6px 18px rgba(0, 0, 0, .25); }
+.park-wrap .park-head .money, .park-wrap .gear-btn { box-shadow: 0 2px 8px rgba(0, 0, 0, .3); }
 </style>
 <main id="app"></main>
 <script type="application/json" id="edits">{}</script>
@@ -9268,16 +9277,16 @@ function parkTree(x, y, s, pine){
 /* The park map is drawn to fit the space it gets: H is its height for a width of 360. The sky and woods take any
    spare height; the three rows below (field and green with the pond, board and shop, the hangout) scale by s when
    space is short; the parking lot sits on the bottom. The tap spots are placed from the same numbers. */
-function parkLayout(H){
-  H = Math.round(Math.max(470, Math.min(980, H || 720)));
+function parkLayout(H, R){
+  H = Math.round(Math.max(470, Math.min(1100, H || 720))); R = Math.max(0, R || 0);
   // rows (nominal heights): A field and green with their signs on top and the pond 216, B board and shop with their
   // signs underneath 182, C the hangout 118; GAP between every row. Spare height goes to the gaps and the sky.
   const A = 216, B = 182, C = 118, GAP = 16, ROWS = A + B + C + 3 * GAP;
-  const top = Math.min(200, Math.max(128, H * .19)), s = Math.max(.6, Math.min(1, (H - 46 - top) / ROWS));
+  const top = Math.max(R + 118, Math.min(200, Math.max(128, H * .19))), s = Math.max(.6, Math.min(1, (H - 46 - top) / ROWS));
   const extra = Math.max(0, H - 46 - top - ROWS * s), g = GAP * s + extra * .18, T = Math.round(H - 46 - (A + B + C) * s - 3 * g), ox = (360 - 360 * s) / 2;
   const ya = T + g, yb = ya + A * s + g, yc = yb + B * s + g;
   const at = (y0) => (x, y) => [+(ox + x * s).toFixed(1), +(y0 + y * s).toFixed(1)];
-  return {H, s, T, ox, ya, yb, yc, A: at(ya), B: at(yb), C: at(yc)};
+  return {H, R, s, T, ox, ya, yb, yc, A: at(ya), B: at(yb), C: at(yc)};
 }
 function parkSpotStyle(L){
   const box = (f, x, y, w, h) => { const [gx, gy] = f(x, y); return `left:${(gx / 360 * 100).toFixed(2)}%;top:${(gy / L.H * 100).toFixed(2)}%;width:${(w * L.s / 360 * 100).toFixed(2)}%;height:${(h * L.s / L.H * 100).toFixed(2)}%`; };
@@ -9301,8 +9310,8 @@ function pkSmooth(P){
   return d;
 }
 function pkBranch(a, b, sag){ const m = [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2 + (sag || 6)]; return `M${a.join(" ")} Q${m.map(v => v.toFixed(1)).join(" ")} ${b.join(" ")}`; }
-function parkSVG(H){
-  const L = parkLayout(H), dy = L.T - 196, row = (y0, inner) => `<g transform="translate(${L.ox.toFixed(1)} ${y0.toFixed(1)}) scale(${L.s.toFixed(3)})">${inner}</g>`;
+function parkSVG(H, R){
+  const L = parkLayout(H, R), sunY = Math.round(L.R ? L.R + 22 : Math.max(34, L.T - 120)), dy = L.T - 196, row = (y0, inner) => `<g transform="translate(${L.ox.toFixed(1)} ${y0.toFixed(1)}) scale(${L.s.toFixed(3)})">${inner}</g>`;
   const lines = [0, 1, 2, 3, 4, 5].map(i => {
     const t = i / 5, y = 384 - t * 156, xl = 20 + t * 22, xr = 186 - t * 22;
     return `<line x1="${xl}" y1="${y}" x2="${xr}" y2="${y}" stroke="var(--chalk)" stroke-opacity="${i ? .55 : .9}" stroke-width="${i ? 1.2 : 2}"/>${i ? `<text x="${xl + 4}" y="${y - 3}" font-family="var(--label)" font-weight="700" font-size="9" fill="var(--chalk)" fill-opacity=".85">${i * 100}</text>` : ""}`;
@@ -9313,7 +9322,7 @@ function parkSVG(H){
   const trees = PARK_TREES.map(([x, y, sz, pine]) => [x, y + dy, sz, pine]);
   const bush = (x, y, r) => `<ellipse cx="${x + r * .5}" cy="${y + r * .7}" rx="${r * 1.3}" ry="${r * .35}" fill="#04181b" fill-opacity=".25"/><circle cx="${x - r * .6}" cy="${y}" r="${r * .75}" fill="#24603d" stroke="var(--ink)" stroke-width=".8"/><circle cx="${x + r * .6}" cy="${y + 1}" r="${r * .7}" fill="#2a6641" stroke="var(--ink)" stroke-width=".8"/><circle cx="${x}" cy="${y - r * .4}" r="${r * .8}" fill="#2c6b45" stroke="var(--ink)" stroke-width=".8"/><circle cx="${x - r * .2}" cy="${y - r * .7}" r="${r * .3}" fill="#fff" fill-opacity=".12"/>`;
   const flowers = (x, y) => [[0, 0, "#f2417f"], [5, 2, "var(--band)"], [-4, 3, "#fff"], [2, -3, "var(--tang)"], [8, -1, "#fff"]].map(([a, b, c]) => `<circle cx="${x + a}" cy="${y + b}" r="1.6" fill="${c}" stroke="var(--ink)" stroke-width=".4"/>`).join("");
-  return `<svg class="park-map" viewBox="0 0 360 ${L.H}" aria-hidden="true">
+  return `<svg class="park-map" viewBox="0 0 360 ${L.H}" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
   <defs><linearGradient id="pk-sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="var(--sky-top)"/><stop offset="1" stop-color="var(--sky-low)"/></linearGradient>
     <radialGradient id="pk-sun"><stop offset="0" stop-color="#ffe9a0" stop-opacity=".75"/><stop offset=".45" stop-color="#ffd23f" stop-opacity=".22"/><stop offset="1" stop-color="#ffd23f" stop-opacity="0"/></radialGradient>
     <linearGradient id="pk-mf" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2b7a80"/><stop offset="1" stop-color="var(--mtn-far)"/></linearGradient>
@@ -9333,8 +9342,8 @@ function parkSVG(H){
     <filter id="pk-soft" x="-30%" y="-80%" width="160%" height="260%"><feGaussianBlur stdDeviation="2.2"/></filter>
   </defs>
   <rect width="360" height="${L.T + 10}" fill="url(#pk-sky)"/>
-  <circle cx="300" cy="34" r="46" fill="url(#pk-sun)"/>
-  <circle cx="300" cy="34" r="15" fill="#ffd23f"/><circle cx="296" cy="30" r="9" fill="#fff1a8" fill-opacity=".55"/>
+  <circle cx="300" cy="${sunY}" r="46" fill="url(#pk-sun)"/>
+  <circle cx="300" cy="${sunY}" r="15" fill="#ffd23f"/><circle cx="296" cy="${sunY - 4}" r="9" fill="#fff1a8" fill-opacity=".55"/>
   <g class="pk-cloud c1" fill="var(--chalk)" fill-opacity=".85"><ellipse cx="0" cy="26" rx="20" ry="7"/><ellipse cx="-9" cy="21" rx="10" ry="7"/><ellipse cx="7" cy="19" rx="12" ry="8"/></g>
   <g class="pk-cloud c2" fill="var(--chalk)" fill-opacity=".7"><ellipse cx="0" cy="52" rx="16" ry="5.5"/><ellipse cx="-6" cy="48" rx="8" ry="5.5"/><ellipse cx="6" cy="47" rx="9" ry="6"/></g>
   <g class="pk-cloud c3" fill="var(--chalk)" fill-opacity=".6"><ellipse cx="0" cy="14" rx="13" ry="4.5"/><ellipse cx="4" cy="10" rx="8" ry="5"/></g>
@@ -9457,12 +9466,14 @@ function parkSVG(H){
 </svg>`;
 }
 /* The map's height for the space under the career card: a first guess from the window, then measured. */
-function parkGuessH(){ const w = Math.min(window.innerWidth || 390, 560) - 32, h = (window.innerHeight || 844) - 210; return 360 * h / Math.max(200, w); }
+function parkGuessH(){ return 360 * (window.innerHeight || 844) / Math.min(window.innerWidth || 390, 560); }
+function parkGuessR(){ return 360 * 170 / Math.min(window.innerWidth || 390, 560); }
 function parkFit(){
-  const box = document.querySelector(".park-box"); if (!box) return;
-  const w = Math.min(box.clientWidth, 528), h = box.clientHeight; if (!w || !h) return;
-  const want = Math.round(360 * h / w);
-  if (Math.abs(want - (ui.parkH || 0)) > 6){ ui.parkH = want; setTimeout(() => { if (state.screen === "home") render(); }, 0); }
+  const box = document.querySelector(".park-box"), over = document.querySelector(".park-wrap .hub-hero") || document.querySelector(".park-wrap .park-head");
+  if (!box) return;
+  const w = box.clientWidth, h = box.clientHeight; if (!w || !h) return;
+  const b = box.getBoundingClientRect(), wantH = Math.round(360 * h / w), wantR = over ? Math.round(360 * (over.getBoundingClientRect().bottom - b.top + 6) / w) : 0;
+  if (Math.abs(wantH - (ui.parkH || 0)) > 6 || Math.abs(wantR - (ui.parkR || 0)) > 6){ ui.parkH = wantH; ui.parkR = wantR; setTimeout(() => { if (state.screen === "home") render(); }, 0); }
 }
 let PARK_RESIZE = 0;
 window.addEventListener("resize", () => { clearTimeout(PARK_RESIZE); PARK_RESIZE = setTimeout(() => { if (state.screen === "home") parkFit(); }, 150); });
@@ -9515,7 +9526,7 @@ function parkHangout(){
    spend), then the park itself with every place to go. */
 function viewHome(){
   const me = meLoad(), n = parkNotes(), bal = meBalance(me);
-  const PL = parkLayout(ui.parkH || parkGuessH()), SP = parkSpotStyle(PL), SPK = {"s-woods": "woods", "s-field": "field", "s-green": "green", "s-board": "board", "s-shop": "shop", "s-friends": "friends"};
+  const PL = parkLayout(ui.parkH || parkGuessH(), ui.parkR || parkGuessR()), SP = parkSpotStyle(PL), SPK = {"s-woods": "woods", "s-field": "field", "s-green": "green", "s-board": "board", "s-shop": "shop", "s-friends": "friends"};
   const spot = (id, act, cls, name, note, extra) => `<button class="spot ${cls}" id="${id}" data-act="${act}" style="${SP[SPK[cls.split(" ")[0]]] || ""}"${extra || ""}><span class="sign" style="${SP.sign[SPK[cls.split(" ")[0]]] || ""}"><b>${name}</b><small>${esc(note)}</small></span></button>`;
   const L = typeof ladderLoad === "function" ? ladderLoad() : null, P = typeof mePrestige === "function" ? mePrestige(me) : 0;
   const lvl = L ? LADDER[L.level] : null, cur = L && L.current && ladderTierOf(L.current);
@@ -9529,7 +9540,7 @@ function viewHome(){
       <ol class="hub-steps" aria-label="Rung ${lvl.level + 1} of ${LADDER.length}">${LADDER.map((t, i) => `<li class="${i < L.level ? "done" : i === L.level ? "now" : ""}" title="${esc(t.name)}"></li>`).join("")}</ol>
     </section>` : ""}
     <div class="park-box"><section class="park${PL.s < .82 ? " compact" : ""}" style="${lookStyle(me)};--pkr:${(360 / PL.H).toFixed(4)}" aria-label="The park. Pick where to go.">
-      ${parkSVG(PL.H)}
+      ${parkSVG(PL.H, PL.R)}
       ${spot("runner", "runner", "s-woods", "Disc Runner", n.runner)}
       ${spot("comp", "comp", "s-field", "Distance Comp", n.comp)}
       ${spot("area-putt", "go", "s-green", "Putting Green", n.putt, ' data-screen="putt"')}
