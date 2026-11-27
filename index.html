@@ -2,7 +2,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="robots" content="noindex,nofollow">
-<!-- 18 Down test build: branch test-combined, commit bbf9aa5 -->
+<!-- 18 Down test build: branch test-combined, commit ed49cbb -->
 <title>18 Down</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&family=Shrikhand&display=swap">
@@ -1418,6 +1418,29 @@ span.pips, .calls-h span.pips { display: inline-flex; gap: 4px; vertical-align: 
 .gi-panel .rules > summary { pointer-events: none; padding-top: 0; }
 .gi-panel .rules > summary::-webkit-details-marker { display: none; }
 .gi-panel .rules > summary { list-style: none; }
+
+/* Career life: sponsors, venues, finish line */
+.cl-head { grid-template-columns: repeat(3, 1fr); }
+.spons { display: grid; gap: 6px; padding: 10px 12px; border-radius: 10px; background: var(--pond-3); }
+.spons-head { display: flex; justify-content: space-between; align-items: baseline; }
+.spons-head b { font-family: var(--label); font-size: 13px; text-transform: uppercase; color: var(--chalk); }
+.spons-head small, .spons-next { font-size: 12px; color: var(--mute); }
+.spons-deal { display: grid; padding: 8px 10px; border-radius: 8px; background: var(--band); color: var(--ink); }
+.spons-deal small { font-size: 12px; }
+.spons-offer { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 6px 0; border-top: 1px solid rgba(255,255,255,.1); }
+.spons-offer span { display: grid; min-width: 0; }
+.spons-offer small { font-size: 11.5px; color: var(--mute); }
+.cl-ladder .rung { flex-wrap: wrap; }
+.venues { flex: 1 0 100%; display: grid; gap: 6px; margin-top: 6px; }
+.venue { display: flex; justify-content: space-between; align-items: center; gap: 8px; text-align: left; padding: 8px 10px; border-radius: 8px; border: 2px solid var(--ink); background: var(--chalk); color: var(--ink); font: inherit; cursor: pointer; }
+.venue span { display: grid; min-width: 0; }
+.venue small { font-size: 11.5px; opacity: .7; }
+.venue-cost { text-align: right; }
+.venue:disabled { opacity: .45; cursor: default; }
+.fin-career { display: flex; gap: 12px; justify-content: center; margin: 0; font-family: var(--label); font-weight: 700; color: var(--band); }
+.cl-ladder .venue b, .cl-ladder .venue small, .cl-ladder .venue span { color: var(--ink); line-height: 1.2; font-family: var(--body, inherit); }
+.cl-ladder .venue b { font-family: var(--label); font-size: 15px; font-weight: 700; }
+.cl-ladder .venue small { font-size: 11.5px; font-weight: 500; opacity: .7; }
 </style>
 <main id="app"></main>
 <script type="application/json" id="edits">{}</script>
@@ -2838,9 +2861,9 @@ function playoffScore(course, pro, key, n, who){
    - Your draft is capped: spins only include seasons rated at or under the tier's cap, so the pros you can draft get
      better as you climb. Legends become draftable at the Playoffs (cap 1058) and GOATs only at Worlds (no cap). */
 const LADDER = [
-  {id: "mini",    name: "Mini",              rounds: 1, field: 23, first: 150,   local: [935, 995],  cap: 1014, up: 3},
-  {id: "c",       name: "C-Tier",            rounds: 2, field: 35, first: 500,   local: [955, 1005], cap: 1018, up: 3},
-  {id: "b",       name: "B-Tier",            rounds: 2, field: 47, first: 1500,  local: [975, 1015], cap: 1022, up: 3},
+  {id: "mini",    name: "Mini",              rounds: 1, field: 23, first: 150,   local: [935, 995],  cap: 1014, up: 3, home: true},
+  {id: "c",       name: "C-Tier",            rounds: 2, field: 35, first: 500,   local: [955, 1005], cap: 1018, up: 3, home: true},
+  {id: "b",       name: "B-Tier",            rounds: 2, field: 47, first: 1500,  local: [975, 1015], cap: 1022, up: 3, home: true},
   {id: "a",       name: "A-Tier",            rounds: 3, field: 59, first: 4000,  local: [985, 1015], pros: [100, 140], proShare: .4, cap: 1028, up: 3},
   {id: "jomez",   name: "Jomez Series",      rounds: 3, field: 53, first: 8000,  depth: [70, 140], cap: 1038, up: 5},
   {id: "dgpt",    name: "DGPT",              rounds: 3, field: 71, first: 16000, depth: [30, 120], cap: 1042, up: 5},
@@ -2858,7 +2881,8 @@ function ladderLoad(){
   return {level: 0, played: 0, best: {}, wins: {}, current: null};
 }
 function ladderSave(v){ storeSet("18down.ladder", JSON.stringify(v)); }
-function ladderKey(n, id){ return "c:" + n + ":" + id; }
+function ladderKey(n, id, venue){ return "c:" + n + ":" + id + (venue ? ":" + venue : ""); }   // venue: home state, or the tour course id
+function keyVenue(key){ return String(key).split(":")[3] || ""; }
 function ladderTierOf(key){ return typeof key === "string" && key.startsWith("c:") ? LADDER_BY_ID[key.split(":")[2]] || null : null; }
 
 /* The draft cap for the event you're in (null when there's none). */
@@ -2911,12 +2935,19 @@ function ladderField(t, key){
 }
 
 /* Start (or resume) a career event at tier id. */
-function openCareerEvent(id){
+function openCareerEvent(id, venue){
   const L = ladderLoad(), t = LADDER_BY_ID[id];
-  if (!t || t.level > L.level) return;
+  if (!t || t.level > L.level) return false;
   let key = L.current && ladderTierOf(L.current) === t ? L.current : null;
-  if (!key){ L.played = (L.played || 0) + 1; key = ladderKey(L.played, id); L.current = key; ladderSave(L); }
+  if (!key){
+    if (!t.home && !venue) return false;   // pick a venue on the ladder first
+    const v = t.home ? (meLoad().home || "") : venue, cost = tripCost(t, v);
+    if (meBalance(meLoad()) < cost.total) return false;
+    L.played = (L.played || 0) + 1; key = ladderKey(L.played, id, v); L.current = key; ladderSave(L);
+    careerMoney(-cost.total);
+  }
   openTourney(key);
+  return true;
 }
 /* Called when a career event finishes. */
 function ladderResult(key, place){
@@ -2926,10 +2957,157 @@ function ladderResult(key, place){
   if (place === 1) L.wins[t.id] = (L.wins[t.id] || 0) + 1;
   if (place <= t.up && t.level === L.level && L.level < LADDER.length - 1) L.level = t.level + 1;
   if (L.current === key) L.current = null;
+  const fans = fanGain(t, keyVenue(key), place);
+  L.fans = (L.fans || 0) + fans;
+  let spons = 0;
+  if (L.sponsor){
+    const d = DEALS[L.sponsor.lvl];
+    spons = d.per + (place === 1 ? d.win : 0);
+    L.sponsor.left--;
+    if (L.sponsor.left <= 0){ habitNews && habitNews(`Your ${L.sponsor.name} deal is done. New offers on the Career screen.`); L.sponsor = null; }
+  }
   ladderSave(L);
-  return {up: L.level > was ? LADDER[L.level] : null, tier: t};
+  if (spons) careerMoney(spons);
+  return {up: L.level > was ? LADDER[L.level] : null, tier: t, fans, spons};
 }
 
+
+/* ---------- Career life: home scene, fans, travel and sponsors ----------
+   Home scene: your home state's courses set its caliber (longer, tougher courses = higher). A strong scene means
+   tougher locals at Mini to B-tier, but more fans and bigger purses for the same result.
+   Travel: from A-tier up you pick one of three venues. Entry plus travel (by distance from your home state; flights
+   overseas) comes out of your coins when you enter, so you can't go if you can't pay. A sponsor covers part of it.
+   Fans: every finish earns some, more for better places and bigger events, x1.5 in your home state.
+   Sponsors: local shops first, then real disc brands, sized by how many 2026 pros in the game each one sponsors.
+   Offers come with enough fans and a high enough tier; a deal lasts DEAL_EVENTS events. */
+const ENTRY = {mini: 15, c: 40, b: 75, a: 150, jomez: 300, dgpt: 500, dgptp: 750, major: 1000, playoff: 0, champ: 0, worlds: 500};
+const FANS = {mini: 25, c: 60, b: 150, a: 400, jomez: 900, dgpt: 1800, dgptp: 3000, major: 6000, playoff: 5000, champ: 8000, worlds: 15000};
+const GEO = {AR: [34.9, -92.4], IA: [42.0, -93.5], KS: [38.5, -98.4], KY: [37.5, -85.3], LA: [31.0, -92.0], MA: [42.3, -71.8],
+  MI: [43.3, -84.5], NC: [35.5, -79.4], SC: [33.9, -80.9], TX: [31.0, -97.5], VA: [37.5, -78.8], VT: [44.0, -72.7],
+  CA: [37.2, -119.5], MN: [46.3, -94.3], CO: [39.0, -105.5], Finland: [61.9, 25.7], Sweden: [59.3, 15.0]};
+const OVERSEAS = new Set(["Finland", "Sweden"]);
+const mean_ = a => a.reduce((x, y) => x + y, 0) / a.length;
+
+function sceneOf(st){
+  const cs = st && typeof homeCourses === "function" ? homeCourses(st) : [];
+  if (!cs.length) return null;
+  const v = .6 * (mean_(cs.map(c => c.ft)) - 4500) / 1500 + .4 * (mean_(cs.map(c => c.diff)) - 1) / 2;
+  return Math.max(0, Math.min(1, v));
+}
+function sceneStars(x){ return 1 + Math.round(x * 4); }
+function sceneMods(st){ const c = sceneOf(st), x = c == null ? .5 : c; return {cal: x, shift: Math.round((x - .5) * 20), fans: .7 + .7 * x, purse: .8 + .45 * x}; }
+/* The tier as played at a given event: home tiers take the home scene's locals and purse. */
+function careerTier(lt, key){
+  if (!lt.home) return lt;
+  const v = keyVenue(key), m = sceneMods(v || (meLoad().home || ""));
+  return Object.assign({}, lt, {local: [lt.local[0] + m.shift, lt.local[1] + m.shift], first: Math.round(lt.first * m.purse / 5) * 5});
+}
+function careerCourse(lt, key){
+  const v = keyVenue(key);
+  if (lt.home){
+    const hc = homeCourses(v || (meLoad().home || "")), pool = hc.length ? hc : COURSES;
+    return pool[hashStr("course|" + key) % pool.length];
+  }
+  return (v && COURSES.find(c => c.id === v)) || COURSES[hashStr("course|" + key) % COURSES.length];
+}
+function placeOf(c){ return (String(c.place || "").split(", ").pop() || "").trim(); }
+/* Three venues for the next event at a tour tier; they change after every event you enter. */
+function venueOptions(id){
+  const L = ladderLoad(), rng = mulberry32(hashStr("venue|" + ((L.played || 0) + 1) + "|" + id)), out = [];
+  const pool = COURSES.slice();
+  while (out.length < 3 && pool.length) out.push(pool.splice(Math.floor(rng() * pool.length), 1)[0]);
+  return out;
+}
+function milesBetween(a, b){
+  const R = 3959, r = x => x * Math.PI / 180, [la1, lo1] = a, [la2, lo2] = b;
+  const h = Math.sin(r(la2 - la1) / 2) ** 2 + Math.cos(r(la1)) * Math.cos(r(la2)) * Math.sin(r(lo2 - lo1) / 2) ** 2;
+  return 2 * R * Math.asin(Math.sqrt(h));
+}
+/* Entry and travel for an event. Home tiers: entry only. */
+function tripCost(t, venue){
+  const entry = ENTRY[t.id] || 0;
+  if (t.home) return {entry, travel: 0, covered: 0, total: entry, miles: 0};
+  const c = COURSES.find(x => x.id === venue), to = c ? placeOf(c) : "", from = meLoad().home || "KS";
+  const miles = to === from ? 120 : GEO[to] && GEO[from] ? milesBetween(GEO[from], GEO[to]) : 900;
+  const nights = t.rounds + 1;
+  let travel = OVERSEAS.has(to) ? 1400 + 150 * nights : miles <= 450 ? 40 + .7 * miles + 90 * nights : 300 + .12 * miles + 120 * nights;
+  travel = Math.round(travel / 10) * 10;
+  const L = ladderLoad(), cover = L.sponsor ? DEALS[L.sponsor.lvl].cover : 0, covered = Math.round(travel * cover / 10) * 10;
+  return {entry, travel, covered, total: entry + travel - covered, miles: Math.round(miles), to};
+}
+/* Money the career moves (entry, travel, sponsor pay) sits on My Player and counts in the balance. */
+function careerToast(m){ ui.notice = m; showToast(); }
+function careerMoney(n){ const me = meLoad(); me.careerNet = (me.careerNet || 0) + n; meSave(me); }
+function fanGain(t, venue, place){
+  const f = place === 1 ? 1 : place <= 3 ? .6 : place <= t.up ? .4 : place <= (t.field + 1) / 2 ? .15 : .05;
+  const home = meLoad().home;
+  let mult = 1;
+  if (t.home) mult = sceneMods(venue || home || "").fans;
+  else { const c = COURSES.find(x => x.id === venue); if (c && home && placeOf(c) === home) mult = 1.5; }
+  return Math.round(FANS[t.id] * f * mult);
+}
+
+/* Sponsors. Shops are made up; brands are the real disc brands sponsoring 2026 pros in the game. */
+const DEAL_EVENTS = 8;
+const DEALS = [
+  {kind: "shop", fans: 40, level: 0, cover: .25, per: 50, win: 300, sign: 250},
+  {kind: "shop", fans: 300, level: 1, cover: .4, per: 150, win: 1000, sign: 1000},
+  {kind: "small", fans: 1200, level: 3, cover: .6, per: 400, win: 3000, sign: 4000},
+  {kind: "mid", fans: 5000, level: 4, cover: .8, per: 1000, win: 8000, sign: 12000},
+  {kind: "big", fans: 15000, level: 5, cover: 1, per: 2500, win: 20000, sign: 35000},
+];
+const SHOPS = ["Chainline Disc Supply", "Teebox Trading Post", "Fairway Corner Discs", "Tunnel Shot Discs", "Roller Ridge Outfitters", "Ace Run Disc Co.", "Mando Mart", "Lefty Glide Shop"];
+let BRAND_SIZE = null;
+function brandSizes(){
+  if (BRAND_SIZE) return BRAND_SIZE;
+  const y = Math.max(...SEASONS.map(s => s.year)), n = {};
+  for (const s of SEASONS) if (s.year === y && s.brand && !/Unconfirmed|Other|Local|My Player/.test(s.brand)) n[s.brand] = (n[s.brand] || 0) + 1;
+  BRAND_SIZE = {big: [], mid: [], small: []};
+  for (const [b, k] of Object.entries(n)) BRAND_SIZE[k >= 10 ? "big" : k >= 4 ? "mid" : "small"].push(b);
+  return BRAND_SIZE;
+}
+function sponsorOffers(){
+  const L = ladderLoad(), fans = L.fans || 0, cur = L.sponsor ? L.sponsor.lvl : -1;
+  const ok = DEALS.map((d, i) => i).filter(i => fans >= DEALS[i].fans && L.level >= DEALS[i].level && i > cur);
+  if (!ok.length) return [];
+  const rng = mulberry32(hashStr("offer|" + (L.played || 0) + "|" + (L.sponsor ? L.sponsor.name : ""))), out = [], used = new Set();
+  for (const i of ok.slice(-2).reverse()){
+    const names = DEALS[i].kind === "shop" ? SHOPS : brandSizes()[DEALS[i].kind];
+    for (let k = 0; k < (out.length ? 1 : 2) && names.length; k++){
+      let nm = names[Math.floor(rng() * names.length)];
+      for (let tries = 0; used.has(nm) && tries < 10; tries++) nm = names[Math.floor(rng() * names.length)];
+      if (used.has(nm)) continue;
+      used.add(nm); out.push({name: nm, lvl: i});
+    }
+  }
+  return out.slice(0, 3);
+}
+function signSponsor(name, lvl){
+  const L = ladderLoad(), offer = sponsorOffers().find(o => o.name === name && o.lvl === lvl);
+  if (!offer) return;
+  L.sponsor = {name, lvl, left: DEAL_EVENTS}; ladderSave(L);
+  careerMoney(DEALS[lvl].sign);
+  habitNews && habitNews(`Signed with ${name}: ${fmtMoney(DEALS[lvl].sign)} to sign.`);
+}
+function dealLine(d){ return `${Math.round(d.cover * 100)}% travel · ${fmtMoney(d.per)}/event · ${fmtMoney(d.win)}/win`; }
+function sponsorHTML(){
+  const L = ladderLoad(), offers = sponsorOffers(), s = L.sponsor, next = DEALS.find((d, i) => i > (s ? s.lvl : -1));
+  return `<div class="spons">
+    <div class="spons-head"><b>Sponsor</b><small class="tnum">${(L.fans || 0).toLocaleString("en-US")} fans</small></div>
+    ${s ? `<div class="spons-deal"><b>${esc(s.name)}</b><small>${dealLine(DEALS[s.lvl])} · ${s.left} event${s.left === 1 ? "" : "s"} left</small></div>` : ""}
+    ${offers.map(o => { const d = DEALS[o.lvl], sure = ui.signSure === o.name; return `<div class="spons-offer"><span><b>${esc(o.name)}</b><small>${fmtMoney(d.sign)} to sign · ${dealLine(d)}</small></span>
+      <button class="btn small ${sure ? "primary" : ""}" data-act="signSponsor" data-name="${esc(o.name)}" data-lvl="${o.lvl}">${sure ? "Confirm" : s ? "Switch" : "Sign"}</button></div>`; }).join("")}
+    ${!offers.length && next ? `<small class="spons-next">Next offers at ${next.fans.toLocaleString("en-US")} fans${next.level > L.level ? ` and ${esc(LADDER[next.level].name)}` : ""}</small>` : ""}
+  </div>`;
+}
+/* The venue picker for a tour tier. */
+function venueHTML(t){
+  const bal = meBalance(meLoad());
+  return `<div class="venues">${venueOptions(t.id).map(c => { const k = tripCost(t, c.id), can = bal >= k.total;
+    return `<button class="venue" data-act="careerVenue" data-id="${t.id}" data-venue="${esc(c.id)}" ${can ? "" : "disabled"}>
+      <span><b>${esc(c.name)}</b><small>${esc(c.place)}${k.miles && !OVERSEAS.has(k.to) ? ` · ${k.miles.toLocaleString("en-US")} mi` : ""}</small></span>
+      <span class="venue-cost"><b class="tnum">${fmtMoney(k.total)}</b><small>${can ? (k.covered ? `sponsor paid ${fmtMoney(k.covered)}` : `entry ${fmtMoney(k.entry)}`) : "can't afford"}</small></span></button>`; }).join("")}</div>`;
+}
 /* Prestige: once you've won Worlds you can restart the career from Mini with more talent (see meLv in ui.js) and new
    Pro Shop items. Money, collection, achievements and what you've bought all stay. */
 function canPrestige(){ const L = ladderLoad(); return ((L.wins || {}).worlds || 0) > 0; }
@@ -2938,7 +3116,7 @@ function doPrestige(){
   const me = meLoad(), L = ladderLoad();
   me.prestige = mePrestige(me) + 1; meSave(me);
   const past = (L.past || []).concat({prestige: me.prestige - 1, best: L.best, wins: L.wins, played: L.played});
-  ladderSave({level: 0, played: 0, best: {}, wins: {}, current: null, past});
+  ladderSave({level: 0, played: 0, best: {}, wins: {}, current: null, past, fans: L.fans || 0, sponsor: L.sponsor || null});
   habitNews && habitNews(`Prestige ${me.prestige}: My Player +${PRESTIGE_TIERS} tiers in every skill and +${PRESTIGE_RATING} rating. New gear unlocked in the Pro Shop.`);
 }
 function prestigeCard(){
@@ -2951,8 +3129,8 @@ function prestigeCard(){
 function homeAreaHTML(){
   if (typeof HOME_STATES === "undefined") return "";
   const me = meLoad(), st = me.home, counts = Object.fromEntries(Object.keys(HOME_STATES).map(k => [k, homeCourses(k).length]));
-  return `<div class="home-area"><b>Home area</b><div class="home-chips">${Object.entries(HOME_STATES).map(([k, name]) => `<button class="${st === k ? "on" : ""}" data-act="homeArea" data-st="${k}" ${counts[k] ? "" : "disabled"} title="${esc(name)}: ${counts[k]} local course${counts[k] === 1 ? "" : "s"}">${k}<small>${counts[k]}</small></button>`).join("")}</div>
-    <small>${st ? `${counts[st]} ${esc(HOME_STATES[st])} course${counts[st] === 1 ? "" : "s"} for Mini to B-tier` : "Pick a state for your local courses"}</small></div>`;
+  return `<div class="home-area"><b>Home area</b><div class="home-chips">${Object.entries(HOME_STATES).map(([k, name]) => `<button class="${st === k ? "on" : ""}" data-act="homeArea" data-st="${k}" ${counts[k] ? "" : "disabled"} title="${esc(name)}: ${counts[k]} local course${counts[k] === 1 ? "" : "s"}">${k}<small>${"★".repeat(sceneStars(sceneOf(k) || 0))}</small></button>`).join("")}</div>
+    <small>${st ? `${counts[st]} courses · ${["weak", "light", "solid", "strong", "elite"][sceneStars(sceneOf(st) || 0) - 1]} scene: ${sceneOf(st) >= .5 ? "tougher locals, more fans" : "easier locals, fewer fans"}` : "Pick a state for your local courses"}</small></div>`;
 }
 /* The career hub: the ladder, what each rung takes, and where you are. */
 function viewLadder(){
@@ -2960,8 +3138,9 @@ function viewLadder(){
   const titles = Object.values(L.wins || {}).reduce((a, b) => a + b, 0);
   return `<div class="wrap">
     <div class="bar has-home"><span class="mark-wrap"><span class="mark">18 Down</span>${moneyChip()}</span><span class="where"><b>Career</b>Earn your way up</span></div>
-    <div class="cl-head"><div><small>Level${mePrestige(meLoad()) ? ` · ★${mePrestige(meLoad())}` : ""}</small><b>${esc(LADDER[L.level].name)}</b></div><div><small>Wins</small><b class="tnum">${titles}</b></div><div><small>Events</small><b class="tnum">${L.played || 0}</b></div></div>
+    <div class="cl-head"><div><small>Level${mePrestige(meLoad()) ? ` · ★${mePrestige(meLoad())}` : ""}</small><b>${esc(LADDER[L.level].name)}</b></div><div><small>Wins</small><b class="tnum">${titles}</b></div><div><small>Fans</small><b class="tnum">${(L.fans || 0).toLocaleString("en-US")}</b></div></div>
     ${homeAreaHTML()}
+    ${sponsorHTML()}
     ${canPrestige() ? prestigeCard() : ""}
     ${cur ? `<button class="btn primary full" data-act="careerEvent" data-id="${cur.id}">Resume ${esc(cur.name)}</button>` : ""}
     <ol class="cl-ladder">${LADDER.map(t => {
@@ -2970,7 +3149,8 @@ function viewLadder(){
       return `<li class="rung${open ? " open" : ""}${next ? " next" : ""}">
         <div class="rung-main"><b>${esc(t.name)}</b><small>${t.rounds} round${t.rounds > 1 ? "s" : ""} · ${t.field + 1} players · ${fmtMoney(t.first)} to win${t.cap ? ` · draft up to ${t.cap}` : ""}</small>
           <small class="rung-need">${open ? need : "Locked"}${best ? ` · best ${fmtPlace(best)}` : ""}${wins ? ` · ${wins} win${wins > 1 ? "s" : ""}` : ""}</small></div>
-        ${open ? `<button class="btn small${next ? " primary" : ""}" data-act="careerEvent" data-id="${t.id}" ${cur && cur !== t ? "disabled" : ""}>${cur === t ? "Resume" : "Play"}</button>` : `<span class="rung-lock" aria-label="Locked">${ico("hidden")}</span>`}
+        ${open ? `<button class="btn small${next ? " primary" : ""}" data-act="careerEvent" data-id="${t.id}" ${cur && cur !== t ? "disabled" : ""}>${cur === t ? "Resume" : t.home ? `Play · ${fmtMoney(ENTRY[t.id])}` : ui.pickTier === t.id ? "Close" : "Venues"}</button>` : `<span class="rung-lock" aria-label="Locked">${ico("hidden")}</span>`}
+      ${ui.pickTier === t.id && open && !cur ? venueHTML(t) : ""}
       </li>`; }).join("")}</ol>
     <div class="row"><button class="btn small" data-act="go" data-screen="bulletin">Back to Tournaments</button></div>
   </div>`;
@@ -4694,10 +4874,8 @@ const tCache = new Map();
 function tourneyCtx(key){
   if (tCache.has(key)) return tCache.get(key);
   const lt = typeof ladderTierOf === "function" && ladderTierOf(key);   // a career event: its own tier and field
-  const t = lt || tourneyFor(key);
-  const home = lt && lt.local ? homeCourses(meLoad().home) : [];   // Mini to B-tier: your home area's courses, if it has any
-  const pool = home.length ? home : COURSES;
-  const c = lt ? pool[hashStr("course|" + key) % pool.length] : dailyCourse(COURSES, key);   // career keys aren't dates
+  const t = lt ? careerTier(lt, key) : tourneyFor(key);   // home tiers: the home scene's locals and purse
+  const c = lt ? careerCourse(lt, key) : dailyCourse(COURSES, key);   // career keys aren't dates
   const field = lt ? ladderField(lt, key) : tourneyField(SEASONS, key, t);
   const rows = playField(c, field, key, t.rounds);
   const ctx = {key, t, c, field, rows, pay: payTable(t)};
@@ -4712,7 +4890,7 @@ function tSaved(key){
 }
 function tSave(){
   const t = state.tour;
-  storeSet("18down.t." + state.dateKey, JSON.stringify({up: t.up || null, seed: t.seed, meAt: state.meAt || null, spin: state.spin, used: state.skips, ranked: !!t.ranked, swapUsed: !!t.swapUsed, me: t.me || null, picks: state.picks, history: state.history, scores: t.scores, playoff: t.playoff, done: t.done, place: t.place, tied: t.tied, pay: t.pay}));
+  storeSet("18down.t." + state.dateKey, JSON.stringify({up: t.up || null, cr: t.cr || null, seed: t.seed, meAt: state.meAt || null, spin: state.spin, used: state.skips, ranked: !!t.ranked, swapUsed: !!t.swapUsed, me: t.me || null, picks: state.picks, history: state.history, scores: t.scores, playoff: t.playoff, done: t.done, place: t.place, tied: t.tied, pay: t.pay}));
 }
 function career(){
   try { const v = JSON.parse(storeGet("18down.career") || "null"); if (v && Array.isArray(v.events)) return v; } catch (e) {}
@@ -4746,7 +4924,7 @@ function openTourney(forKey){
     if (saved.spin) state.spin = saved.spin;
     if (saved.meAt) state.meAt = saved.meAt;
     state.skips = saved.used || {sponsor: 0, year: 0};
-    Object.assign(state.tour, {up: saved.up || null, seed: saved.seed || state.tour.seed, ranked: !!saved.ranked, swapUsed: !!saved.swapUsed, me: saved.me || null, scores: saved.scores || [], playoff: saved.playoff || null, done: !!saved.done, place: saved.place || 0, tied: !!saved.tied, pay: saved.pay || 0});
+    Object.assign(state.tour, {up: saved.up || null, cr: saved.cr || null, seed: saved.seed || state.tour.seed, ranked: !!saved.ranked, swapUsed: !!saved.swapUsed, me: saved.me || null, scores: saved.scores || [], playoff: saved.playoff || null, done: !!saved.done, place: saved.place || 0, tied: !!saved.tied, pay: saved.pay || 0});
     state.screen = state.tour.done ? "tfinal" : state.tour.playoff ? "playoff" : state.tour.scores.length ? "board" : Object.keys(state.picks).length === 4 ? "draft" : "draft";
     render();
   } else {
@@ -4924,7 +5102,7 @@ function finishTourney(){
   if (t.pay > 0) setTimeout(() => sfx("cash"), 500);
   if (firstFinish && typeof habitsTourney === "function") habitsTourney(t.place, ctx.t.name);
   addToCareer({key: state.dateKey, tier: ctx.t.name, course: ctx.c.name, place: t.place, tied: t.tied, of: ctx.t.field + 1, total: me.total, pay: t.pay});
-  if (firstFinish && typeof ladderResult === "function" && ladderTierOf(state.dateKey)){ const lr = ladderResult(state.dateKey, t.place); t.up = lr && lr.up ? lr.up.name : null; tSave(); }
+  if (firstFinish && typeof ladderResult === "function" && ladderTierOf(state.dateKey)){ const lr = ladderResult(state.dateKey, t.place); t.up = lr && lr.up ? lr.up.name : null; t.cr = lr ? {fans: lr.fans, spons: lr.spons} : null; tSave(); }
   if (firstFinish && cardBefore && typeof cardCheck === "function") cardCheck(cardBefore);
   ui.copied = false; ui.shareFail = false;
   state.screen = "tfinal";
@@ -4954,6 +5132,7 @@ function viewTFinal(){
         <div class="fin-side"><h1 class="verdict">${esc(t.name)}</h1><p class="fin-pay"><span>Payout</span><b class="tnum">${fmtMoney(T.pay)}</b></p></div>
       </div>
       ${T.up ? `<p class="ladder-up">${ico("trophy")} You earned your way into the <b>${esc(T.up)}</b></p>` : ""}
+      ${T.cr ? `<p class="fin-career"><span>+${T.cr.fans.toLocaleString("en-US")} fans</span>${T.cr.spons ? `<span>Sponsor +${fmtMoney(T.cr.spons)}</span>` : ""}</p>` : ""}
       <div class="fin-actions"><button class="btn small primary" id="again" data-act="go" data-screen="${ladderTierOf(state.dateKey) ? "ladder" : "bulletin"}">${ladderTierOf(state.dateKey) ? "Career" : "Tournaments"}</button><button class="btn small" id="earnings" data-act="earnings">History</button></div>
       ${typeof habitNewsHTML === "function" ? habitNewsHTML() : ""}
       ${resTabs("tfin", [
@@ -5214,7 +5393,7 @@ function meLoad(){
   return meDefault();
 }
 function meSave(me){ storeSet("18down.me", JSON.stringify(me)); }
-function meBalance(me){ return career().total + (me.challengeTotal || 0) + (me.miniTotal || 0) + (me.classicTotal || 0) + (me.bonusTotal || 0) + (me.compTotal || 0) + (me.runnerTotal || 0) + (me.contestNet || 0) - (me.spent || 0); }
+function meBalance(me){ return (me.careerNet || 0) + career().total + (me.challengeTotal || 0) + (me.miniTotal || 0) + (me.classicTotal || 0) + (me.bonusTotal || 0) + (me.compTotal || 0) + (me.runnerTotal || 0) + (me.contestNet || 0) - (me.spent || 0); }
 /* Classic (the daily draft) pays on a ladder, once a day: $20,000 for 18 down or better, down to $500 for 10 down. */
 const CLASSIC_PRIZE = 20000, CLASSIC_BACK_DAYS = ["2026-11-13", "2026-11-14"];
 const CLASSIC_LADDER = {18: 20000, 17: 10000, 16: 5000, 15: 3000, 14: 2000, 13: 1500, 12: 1000, 11: 750, 10: 500};
@@ -5581,9 +5760,19 @@ app.addEventListener("click", ev => {
     if (!ui.prestigeSure){ ui.prestigeSure = true; render(); }
     else { ui.prestigeSure = false; doPrestige(); render(); window.scrollTo(0, 0); }
   } else if (act === "homeArea"){
+    if (ladderLoad().current){ careerToast("Finish your event first"); return; }
     const me = meLoad(); me.home = el.dataset.st || null; meSave(me); render();
   } else if (act === "careerEvent"){
-    openCareerEvent(el.dataset.id);
+    const t = LADDER_BY_ID[el.dataset.id], L = ladderLoad(), resume = L.current && ladderTierOf(L.current) === t;
+    if (resume || (t && t.home)){
+      if (!openCareerEvent(el.dataset.id)){ careerToast(`Need ${fmtMoney(ENTRY[t.id])} to enter`); }
+    } else { ui.pickTier = ui.pickTier === el.dataset.id && state.screen === "ladder" ? null : el.dataset.id; state.screen = "ladder"; render(); }
+  } else if (act === "careerVenue"){
+    ui.pickTier = null;
+    if (!openCareerEvent(el.dataset.id, el.dataset.venue)) { careerToast("Can't afford that trip"); render(); }
+  } else if (act === "signSponsor"){
+    if (ui.signSure !== el.dataset.name){ ui.signSure = el.dataset.name; render(); }
+    else { ui.signSure = null; signSponsor(el.dataset.name, +el.dataset.lvl); render(); }
   } else if (act === "playoff"){
     playPlayoffHole(el.dataset.slot);
   } else if (act === "toPlayoff"){
@@ -9141,8 +9330,8 @@ function viewHome(){
   return `<div class="wrap park-wrap hub">
     <header class="park-head">${moneyChip()}<h1>18 Down</h1></header>
     ${lvl ? `<section class="hub-hero compact" aria-label="Career">
-      <div class="hub-row"><div class="hub-top"><small>Career${P ? ` · ★${P}` : ""}</small><b>${esc(lvl.name)}</b><span>${esc(cur ? `${cur.name} in progress` : need)}</span></div>
-        <button class="btn primary" id="hub-play" data-act="careerEvent" data-id="${(cur || lvl).id}">${cur ? "Resume" : "Play"}</button></div>
+      <div class="hub-row"><div class="hub-top"><small>Career${P ? ` · ★${P}` : ""} · ${(L.fans || 0).toLocaleString("en-US")} fans${L.sponsor ? ` · ${esc(L.sponsor.name)}` : ""}</small><b>${esc(lvl.name)}</b><span>${esc(cur ? `${cur.name} in progress` : need)}</span></div>
+        <button class="btn primary" id="hub-play" data-act="careerEvent" data-id="${(cur || lvl).id}">${cur ? "Resume" : lvl.home ? "Play" : "Venues"}</button></div>
       <ol class="hub-steps" aria-label="Rung ${lvl.level + 1} of ${LADDER.length}">${LADDER.map((t, i) => `<li class="${i < L.level ? "done" : i === L.level ? "now" : ""}" title="${esc(t.name)}"></li>`).join("")}</ol>
       <button class="linkish" id="hub-ladder" data-act="go" data-screen="ladder">See the ladder</button>
     </section>` : ""}
