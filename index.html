@@ -2,7 +2,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="robots" content="noindex,nofollow">
-<!-- 18 Down test build: branch test-combined, commit 0f47590 -->
+<!-- 18 Down test build: branch test-combined, commit 36eacbc -->
 <script>
 /* Test-site guard (Kade, 2026-11-28). deploy.sh puts this at the top of every test build; it is not part of the game.
    1. Offline: the test build plays by different rules than the live game, so it must never write to Hayden's live
@@ -2990,6 +2990,7 @@ function playoffScore(course, pro, key, n, who, lift){
      Championship 14-15, Worlds 15-21 (a win). 30 rating points above the tier's rating cuts it to about a third.
      Money (real entry fees and purses, see PURSE): at the tier's rating a typical event nets about Mini +$47, C +$25,
      B +$200, and loses $300-$1,100 from A-tier through the Playoffs once travel is paid, like most real touring pros.
+     With the sponsor deal you can get at that level (DEALS), it nets about A +$300, Jomez +$500, DGPT +$1,400-$2,000.
    - A-tier mixes locals with the lowest-rated current-year pros; from the Jomez Series up the fields are real
      current-year pros, deeper into the ratings list the higher you climb.
    - Your draft is capped: spins only include seasons rated at or under the tier's cap, so the pros you can draft get
@@ -3124,7 +3125,7 @@ function ladderResult(key, place){
   let spons = 0;
   if (L.sponsor){
     const d = DEALS[L.sponsor.lvl];
-    spons = d.per + (place === 1 ? d.win : 0);
+    spons = d.per + (place <= 10 ? d.top10 || 0 : 0) + (place === 1 ? d.win : 0);
     if (d.m) addMerch(L, d.m.per + (place === 1 ? d.m.win : 0), d.m.price);
     L.sponsor.left--;
     if (L.sponsor.left <= 0){ habitNews && habitNews(`Your ${L.sponsor.name} deal is done. New offers on the Career screen.`); L.sponsor = null; }
@@ -3224,7 +3225,7 @@ function tripCost(t, venue){
   const entry = (ladderLoad().played || 0) === 0 ? 0 : ENTRY[t.id] || 0;
   if (t.home){
     if (!entry) return {entry, travel: 0, covered: 0, total: 0, miles: 0};   // the first event of a new career is free
-    const travel = LOCAL_DAY * t.rounds, L0 = ladderLoad(), cov = L0.sponsor ? Math.round(travel * DEALS[L0.sponsor.lvl].cover / 5) * 5 : 0;
+    const travel = LOCAL_DAY * t.rounds, L0 = ladderLoad(), cov = L0.sponsor && DEALS[L0.sponsor.lvl] ? Math.round((entry + travel) * DEALS[L0.sponsor.lvl].cover / 5) * 5 : 0;
     return {entry, travel, covered: cov, total: entry + travel - cov, miles: 0};
   }
   const c = COURSES.find(x => x.id === venue), to = c ? placeOf(c) : "", from = meLoad().home || "KS";
@@ -3232,7 +3233,7 @@ function tripCost(t, venue){
   const nights = t.rounds + 1;
   let travel = OVERSEAS.has(to) ? 1400 + 150 * nights : miles <= 450 ? 40 + .7 * miles + 90 * nights : 300 + .12 * miles + 120 * nights;
   travel = Math.round(travel / 10) * 10;
-  const L = ladderLoad(), cover = L.sponsor ? DEALS[L.sponsor.lvl].cover : 0, covered = Math.round(travel * cover / 10) * 10;
+  const L = ladderLoad(), cover = L.sponsor && DEALS[L.sponsor.lvl] ? DEALS[L.sponsor.lvl].cover : 0, covered = Math.round((entry + travel) * cover / 10) * 10;   // entry and travel
   return {entry, travel, covered, total: entry + travel - covered, miles: Math.round(miles), to};
 }
 /* Money the career moves (entry, travel, sponsor pay) sits on My Player and counts in the balance. */
@@ -3248,14 +3249,19 @@ function fanGain(t, venue, place){
 }
 
 /* Sponsors. Shops are made up; brands are the real disc brands sponsoring 2026 pros in the game. */
-const DEAL_EVENTS = 8;
+/* Better sponsors (Kade, 2026-11-28, once entry and travel turned the tour into a money-loser): a deal covers a share
+   of entry AND travel, pays a stipend every event, a bonus for any top-10 finish and more for a win, and lasts
+   DEAL_EVENTS events. A regional deal arrives at A-tier, where the losses start. Sized so that with the deal you can get
+   at each level, a typical finish at the tier's rating about breaks even, and a good one makes money. */
+const DEAL_EVENTS = 12;
 const DEALS = [
   // early deals pay in merch (m: units to sign, per event, per win; at price each), sold only to your fans
-  {kind: "shop", fans: 40, level: 0, cover: .25, per: 0, win: 0, sign: 0, m: {sign: 30, per: 5, win: 10, item: "shirts", price: 15}},
-  {kind: "shop", fans: 300, level: 1, cover: .4, per: 0, win: 0, sign: 0, m: {sign: 60, per: 10, win: 20, item: "shirts", price: 20}},
-  {kind: "small", fans: 1200, level: 3, cover: .6, per: 200, win: 1500, sign: 2000, m: {sign: 40, per: 15, win: 30, item: "discs", price: 25}},
-  {kind: "mid", fans: 5000, level: 4, cover: .8, per: 1000, win: 8000, sign: 12000},
-  {kind: "big", fans: 15000, level: 5, cover: 1, per: 2500, win: 20000, sign: 35000},
+  {kind: "shop", fans: 40, level: 0, cover: .25, per: 0, top10: 0, win: 0, sign: 0, m: {sign: 30, per: 5, win: 10, item: "shirts", price: 15}},
+  {kind: "shop", fans: 300, level: 1, cover: .4, per: 50, top10: 0, win: 100, sign: 0, m: {sign: 60, per: 10, win: 20, item: "shirts", price: 20}},
+  {kind: "small", fans: 800, level: 3, cover: .6, per: 300, top10: 200, win: 1000, sign: 1000, m: {sign: 40, per: 15, win: 30, item: "discs", price: 25}},
+  {kind: "small", fans: 2000, level: 4, cover: .75, per: 450, top10: 400, win: 3000, sign: 4000, m: {sign: 60, per: 20, win: 40, item: "discs", price: 25}},
+  {kind: "mid", fans: 5000, level: 5, cover: .85, per: 700, top10: 800, win: 8000, sign: 12000},
+  {kind: "big", fans: 15000, level: 7, cover: 1, per: 1500, top10: 2000, win: 20000, sign: 35000},
 ];
 const SHOPS = ["Chainline Disc Supply", "Teebox Trading Post", "Fairway Corner Discs", "Tunnel Shot Discs", "Roller Ridge Outfitters", "Ace Run Disc Co.", "Mando Mart", "Lefty Glide Shop"];
 let BRAND_SIZE = null;
@@ -3293,7 +3299,7 @@ function signSponsor(name, lvl){
   if (d.sign) careerMoney(d.sign);
   habitNews && habitNews(`Signed with ${name}: ${[d.sign ? fmtMoney(d.sign) : "", d.m ? `${d.m.sign} ${d.m.item}` : ""].filter(Boolean).join(" + ")} to sign.`);
 }
-function dealLine(d){ return [`${Math.round(d.cover * 100)}% travel`, d.m ? `${d.m.per} ${d.m.item}/event at ${fmtMoney(d.m.price)}` : "", d.per ? `${fmtMoney(d.per)}/event` : "", d.win ? `${fmtMoney(d.win)}/win` : ""].filter(Boolean).join(" · "); }
+function dealLine(d){ return [`${Math.round(d.cover * 100)}% of entry and travel`, d.per ? `${fmtMoney(d.per)}/event` : "", d.top10 ? `${fmtMoney(d.top10)} top 10` : "", d.win ? `${fmtMoney(d.win)}/win` : "", d.m ? `${d.m.per} ${d.m.item}/event at ${fmtMoney(d.m.price)}` : ""].filter(Boolean).join(" · "); }
 function signLine(d){ return [d.sign ? fmtMoney(d.sign) : "", d.m ? `${d.m.sign} ${d.m.item}` : ""].filter(Boolean).join(" + ") + " to sign"; }
 /* Merch: stock you hold (units at an average price). After each career event your fans buy up to 1 per 25 fans,
    1.5x with a home crowd. No fans, no sales. Stock stays after a deal ends. */
