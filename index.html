@@ -2,7 +2,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="robots" content="noindex,nofollow">
-<!-- 18 Down test build: branch test-combined, commit d625d7a -->
+<!-- 18 Down test build: branch test-combined, commit 0e72d9f -->
 <title>18 Down</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&family=Shrikhand&display=swap">
@@ -1052,7 +1052,7 @@ summary { cursor: pointer; font-family: var(--label); font-weight: 700; font-siz
 
 /* Slot colors: what you're drafting for, at a glance */
 :root { --s-bh: #5aa9e6; --s-fh: #ff8c3a; --s-c1: #5ac46a; --s-c2: #c18cf0; }
-.s-bh { --sc: var(--s-bh); } .s-fh { --sc: var(--s-fh); } .s-c1 { --sc: var(--s-c1); } .s-c2 { --sc: var(--s-c2); }
+.s-bh { --sc: var(--s-bh); } .s-fh { --sc: var(--s-fh); } .s-c1 { --sc: var(--s-c1); } .s-c2 { --sc: var(--s-c2); } .s-ap { --sc: var(--s-c2); }
 .slot-banner { display: grid; gap: 1px; padding: 10px 14px 11px; border-radius: 8px; background: var(--sc, var(--pond-2)); color: var(--ink); border: 2px solid var(--ink); box-shadow: 3px 3px 0 var(--ink); }
 .slot-banner small { font-family: var(--label); font-weight: 700; font-size: 13px; letter-spacing: .08em; text-transform: uppercase; opacity: .75; }
 .slot-banner b { font-family: var(--display); font-weight: 400; font-size: clamp(30px, 9vw, 40px); line-height: 1.05; }
@@ -1061,7 +1061,7 @@ summary { cursor: pointer; font-family: var(--label); font-weight: 700; font-siz
 .sb-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
 .sb-chips span { padding: 3px 10px; border-radius: 999px; background: var(--sc); color: var(--ink); font-family: var(--label); font-weight: 700; font-size: 15px; border: 2px solid var(--ink); }
 .pro-row[class*=" s-"] { border-left: 7px solid var(--sc); }
-.cell[class*=" s-"] > small, .cell.s-bh > small, .cell.s-fh > small, .cell.s-c1 > small, .cell.s-c2 > small { color: var(--ink); background: var(--sc); border-radius: 3px; padding: 2px 4px; font-size: 12px; letter-spacing: .02em; }
+.cell[class*=" s-"] > small, .cell.s-bh > small, .cell.s-fh > small, .cell.s-c1 > small, .cell.s-c2 > small, .cell.s-ap > small { color: var(--ink); background: var(--sc); border-radius: 3px; padding: 2px 4px; font-size: 12px; letter-spacing: .02em; }
 .pk-row .cell { box-shadow: 0 3px 0 var(--card-2), inset 0 4px 0 var(--sc, transparent); }
 .pk-row .cell:disabled small { background: transparent; color: var(--mute); }
 .slot .k { color: var(--sc, var(--mute)); }
@@ -2281,9 +2281,41 @@ const UW_CONTRACTS = [
 function sponsorUW(name, year){ const c = UW_CONTRACTS.find(c => c[0] === name && year >= c[1] && year <= c[2]); return c ? c[3] : null; }
 
 /* ---------- Engine ---------- */
-const SLOTS = ["bh","fh","c1","c2"];
-const SLOT_LABEL = {bh:"BH", fh:"FH", c1:"C1X", c2:"C2"};
-const SLOT_NAME = {bh:"Backhand", fh:"Forehand", c1:"C1X putting", c2:"C2 putting"};
+/* The four picks (Kade, 2026-11-28): Backhand and Forehand drive, Approach plays the second shots on par 4s and 5s and
+   saves par from the rough, Putting makes every putt, inside and outside the circle, from the putter's own C1X and C2
+   rates. The putting slot keeps its old key, c1, so saved teams and My Player's putting tiers carry over. */
+const SLOTS = ["bh","fh","ap","c1"];
+const SLOT_LABEL = {bh:"BH", fh:"FH", ap:"APP", c1:"PUTT"};
+const SLOT_NAME = {bh:"Backhand", fh:"Forehand", ap:"Approach", c1:"Putting"};
+/* Saved teams from before Approach: the old C2 putter becomes the approach pick. */
+function fixPicks(p){
+  if (!p || typeof p !== "object") return p;
+  if (p.c2 != null && p.ap == null) p.ap = p.c2;
+  delete p.c2;
+  return p;
+}
+function fixSlot(k){ return k === "c2" ? "ap" : k; }
+/* Approach: scramble rate weighted heaviest, then backhand and forehand (Kade, 2026-11-28: "use the scramble weighted
+   heaviest, with the fh and bh all creating the approach stat"). Scramble is StatMando's par-save rate, which only
+   2024-26 seasons have; it's put on the BH/FH scale (same mean and spread among those seasons) and weighted AP_W.scr.
+   Seasons without it get the average of their BH and FH, marked as an estimate. */
+const AP_W = {scr: 0.5, bh: 0.25, fh: 0.25};
+function approachStats(seasons){
+  const has = s => s.stats && typeof s.stats.scr === "number" && !s.legend;
+  const R = seasons.filter(has), n = R.length || 1;
+  const mean = a => a.reduce((x, y) => x + y, 0) / (a.length || 1), sd = (a, m) => Math.sqrt(mean(a.map(x => (x - m) ** 2))) || 1;
+  const scr = R.map(s => s.stats.scr), arm = R.map(s => (s.bh + s.fh) / 2);
+  const ms = mean(scr), ss = sd(scr, ms), ma = mean(arm), sa = sd(arm, ma);
+  for (const s of seasons){
+    let ap, src;
+    if (has(s)){ const sc = ma + (s.stats.scr - ms) / ss * sa; ap = AP_W.scr * sc + AP_W.bh * s.bh + AP_W.fh * s.fh; src = "scramble"; }
+    else { ap = (s.bh + s.fh) / 2; src = s.legend || "estimate"; }
+    s.ap = Math.max(1, Math.min(100, Math.round(ap)));
+    if (s.src) s.src.ap = src;
+    if (s.real) s.real.ap = s.ap;
+  }
+  return seasons;
+}
 
 function mulberry32(seed){
   let a = seed >>> 0;
@@ -2574,6 +2606,7 @@ function teamBoost(build){
    opts.lift is in skill points: every throw plays as if the thrower had that many more BH/FH points, and every putt gets
    LIFT_PUTT make-rate points per lift point. Negative lifts drag the team down. Career events set it from My Player's rating. */
 const LIFT_PUTT = 0.5;
+const AP_MID = 82, AP_HOLE = 0.4;   // a tour-average approacher, and his share of where a par 4 or 5 ends up
 function playRound(course, build, seed, opts){
   build = teamBoost(build);
   const pressure = (opts && opts.pressure) || 0;
@@ -2581,10 +2614,13 @@ function playRound(course, build, seed, opts){
   const holes = layoutCourse(course);
   const tough = TOUGH[course.diff - 1];
   const form = normal(mulberry32(seed));  // the same day applies to all 18 holes
-  const sw = {bh: swing(build.bh), fh: swing(build.fh), c1: swing(build.c1), c2: swing(build.c2)};
-  const nv = {bh: nerves(build.bh, pressure), fh: nerves(build.fh, pressure), c1: nerves(build.c1, pressure), c2: nerves(build.c2, pressure)};
+  build = Object.assign({}, build, {ap: build.ap || build.c2 || build.bh});   // older callers without an approach pick
+  const sw = {bh: swing(build.bh), fh: swing(build.fh), c1: swing(build.c1), ap: swing(build.ap)};
+  const nv = {bh: nerves(build.bh, pressure), fh: nerves(build.fh, pressure), c1: nerves(build.c1, pressure), ap: nerves(build.ap, pressure)};
+  // approach: how well the approacher plays (on the BH/FH scale), as a z around a tour average, plus the team lift
+  const apZ = Math.max(-3, Math.min(2.5, ((build.ap.ap != null ? build.ap.ap : (build.ap.bh + build.ap.fh) / 2) - AP_MID) / 8 + rateZ(build.ap) * RATE_EDGE + lift / 8 - nv.ap * 0.05));
   const c1Pct = puttChance(build.c1.c1, FIELD_C1, form * 1.12 * sw.c1 + rateZ(build.c1) * RATE_EDGE * 14 - nv.c1 * NERVE_PTS + lift * LIFT_PUTT);
-  const c2Pct = puttChance(build.c2.c2, FIELD_C2, form * 1.6 * sw.c2 + rateZ(build.c2) * RATE_EDGE * 10 - nv.c2 * NERVE_PTS + lift * LIFT_PUTT);
+  const c2Pct = puttChance(build.c1.c2, FIELD_C2, form * 1.6 * sw.c1 + rateZ(build.c1) * RATE_EDGE * 10 - nv.c1 * NERVE_PTS + lift * LIFT_PUTT);
   const out = [];
   let total = 0;
   for (const h of holes){
@@ -2596,7 +2632,10 @@ function playRound(course, build, seed, opts){
     const thrower = h.shot === "FH" ? build.fh : build.bh;
     const k = h.shot === "FH" ? sw.fh : sw.bh;
     const tb = thrower.teeBase || null, mid = (thrower.bh + thrower.fh) / 2;
-    const rating = tb ? mid + TEE_SPLIT * ((h.shot === "FH" ? thrower.fh : thrower.bh) - mid) : (h.shot === "FH" ? thrower.fh : thrower.bh);
+    const drive = tb ? mid + TEE_SPLIT * ((h.shot === "FH" ? thrower.fh : thrower.bh) - mid) : (h.shot === "FH" ? thrower.fh : thrower.bh);
+    // par 4s and 5s: the approacher plays the second shot, so he shares where the ball ends up (AP_HOLE of it)
+    const apRating = build.ap.ap != null ? build.ap.ap : (build.ap.bh + build.ap.fh) / 2;
+    const rating = h.par > 3 ? (1 - AP_HOLE) * drive + AP_HOLE * (tb ? mid + (apRating - mid) : apRating) : drive;
     const q = curve(rating) + rateZ(thrower) * RATE_EDGE + form * 0.176 * k + holeNoise * 0.14 * k - tough - h.d * 0.4 - (h.shot === "FH" ? nv.fh : nv.bh) * 0.045 + lift / 17;
     // real-stat seasons: their own rates already include their rating, measured on average tour courses
     const qRef = tb ? curve(mid) + rateZ(thrower) * RATE_EDGE - TOUGH[2] : 0;
@@ -2617,7 +2656,7 @@ function playRound(course, build, seed, opts){
     } else if (lie === "c2"){
       r.feet = 34 + Math.floor(uFeet * 33);
       const p2 = pc ? clamp01(c2Pct * pc.make) : c2Pct, made = uPutt < p2;
-      r.putt = {kind: "c2", made, by: build.c2, p: p2};
+      r.putt = {kind: "c2", made, by: build.c1, p: p2};
       if (pc) r.putt.call = call.putt;
       if (made) r.rel = -1;
       else if (uBack < (pc ? pc.back : 0.26)){
@@ -2626,10 +2665,13 @@ function playRound(course, build, seed, opts){
         r.rel = back ? 0 : 1;
       } else r.rel = 0;
     } else if (lie === "outside"){
+      // scrambling: the approacher's save. A better one throws in more, misses less and leaves more tap-ins.
       r.feet = 70 + Math.floor(uFeet * 80);
-      if (uSave < 0.05){ r.rel = -1; r.save = "throwin"; }
-      else if (uSave < 0.19){ r.rel = 1; r.save = "miss"; }
-      else if (uSave2 < 0.5){ r.rel = 0; r.save = "tapin"; }
+      r.by = build.ap;
+      const pIn = Math.max(0.02, Math.min(0.1, 0.05 + 0.012 * apZ)), pMiss = Math.max(0.05, Math.min(0.3, 0.14 - 0.03 * apZ));
+      if (uSave < pIn){ r.rel = -1; r.save = "throwin"; }
+      else if (uSave < pIn + pMiss){ r.rel = 1; r.save = "miss"; }
+      else if (uSave2 < Math.max(0.3, Math.min(0.7, 0.5 + 0.06 * apZ))){ r.rel = 0; r.save = "tapin"; }
       else {
         const made = uParPutt < c1Pct;
         r.putt = {kind: "c1", made, by: build.c1, forPar: true, p: c1Pct};
@@ -2639,7 +2681,9 @@ function playRound(course, build, seed, opts){
       }
     } else {
       r.feet = 40 + Math.floor(uFeet * 90);
-      r.rel = uSave < 0.12 ? 0 : uSave < 0.7 ? 1 : 2;
+      r.by = build.ap;
+      const ob0 = Math.max(0.05, Math.min(0.22, 0.12 + 0.025 * apZ)), ob1 = Math.max(0.55, Math.min(0.82, 0.7 + 0.03 * apZ));
+      r.rel = uSave < ob0 ? 0 : uSave < ob1 ? 1 : 2;
       r.save = "ob";
     }
     total += r.rel;
@@ -2650,7 +2694,7 @@ function playRound(course, build, seed, opts){
 }
 
 /* ---------- Stroke breakdown ---------- */
-const FIELD_PRO = {bh:85, fh:85, c1:FIELD_C1, c2:FIELD_C2, pdga:PDGA_MID};
+const FIELD_PRO = {bh:85, fh:85, ap:85, c1:FIELD_C1, c2:FIELD_C2, pdga:PDGA_MID};
 const BREAKDOWN_ROUNDS = 240;
 function avgScore(course, build, rounds){
   let sum = 0;
@@ -2660,7 +2704,7 @@ function avgScore(course, build, rounds){
 function strokeBreakdown(course, build, history, byId, rounds){
   const n = rounds || BREAKDOWN_ROUNDS;
   const avg = avgScore(course, build, n);
-  const field = avgScore(course, {bh:FIELD_PRO, fh:FIELD_PRO, c1:FIELD_PRO, c2:FIELD_PRO}, n);
+  const field = avgScore(course, {bh:FIELD_PRO, fh:FIELD_PRO, ap:FIELD_PRO, c1:FIELD_PRO}, n);
   const picks = {};
   for (const k of SLOTS) picks[k] = {gain: avgScore(course, Object.assign({}, build, {[k]: FIELD_PRO}), n) - avg, best: null};
   const names = SLOTS.map(k => build[k].name);
@@ -2828,7 +2872,7 @@ function tourneyField(seasons, key, t){
   const pool = ranked.slice(lo, hi);
   const extra = lo > 0 ? shuffled(ranked.slice(0, lo), mulberry32(hashStr("stars|" + key))).slice(0, 3) : [];
   const picked = shuffled(pool, mulberry32(hashStr("field|" + key))).slice(0, t.field - extra.length).concat(extra);
-  return picked.map(s => ({name: s.name, season: s, build: {bh: s, fh: s, c1: s, c2: s}}));
+  return picked.map(s => ({name: s.name, season: s, build: {bh: s, fh: s, ap: s, c1: s}}));
 }
 function tourneySeed(key, r, who){ return hashStr("tround|" + key + "|" + r + "|" + who); }
 function cardPressure(rank){ return rank <= 4 ? 2 : rank <= 12 ? 1 : 0; }
@@ -2863,7 +2907,7 @@ function payoutFor(t, place, tiedCount){
 /* One playoff hole: the chosen pro plays it alone, every role his own. */
 function playoffHoleIndex(course, n){ return (17 + n) % 18; }
 function playoffScore(course, pro, key, n, who, lift){
-  const b = {bh: pro, fh: pro, c1: pro, c2: pro};
+  const b = {bh: pro, fh: pro, ap: pro, c1: pro};
   const idx = playoffHoleIndex(course, n);
   const r = playRound(course, b, tourneySeed(key, 100 + n, who), {pressure: 2, lift: lift || 0});
   return {strokes: r.holes[idx].par + r.holes[idx].rel, hole: r.holes[idx]};
@@ -2875,24 +2919,24 @@ function playoffScore(course, pro, key, n, who, lift){
    earn your way into the next one; every tier you've earned stays open to play again.
    - Mini, C-tier and B-tier fields are fictional local players, simulated from a rating (see localSeason). Fields and "up" places were tuned on 2026-11-28 (Kade:
      "at least a few tries to beat each tier ... about 2 at C-tier and like 20 at Worlds"). Simulated with My Player at the
-     tier's rating and his team lift (careerLift in ui.js), the tries it takes to move up average about: Mini 1.5, C 2, B 3,
-     A 4, Jomez 5, DGPT 5-6, DGPT+ 8-12, Major 8-10, Playoffs 10-12, Championship 14, Worlds 15-18 (a win). 30 rating
-     points above the tier's rating roughly halves it.
+     tier's rating and his team lift (careerLift in ui.js), the tries it takes to move up average about (retuned
+     for Approach and one putter, LIFT_MID 985): Mini 1.5, C 2, B 3, A 4, Jomez 5-6, DGPT 5-6, DGPT+ 8, Major 10, Playoffs 12,
+     Championship 9-14, Worlds 12-15 (a win). 30 rating points above the tier's rating cuts it to about a third.
    - A-tier mixes locals with the lowest-rated current-year pros; from the Jomez Series up the fields are real
      current-year pros, deeper into the ratings list the higher you climb.
    - Your draft is capped: spins only include seasons rated at or under the tier's cap, so the pros you can draft get
      better as you climb. Legends become draftable at the Playoffs (cap 1058) and GOATs only at Worlds (no cap). */
 const LADDER = [
-  {id: "mini",    rate: 900,  name: "Mini",              rounds: 1, field: 23, first: 150,   local: [906, 956],  cap: 1014, up: 3, home: true},
-  {id: "c",       rate: 915,  name: "C-Tier",            rounds: 2, field: 35, first: 500,   local: [940, 982],  cap: 1018, up: 3, home: true},
-  {id: "b",       rate: 935,  name: "B-Tier",            rounds: 2, field: 47, first: 1500,  local: [965, 1000], cap: 1022, up: 3, home: true},
-  {id: "a",       rate: 960,  name: "A-Tier",            rounds: 3, field: 59, first: 4000,  local: [940, 975],  pros: [100, 140], proShare: .2, cap: 1028, up: 5},
+  {id: "mini",    rate: 900,  name: "Mini",              rounds: 1, field: 23, first: 150,   local: [908, 958],  cap: 1014, up: 3, home: true},
+  {id: "c",       rate: 915,  name: "C-Tier",            rounds: 2, field: 35, first: 500,   local: [948, 990],  cap: 1018, up: 3, home: true},
+  {id: "b",       rate: 935,  name: "B-Tier",            rounds: 2, field: 47, first: 1500,  local: [966, 1001], cap: 1022, up: 3, home: true},
+  {id: "a",       rate: 960,  name: "A-Tier",            rounds: 3, field: 59, first: 4000,  local: [940, 975],  pros: [100, 140], proShare: .2, cap: 1028, up: 6},
   {id: "jomez",   rate: 985,  name: "Jomez Series",      rounds: 3, field: 53, first: 8000,  depth: [70, 140], cap: 1038, up: 7},
   {id: "dgpt",    rate: 1010, name: "DGPT",              rounds: 3, field: 71, first: 16000, depth: [30, 120], cap: 1042, up: 5},
   {id: "dgptp",   rate: 1015, name: "DGPT+",             rounds: 4, field: 71, first: 20000, depth: [15, 105], cap: 1048, up: 4},
-  {id: "major",   rate: 1020, name: "Major",             rounds: 4, field: 71, first: 40000, depth: [0, 80], cap: 1052, up: 8},
-  {id: "playoff", rate: 1025, name: "DGPT Playoffs",     rounds: 3, field: 39, first: 30000, depth: [0, 48], cap: 1058, up: 3},
-  {id: "champ",   rate: 1025, name: "DGPT Championship", rounds: 4, field: 23, first: 50000, depth: [0, 30], cap: 1058, up: 2},
+  {id: "major",   rate: 1020, name: "Major",             rounds: 4, field: 71, first: 40000, depth: [0, 80], cap: 1052, up: 7},
+  {id: "playoff", rate: 1025, name: "DGPT Playoffs",     rounds: 3, field: 39, first: 30000, depth: [0, 48], cap: 1058, up: 2},
+  {id: "champ",   rate: 1025, name: "DGPT Championship", rounds: 4, field: 23, first: 50000, depth: [0, 30], cap: 1058, up: 3},
   {id: "worlds",  rate: 1030, name: "Worlds",            rounds: 5, field: 89, first: 60000, depth: [0, 95], up: 1},
 ];
 /* rate: the My Player rating it takes to enter (Kade, 2026-11-28: "about 1010 rated to play a DGPT event and about 1030
@@ -2936,7 +2980,7 @@ function localFit(){
 function localSeason(name, rating, i){
   const F = localFit(), at = (k, lo, hi) => Math.max(lo, Math.min(hi, F[k].a + F[k].b * (rating - 1000)));
   return {id: "local" + i, name, year: new Date().getFullYear(), sponsor: "Local", brand: "Local", short: name, pdga: rating,
-    bh: at("bh", 35, 95), fh: at("fh", 35, 95), c1: at("c1", 55, 92), c2: at("c2", 6, 40), tee: null, teeBase: null, stats: null, legend: null, local: true};
+    bh: at("bh", 35, 95), fh: at("fh", 35, 95), ap: Math.round((at("bh", 35, 95) + at("fh", 35, 95)) / 2), c1: at("c1", 55, 92), c2: at("c2", 6, 40), tee: null, teeBase: null, stats: null, legend: null, local: true};
 }
 function localField(t, key, n){
   const rng = mulberry32(hashStr("local|" + key)), used = new Set(), out = [];
@@ -2945,7 +2989,7 @@ function localField(t, key, n){
     if (used.has(name)) continue; used.add(name);
     const r = Math.round(t.local[0] + (t.local[1] - t.local[0]) * Math.pow(rng(), 1.3));
     const s = localSeason(name, r, out.length);
-    out.push({name, season: s, build: {bh: s, fh: s, c1: s, c2: s}});
+    out.push({name, season: s, build: {bh: s, fh: s, ap: s, c1: s}});
   }
   return out;
 }
@@ -3272,7 +3316,7 @@ function applyVotes(seasons){
 }
 let SEASONS, COURSES, SEASON_BY_ID;
 function loadData(){
-  SEASONS = applyVotes(makeSeasons(SEASON_ROWS.concat(typeof HISTORY_ROWS !== "undefined" ? HISTORY_ROWS : [], addedRows().map(a => a.row)), EDITS));
+  SEASONS = approachStats(applyVotes(makeSeasons(SEASON_ROWS.concat(typeof HISTORY_ROWS !== "undefined" ? HISTORY_ROWS : [], addedRows().map(a => a.row)), EDITS)));
   COURSES = makeCourses(COURSE_ROWS, EDITS);
   SEASON_BY_ID = new Map(SEASONS.map(s => [s.id, s]));
 }
@@ -3291,7 +3335,7 @@ let playToken = 0;
 
 function esc(s){ return String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
 function fmtTotal(t){ return t === 0 ? "E" : t < 0 ? "−" + Math.abs(t) : "+" + t; }
-function fmtSlot(slot, v){ return slot === "c1" || slot === "c2" ? (Number.isInteger(v) ? String(v) : v.toFixed(1)) : String(v); }
+function fmtSlot(slot, v){ return slot === "c1" || slot === "c2" ? (Number.isInteger(v) ? String(v) : v.toFixed(1)) : String(Math.round(v)); }
 let LOCAL_COURSES = null;
 function localCourses(){
   if (!LOCAL_COURSES) LOCAL_COURSES = typeof LOCAL_COURSE_ROWS === "undefined" ? [] : makeCourses([].concat(...Object.values(LOCAL_COURSE_ROWS)), {});
@@ -3319,6 +3363,7 @@ function refText(s){
 function dailySaved(key){
   try {
     const v = JSON.parse(storeGet("18down.daily." + key) || "null");
+    if (v && v.picks) fixPicks(v.picks);
     return v && v.picks && SLOTS.every(k => SEASON_BY_ID.has(v.picks[k])) ? v : null;
   } catch (e) { return null; }
 }
@@ -3377,7 +3422,7 @@ function discHTML(seed, inner, extra){
 }
 function flightHTML(b){
   const nums = SLOTS.map(k => b[k] ? (hidden() ? "?" : Math.round(b[k][k])) : "–");
-  return `<div class="flight" aria-label="Flight numbers: ${SLOTS.map((k,i) => SLOT_LABEL[k] + " " + nums[i]).join(", ")}">${nums.map((n,i) => (i ? "<i>|</i>" : "") + `<span>${n}</span>`).join("")}</div><div class="flight-keys">BH FH C1X C2</div>`;
+  return `<div class="flight" aria-label="Flight numbers: ${SLOTS.map((k,i) => SLOT_LABEL[k] + " " + nums[i]).join(", ")}">${nums.map((n,i) => (i ? "<i>|</i>" : "") + `<span>${n}</span>`).join("")}</div><div class="flight-keys">${SLOTS.map(k => SLOT_LABEL[k]).join(" ")}</div>`;
 }
 
 /* ---------- Scorecard ---------- */
@@ -3405,7 +3450,7 @@ function cardHTML(c, holes, title, right, currentN){
 /* ---------- Home ---------- */
 function exampleRound(){
   const c = COURSES.find(x => x.id === "hornets");
-  const b = {bh:SEASON_BY_ID.get("calvinheimburg2023"), fh:SEASON_BY_ID.get("anthonybarela2023"), c1:SEASON_BY_ID.get("andrewmarwede2023"), c2:SEASON_BY_ID.get("gannonbuhr2023")};
+  const b = {bh:SEASON_BY_ID.get("calvinheimburg2023"), fh:SEASON_BY_ID.get("anthonybarela2023"), ap:SEASON_BY_ID.get("gannonbuhr2023"), c1:SEASON_BY_ID.get("andrewmarwede2023")};
   for (let s = 1; s < 4000; s++){ const r = playRound(c, b, s); if (r.total === -14) return {c, b, r}; }
   return {c, b, r: playRound(c, b, 1)};
 }
@@ -3755,7 +3800,7 @@ function viewCourse(){
         <div class="trait"><span>OB risk</span>${dots(c.ob)}</div>
         <div class="trait"><span>Difficulty</span>${dots(c.diff)}</div>
       </div>
-      <ol class="order" aria-label="Draft order: backhand, forehand, C1X putter, C2 putter. Each pro once.">${SLOTS.map(k => `<li class="s-${k}">${SLOT_LABEL[k]}</li>`).join("")}</ol>
+      <ol class="order" aria-label="Draft order: backhand, forehand, approach, putter. Each pro once.">${SLOTS.map(k => `<li class="s-${k}">${SLOT_LABEL[k]}</li>`).join("")}</ol>
       <button class="btn primary full" id="start-draft" data-act="startDraft">Start the draft</button>
     </div>
   </div>`;
@@ -3784,8 +3829,8 @@ function slotHint(k, c){
   const fh = layout.filter(h => h.shot === "FH").length;
   if (k === "bh") return (18 - fh) + " holes";
   if (k === "fh") return fh + " holes";
-  if (k === "c1") return "Inside 33 ft";
-  return "33 to 66 ft";
+  if (k === "ap") return layout.filter(h => h.par > 3).length + " par 4s & 5s";
+  return "Every putt";
 }
 function buildPanel(c, b, spinning){
   return `<section class="build" aria-label="Your build">
@@ -3859,8 +3904,8 @@ function needMeSlotOld(){
   }
   return state.mode === "free" && !state.meDecided && !Object.keys(state.picks).length;
 }
-const MED = {bh:88, fh:85, c1:84.7, c2:27};
-const SPREAD = {bh:6, fh:8, c1:3, c2:4};
+const MED = {bh:88, fh:85, ap:85, c1:84.7, c2:27};
+const SPREAD = {bh:6, fh:8, ap:6, c1:3, c2:4};
 /* Hard mode hints: ratings stay hidden, but each pro shows a tier for the spot (A top 20%, B next 30%, C the rest) and the
    skill he's known for. Enough to reason with, not enough to read the answer. */
 let TIER_CUTS = null;
@@ -3893,10 +3938,10 @@ function pickerPoolHTML(){
   }).join("")}</div>`;
 }
 /* Each slot has its own color and plain-English name so it's always clear what you're drafting for. */
-const SLOT_FULL = {bh: "Backhand", fh: "Forehand", c1: "Circle 1 putting", c2: "Circle 2 putting"};
+const SLOT_FULL = {bh: "Backhand", fh: "Forehand", ap: "Approach", c1: "Putting"};
 function hardKey(){ return `<span class="tier-key" title="Ratings hidden until the round ends">${ico("hidden", "Ratings hidden")}</span>`; }
-const SLOT_WHAT = {bh: "Throws your tee shots on backhand holes", fh: "Throws your tee shots on forehand holes", c1: "Makes your putts inside 33 ft", c2: "Makes your putts from 33 to 66 ft"};
-const SLOT_CELL = {bh: "Backhand", fh: "Forehand", c1: "C1 putt", c2: "C2 putt"};
+const SLOT_WHAT = {bh: "Throws your tee shots on backhand holes", fh: "Throws your tee shots on forehand holes", ap: "Plays your second shots on par 4s and 5s and saves par from the rough", c1: "Makes all your putts, inside and outside the circle"};
+const SLOT_CELL = {bh: "Backhand", fh: "Forehand", ap: "Approach", c1: "Putting"};
 function done0(){ return SLOTS.every(k => state.picks[k]); }
 function slotBanner(){
   if (done0()) return "";
@@ -4501,11 +4546,13 @@ function teamRowsHTML(holes, live){
 }
 /* How each slot is playing so far: good drives and made putts push the bar right, OB and misses push it left. */
 function slotForm(holes){
-  const f = {bh: 0, fh: 0, c1: 0, c2: 0};
+  const f = {bh: 0, fh: 0, ap: 0, c1: 0};
   for (const h of holes){
-    const d = h.shot === "FH" ? "fh" : "bh";
-    f[d] += h.flair === "ace" ? 3 : {parked: 2, c1: 1, c2: 0, outside: -1, ob: -2}[h.lie] || 0;
-    if (h.putt){ const k = h.putt.kind === "c2" ? "c2" : "c1"; f[k] += h.putt.made ? (k === "c2" ? 2 : 1) : (k === "c1" ? -2 : -0.5); }
+    const d = h.shot === "FH" ? "fh" : "bh", lv = h.flair === "ace" ? 3 : {parked: 2, c1: 1, c2: 0, outside: -1, ob: -2}[h.lie] || 0;
+    if (h.par > 3){ f[d] += lv * 0.6; f.ap += lv * 0.4; } else f[d] += lv;
+    if (h.save) f.ap += {throwin: 2, tapin: 0.5, miss: -2, ob: 0, putt: 0}[h.save] || 0;
+    if (h.lie === "ob") f.ap += h.rel <= 0 ? 1.5 : h.rel >= 2 ? -1 : 0;
+    if (h.putt) f.c1 += h.putt.made ? (h.putt.kind === "c2" ? 2 : 1) : (h.putt.kind === "c1" ? -2 : -0.5);
     if (h.comeback) f.c1 += h.comeback.made ? 0.5 : -2;
   }
   return f;
@@ -4513,7 +4560,7 @@ function slotForm(holes){
 /* A round: the sim plays it out from the seed (Kade, 2026-11-27: no round plan, no Sim button, just the sim). */
 /* Career events: My Player's rating lifts (or drags) the whole team. LIFT_MID is neutral; every 10 rating points
    is LIFT_PER skill points for every pro on the team. Ranked and daily rounds don't use it. */
-const LIFT_MID = 1000, LIFT_PER = 1;
+const LIFT_MID = 985, LIFT_PER = 1;
 function careerLift(){
   if (!(state.mode === "tourney" && typeof ladderTierOf === "function" && ladderTierOf(state.dateKey)) || isRanked()) return 0;
   const me = (state.tour && state.tour.me) || meForMode();
@@ -4656,7 +4703,7 @@ function shareText(){
     return `18 Down daily tournament, ${fmtDate(state.dateKey)}\n${ctx.t.name} at ${ctx.c.name}\n${fmtPlace(T.place, T.tied)} of ${ctx.t.field + 1}, ${fmtTotal(me.total)} (${me.scores.map(fmtTotal).join(", ")})${T.playoff ? (T.playoff.result === "won" ? ", won in a playoff" : ", lost in a playoff") : ""}\n${T.pay ? "Won " + fmtMoney(T.pay) : "Missed the cash"}`;
   }
   if (state.mode === "daily") return `18 Down Classic, ${fmtDate(state.dateKey)}: ${fmtTotal(state.round.total)} at ${c.name}\n${row(0,9)}\n${row(9,18)}`;
-  return `18 Down${hm}: ${fmtTotal(state.round.total)} at ${c.name}\n${row(0,9)}\n${row(9,18)}\nBH ${b.bh.short}, FH ${b.fh.short}\nC1X ${b.c1.short}, C2 ${b.c2.short}`;
+  return `18 Down${hm}: ${fmtTotal(state.round.total)} at ${c.name}\n${row(0,9)}\n${row(9,18)}\nBH ${b.bh.short}, FH ${b.fh.short}\nAPP ${b.ap.short}, PUTT ${b.c1.short}`;
 }
 function fmtStrokes(v){ const r = Math.round(Math.abs(v) * 10) / 10; return r === 0 ? "0.0" : (v > 0 ? "+" : "−") + r.toFixed(1); }
 function fmtAvg(v){ const r = Math.round(Math.abs(v) * 10) / 10; return r === 0 ? "even" : (v < 0 ? "−" : "+") + r.toFixed(1); }
@@ -4808,10 +4855,10 @@ function openTourney(forKey){
   state.courseId = ctx.c.id;
   state.tour = {seed: Math.floor(Math.random() * 2147483647), scores: [], playoff: null, done: false, place: 0, tied: false, pay: 0};
   if (saved){
-    state.picks = saved.picks;
+    state.picks = fixPicks(saved.picks);
     state.history = saved.history || [];
     if (saved.spin) state.spin = saved.spin;
-    if (saved.meAt) state.meAt = saved.meAt;
+    if (saved.meAt) state.meAt = fixSlot(saved.meAt);
     state.skips = saved.used || {sponsor: 0, year: 0};
     Object.assign(state.tour, {up: saved.up || null, cr: saved.cr || null, seed: saved.seed || state.tour.seed, ranked: !!saved.ranked, swapUsed: !!saved.swapUsed, me: saved.me || null, scores: saved.scores || [], playoff: saved.playoff || null, done: !!saved.done, place: saved.place || 0, tied: !!saved.tied, pay: saved.pay || 0});
     state.screen = state.tour.done ? "tfinal" : state.tour.playoff ? "playoff" : state.tour.scores.length ? "board" : Object.keys(state.picks).length === 4 ? "draft" : "draft";
@@ -5057,7 +5104,7 @@ function viewEarnings(){
 /* ---------- My Player ---------- */
 const ME_TIERS = 50;   // each skill has tiers 0 to 50, one point per tier
 /* Tier 0 to 50: BH and FH go 50 to 100, C1X 50% to 100%, C2 10% to 40%. */
-const ME_SCALE = {bh: [50, 100], fh: [50, 100], c1: [50, 100], c2: [10, 40]};
+const ME_SCALE = {bh: [50, 100], fh: [50, 100], ap: [50, 100], c1: [50, 100], c2: [10, 40]};   // c2: My Player's C2 make rate, from his putting tiers
 /* Putting pays by how many in a row: 1st $20, 2nd $50, 3rd $200, 4th $500, 5th $1,000, then $10,000 for the 6th and every one after. No daily limit. */
 const PUTT_LADDER = [20, 50, 200, 500, 1000, 10000];
 const PUTT_WHEEL_AT = 6;   // the 6th make in a row spins a wheel instead of paying
@@ -5263,13 +5310,18 @@ const LOOKS = {
   disc:  DISCS.map(d => d.c),
 };
 const LOOK_NAME = {cap:"Cap", shirt:"Jersey", pants:"Pants", skin:"Skin", disc:"Disc"};
-function meDefault(){ return {v: 3, name: "", look: {cap: 0, shirt: 0, pants: 1, skin: 1, disc: 0}, discs: [0], clothes: {cap: [0], shirt: [0], pants: [1]}, clothSpent: 0, discSpent: 0, levels: {bh: 0, fh: 0, c1: 0, c2: 0}, spent: 0, bonus: {day: "", makes: 0}, bonusTotal: 0}; }
+function meDefault(){ return {v: 3, name: "", look: {cap: 0, shirt: 0, pants: 1, skin: 1, disc: 0}, discs: [0], clothes: {cap: [0], shirt: [0], pants: [1]}, clothSpent: 0, discSpent: 0, levels: {bh: 0, fh: 0, ap: 0, c1: 0}, spent: 0, bonus: {day: "", makes: 0}, bonusTotal: 0}; }
 function meLoad(){
   try {
     const v = JSON.parse(storeGet("18down.me") || "null");
     if (v && v.levels && v.v !== 3){   // older saves: 20 levels of 5%, then 50 to 100; keep the progress
       for (const k of SLOTS){ const L = v.levels[k] || 0; v.levels[k] = Math.max(0, Math.min(ME_TIERS, v.v === 2 ? L - 50 : Math.round(L * 2.5))); }
       v.v = 3;
+    }
+    if (v && v.levels && v.levels.c2 != null){
+      v.levels.ap = Math.min(ME_TIERS, (v.levels.ap || 0) + v.levels.c2); delete v.levels.c2;
+      if (v.form && v.form.c2 != null){ v.form.ap = v.form.c2; delete v.form.c2; }
+      if (v.train) delete v.train.c2;
     }
     if (v && v.levels && !Array.isArray(v.discs)){   // saves from before discs cost money: keep the disc you were using
       const nd = DISC_OLD[(v.look && v.look.disc) || 0] || 0;
@@ -5330,7 +5382,7 @@ function mePrestige(me){ return (me && me.prestige) || 0; }
    up to TRAIN_DAY a day per skill; career events add or take it away by your finish (formFromEvent), for the skill
    My Player played. Ranked tournaments ignore it. */
 const FORM_MIN = -10, FORM_MAX = 15, TRAIN_DAY = 1;
-const FORM_SHORT = {bh: "BH", fh: "FH", c1: "C1X", c2: "C2"};
+const FORM_SHORT = {bh: "BH", fh: "FH", ap: "APP", c1: "PUTT", c2: "APP"};
 function meForm(me, k){ return (me && me.form && me.form[k]) || 0; }
 function meLv(me, k){ return Math.max(0, Math.min(ME_TIERS, (me.levels[k] || 0) + PRESTIGE_TIERS * mePrestige(me) + meForm(me, k))); }
 function formAdd(me, k, d){
@@ -5357,21 +5409,21 @@ function formFromEvent(place, of){
   return place === 1 ? 2 : p <= .1 ? 1.5 : p <= .25 ? 1 : p <= .5 ? .3 : p <= .75 ? -.5 : -1.5;
 }
 function prestigeLocked(it){ return (it && it.pr || 0) > mePrestige(meLoad()); }
-function meStat(me, k){ const [lo, hi] = ME_SCALE[k]; const v = lo + (hi - lo) * meLv(me, k) / ME_TIERS; return Math.round(v * 10) / 10; }
-function meFmt(k, v){ return k === "bh" || k === "fh" ? String(Math.round(v)) : (Number.isInteger(v) ? v : v.toFixed(1)) + "%"; }
+function meStat(me, k){ const [lo, hi] = ME_SCALE[k]; const v = lo + (hi - lo) * meLv(me, k === "c2" ? "c1" : k) / ME_TIERS; return Math.round(v * 10) / 10; }
+function meFmt(k, v){ return k === "bh" || k === "fh" || k === "ap" ? String(Math.round(v)) : (Number.isInteger(v) ? v : v.toFixed(1)) + "%"; }
 function meRating(me){ return Math.round(900 + SLOTS.reduce((a, k) => a + meLv(me, k), 0) + PRESTIGE_RATING * mePrestige(me)); }   // +1 per tier, plus prestige
 function meName(me){ return (me.name || "").trim() || "My Player"; }
 function meSeason(me){
   const name = meName(me);
   return {id: "me", name, year: 2026, sponsor: "My Player", brand: "My Player", sponsorOk: true, me: true,
     short: name.length > 14 ? name.split(" ")[0] : name,
-    bh: meStat(me, "bh"), fh: meStat(me, "fh"), c1: meStat(me, "c1"), c2: meStat(me, "c2"),
-    att: {c1: null, c2: null}, pdga: meRating(me), base: {}, src: {bh: "me", fh: "me", c1: "me", c2: "me"}, refs: null};
+    bh: meStat(me, "bh"), fh: meStat(me, "fh"), ap: meStat(me, "ap"), c1: meStat(me, "c1"), c2: meStat(me, "c2"),
+    att: {c1: null, c2: null}, pdga: meRating(me), base: {}, src: {bh: "me", fh: "me", ap: "me", c1: "me", c2: "me"}, refs: null};
 }
 /* Ranked tournaments use the same standard My Player for everyone (tier 25 in every skill); everywhere else it's yours. */
 const RANKED_LEVEL = 25;
 function isRanked(){ return state.mode === "tourney" && !!(state.tour && state.tour.ranked); }
-function meForMode(){ const me = meLoad(); return isRanked() ? Object.assign(meSeason(Object.assign({}, me, {prestige: 0, form: null, levels: {bh: RANKED_LEVEL, fh: RANKED_LEVEL, c1: RANKED_LEVEL, c2: RANKED_LEVEL}})), {ranked: true}) : meSeason(me); }
+function meForMode(){ const me = meLoad(); return isRanked() ? Object.assign(meSeason(Object.assign({}, me, {prestige: 0, form: null, levels: {bh: RANKED_LEVEL, fh: RANKED_LEVEL, ap: RANKED_LEVEL, c1: RANKED_LEVEL}})), {ranked: true}) : meSeason(me); }
 function getSeason(id){
   if (id === "me") return (state.tour && state.tour.me) || state.meSnap || meForMode();
   return SEASON_BY_ID.get(id);
@@ -5398,7 +5450,7 @@ function eggBonus(made){
   refreshMoney();
   if (typeof puttStatsRefresh === "function") puttStatsRefresh();
   eggBonus.last = {pay, run: me.bonus.run, wheel: me.bonus.run >= PUTT_WHEEL_AT ? "choose" : ""};
-  meTrain("c1", .1); if (me.bonus.run >= 3) meTrain("c2", .1);
+  meTrain("c1", me.bonus.run >= 3 ? .2 : .1);
   return pay;
 }
 function historyHTML(){
@@ -5432,7 +5484,7 @@ function proCell(s, k, ed){
   const e = ed.pros[s.id] || {};
   const v = k in e ? e[k] : s.base[k];
   const cls = k in e ? "edited" : (s.att[k] ? "pub" : "est");
-  const label = `${s.name} ${s.year} ${SLOT_NAME[k]}`;
+  const label = `${s.name} ${s.year} ${({c1: "C1X putting", c2: "C2 putting"})[k] || SLOT_NAME[k]}`;
   const title = s.att[k] && !(k in e) ? sourceNote(s, k) : (k in e ? "Your rating" : "Estimate");
   return `<td><input id="r-${s.id}-${k}" class="${cls}" type="number" inputmode="decimal" data-act-input="pro" data-id="${s.id}" data-slot="${k}" value="${v}" min="${k === "bh" || k === "fh" ? 1 : 0}" max="${k === "bh" || k === "fh" ? 99 : 100}" step="${k === "bh" || k === "fh" ? 1 : 0.1}" aria-label="${esc(label)}" title="${esc(title)}" ${ui.canEdit ? "" : "disabled"}></td>`;
 }
@@ -5452,7 +5504,7 @@ function viewRatings(){
     <div class="chips">${sponsors.map(s => `<button class="chip" data-act="sponsor" data-sponsor="${esc(s)}" aria-pressed="${ui.sponsor === s}">${esc(s)}</button>`).join("")}</div>
     <div class="key"><span><i class="pub-dot" style="background:var(--birdie)"></i>Green outline: real stat</span><span><i class="est-dot"></i>Dashed: estimate</span><span><i class="pub-dot"></i>Yellow: your rating</span></div>
     <div class="tbl-wrap"><table class="rt"><thead><tr><th>Pro</th><th class="n">BH</th><th class="n">FH</th><th class="n">C1X</th><th class="n">C2</th></tr></thead><tbody>
-      ${rows.map(s => `<tr><td class="who">${esc(s.name)}<span>${esc(s.brand)} ${s.year}${s.sponsorOk || s.brand === "Unconfirmed sponsor" ? "" : " (unconfirmed)"}</span>${s.refs ? `<span class="ref">${esc(refText(s))}</span>` : ""}</td>${SLOTS.map(k => proCell(s, k, ed)).join("")}</tr>`).join("")}
+      ${rows.map(s => `<tr><td class="who">${esc(s.name)}<span>${esc(s.brand)} ${s.year}${s.sponsorOk || s.brand === "Unconfirmed sponsor" ? "" : " (unconfirmed)"}</span>${s.refs ? `<span class="ref">${esc(refText(s))}</span>` : ""}</td>${["bh", "fh", "c1", "c2"].map(k => proCell(s, k, ed)).join("")}</tr>`).join("")}
     </tbody></table></div>
     <details id="csv-box"><summary>Edit in a spreadsheet</summary><div class="csv">
       <p class="fine">Copy, edit, paste back. Rows match on id.</p>
@@ -5465,7 +5517,7 @@ function viewRatings(){
     <div class="ce-list">${makeCourses(COURSE_ROWS, ed).map(c => courseEditor(c, ed)).join("")}</div>`}
     <details class="rules"><summary>How a round is scored</summary><ul>
       <li>Each hole is backhand or forehand. That rating, the hole and a daily form roll pick the tee result: parked, C1, C2, no look or OB.</li>
-      <li>C1 looks use your C1X pick; C2 looks use your C2 pick.</li>
+      <li>Your putter makes every putt, C1 and C2, from his own C1X and C2 rates. Your approacher plays the second shot on par 4s and 5s and saves par from outside C2 and after OB.</li>
       <li>Upshots use a fixed tour-level baseline.</li>
       <li>Long holes leave more C2 looks. OB notes add OB risk.</li>
       <li>Putting counts ${PUTT_WEIGHT}× its gap from the field (${FIELD_C1}% C1X, ${FIELD_C2}% C2).</li>
@@ -5516,7 +5568,7 @@ function applyCsv(text){
     if (!s){ missed++; return; }
     const vals = {bh: +parts[4], fh: +parts[5], c1: +parts[6], c2: +parts[7]};
     let touched = false;
-    for (const k of SLOTS){
+    for (const k of ["bh", "fh", "c1", "c2"]){   // the stats file columns
       const lim = k === "bh" || k === "fh" ? [1,99] : [0,100];
       if (parts[{bh:4,fh:5,c1:6,c2:7}[k]] !== "" && Number.isFinite(vals[k]) && vals[k] >= lim[0] && vals[k] <= lim[1]){
         const before = JSON.stringify(ed.pros[s.id] || {});
@@ -5726,7 +5778,7 @@ app.addEventListener("click", ev => {
     state.dateKey = key;
     state.courseId = dailyCourse(COURSES, key).id;
     if (saved){
-      state.picks = saved.picks;
+      state.picks = fixPicks(saved.picks);
       state.history = saved.history || [];
       state.round = playRound(course(), buildObj(), dailySeed(key));
       state.step = 18;
@@ -5912,7 +5964,7 @@ function ratingsCount(){
   let left = 0;
   for (const s of SEASONS){
     const e = ed.pros[s.id] || {};
-    for (const k of SLOTS) if (!(k in e) && !s.att[k]) left++;
+    for (const k of ["bh", "fh", "c1", "c2"]) if (!(k in e) && !s.att[k]) left++;
   }
   return `${SEASONS.length} pro seasons and ${COURSES.length} courses, ${COURSES.filter(c => c.holes).length} with real hole lists. ${pub} putting numbers are real, from your stats file and UDisc’s season lists, and ${left} of the ${total} pro numbers are still estimates.`;
 }
@@ -8585,7 +8637,7 @@ document.addEventListener("visibilitychange", () => { if (document.hidden && clo
 function frCard(){
   const me = meLoad(), car = career(), ev = car.events, best = storeGet("18down.best");
   return {v: 1, look: Object.assign({}, me.look), discs: (me.discs || [0]).slice(), rating: meRating(me),
-    skills: {bh: meStat(me, "bh"), fh: meStat(me, "fh"), c1: meStat(me, "c1"), c2: meStat(me, "c2")},
+    skills: {bh: meStat(me, "bh"), fh: meStat(me, "fh"), ap: meStat(me, "ap"), c1: meStat(me, "c1"), c2: meStat(me, "c2")},
     comp: {best: me.compBest || 0, stack: me.compStackBest || 0}, runner: {best: me.runnerBest || 0},
     putt: {best: Math.max(me.puttBest || 0, (me.bonus && me.bonus.best) || 0)},
     mini: {best: best === null ? null : +best},
@@ -8937,11 +8989,11 @@ function ctClassicOpen(){
   state.dateKey = "ct|" + c.seed;
   state.courseId = pick(COURSES, mulberry32(hashStr("ctcourse|" + c.seed))).id;
   if (c.team && c.team.picks && SLOTS.every(k => SEASON_BY_ID.get(c.team.picks[k]))){   // drafted already: straight to the next round
-    state.picks = Object.assign({}, c.team.picks);
+    state.picks = fixPicks(Object.assign({}, c.team.picks));
     state.screen = "ctround"; render(); window.scrollTo(0, 0); return;
   }
   const saved = ctDraftLoad();   // picks made before leaving mid-draft stay put
-  if (saved && saved.picks) state.picks = Object.assign({}, saved.picks);
+  if (saved && saved.picks) state.picks = fixPicks(Object.assign({}, saved.picks));
   state.screen = "course"; state.landing = true;
   render(); window.scrollTo(0, 0); landCourse();
 }
@@ -8998,7 +9050,7 @@ async function dlLoad(key){
   if (ids.length) (await sbRest("profiles?id=in.(" + ids.join(",") + ")&select=id,name")).forEach(p => names.set(p.id, String(p.name || "")));
   const me = sbUser() && sbUser().uid;
   return rows.map(r => ({you: r.player === me, name: names.get(r.player) || "Friend", total: Number(r.total) || 0,
-    picks: r.picks && typeof r.picks === "object" ? r.picks : {}}));
+    picks: r.picks && typeof r.picks === "object" ? fixPicks(Object.assign({}, r.picks)) : {}}));
 }
 /* Called after the Classic result screen draws. Posts today's score if needed, then shows the board. */
 async function dlFill(){
@@ -9552,7 +9604,7 @@ function viewMe(){
             ${maxed ? `<span class="maxed">Maxed</span>` : `<button class="btn small ${bal >= cost ? "primary" : ""}" id="up-${k}" data-act="upgrade" data-slot="${k}" ${bal >= cost ? "" : "disabled"}><span class="tag">${fmtMoney(cost)}</span> Buy</button>`}</div>
         </div>`;
       }).join("")}</div>
-      <details class="rules"><summary>How it works</summary><ul><li>Tier 0: BH 50, FH 50, C1X 50%, C2 10%. Tier 50: 100, 100, 100%, 40%.</li><li>Each tier costs 6.75% more than the last.</li><li>Career: each tier needs a My Player rating to enter (DGPT 1010, Worlds 1030), and My Player plays every event.</li><li>Backhand powers Distance Comp. Forehand steers Disc Runner.</li><li>Form: practice adds up to +1 a day per skill (Putting Green for C1X and C2, Distance Comp for BH, Disc Runner for FH). Career finishes add or take it away. −10 to +15.</li></ul></details>`;
+      <details class="rules"><summary>How it works</summary><ul><li>Tier 0: BH 50, FH 50, Approach 50, Putting 50% (C2 10%). Tier 50: 100, 100, 100, 100% (C2 40%).</li><li>Approach plays your second shots on par 4s and 5s and saves par from the rough.</li><li>Each tier costs 6.75% more than the last.</li><li>Career: each tier needs a My Player rating to enter (DGPT 1010, Worlds 1030), and My Player plays every event.</li><li>Backhand powers Distance Comp. Forehand steers Disc Runner.</li><li>Form: practice adds up to +1 a day per skill (Putting Green for C1X and C2, Distance Comp for BH, Disc Runner for FH). Career finishes add or take it away. −10 to +15.</li></ul></details>`;
   else if (tab === "gear") panel = `
       <label class="me-name"><span>Name</span><input id="me-name" maxlength="20" autocomplete="off" placeholder="My Player" value="${esc(me.name || "")}" data-act-input="me-name"></label>
       <div class="looks">${swatches(["skin"])}</div>
