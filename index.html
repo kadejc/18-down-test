@@ -2,7 +2,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="robots" content="noindex,nofollow">
-<!-- 18 Down test build: branch test-combined, commit cb7e68d -->
+<!-- 18 Down test build: branch test-combined, commit 3d4e9fa -->
 <title>18 Down</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&family=Shrikhand&display=swap">
@@ -4564,14 +4564,13 @@ function teamRowsHTML(holes, live){
 function slotForm(holes){
   const f = {bh: 0, fh: 0, ap: 0, c1: 0};
   for (const h of holes){
-    const F = h.clutch ? {bh: 0, fh: 0, ap: 0, c1: 0} : f;
+    const F = f, pk = h.clutch || "c1";   // a clutch putt counts for the pro who took it
     const d = h.shot === "FH" ? "fh" : "bh", lv = h.flair === "ace" ? 3 : {parked: 2, c1: 1, c2: 0, outside: -1, ob: -2}[h.lie] || 0;
     if (h.par > 3){ F[d] += lv * 0.6; F.ap += lv * 0.4; } else F[d] += lv;
     if (h.save) F.ap += {throwin: 2, tapin: 0.5, miss: -2, ob: 0, putt: 0}[h.save] || 0;
     if (h.lie === "ob") F.ap += h.rel <= 0 ? 1.5 : h.rel >= 2 ? -1 : 0;
-    if (h.putt) F.c1 += h.putt.made ? (h.putt.kind === "c2" ? 2 : 1) : (h.putt.kind === "c1" ? -2 : -0.5);
-    if (h.comeback) F.c1 += h.comeback.made ? 0.5 : -2;
-    if (h.clutch && f[h.clutch] != null) f[h.clutch] += F.bh + F.fh + F.ap + F.c1;
+    if (h.putt) F[pk] += h.putt.made ? (h.putt.kind === "c2" ? 2 : 1) : (h.putt.kind === "c1" ? -2 : -0.5);
+    if (h.comeback) F[pk] += h.comeback.made ? 0.5 : -2;
   }
   return f;
 }
@@ -4594,20 +4593,33 @@ function roundPlay(seed, pressure){
   r.spec = {seed, pressure}; return r;
 }
 const BIG_FROM = 16;   // the last three holes land slower
-/* Clutch holes (Kade, 2026-11-28: "fix it all"): in tournament and career rounds, holes 16 to 18 stop for one pick, which
-   of your four pros plays the whole hole, every shot. Each pro once. Picking well is worth about a quarter of a stroke
-   over the three holes, picking badly costs about a third. Picks are saved with the event, so leaving and coming back
-   can't re-roll them. */
+/* Clutch putts (Kade, 2026-11-28: "make clutch only for podium spot and only during putting"). In the final round of a
+   tournament or career event, on holes 16 to 18, when you're on the podium or one shot off it, a hole with a putt stops
+   before the putt: you pick which of your four pros takes it. Each pro once. The tee shot and lie stay your team's; only
+   the putter changes, so the same roll decides the putt with his C1X or C2 rate. Picks are saved with the event, so
+   leaving and coming back can't re-roll them. */
 const CLUTCH_FROM = 15;   // the index of hole 16
 let clutchWait = null;
 function clutchOn(){ return state.mode === "tourney" && !!state.tour && !state.tour.done; }
 function clutchSaved(){ const t = state.tour; return (t && t.clutch && t.clutch[t.scores.length]) || {}; }
+/* On the podium or one shot off it, counting what you've shot through the hole before (the field is in the clubhouse). */
+function clutchPodium(i){
+  const t = state.tour, ctx = tourneyCtx(state.dateKey);
+  if (t.scores.length !== ctx.t.rounds - 1) return false;   // the final round only
+  const mine = t.scores.reduce((x, y) => x + y, 0) + (i > 0 ? state.round.holes[i - 1].running : 0);
+  const field = ctx.rows.map(f => f.total).sort((x, y) => x - y);
+  return mine <= field[Math.min(2, field.length - 1)] + 1;
+}
+function clutchLive(i){
+  const h = state.round && state.round.holes[i];
+  return clutchOn() && i >= CLUTCH_FROM && !!(h && h.putt) && !(i in clutchSaved()) && clutchPodium(i);
+}
 function clutchApply(round, picks){
   if (!round || !picks || !Object.keys(picks).length) return round;
-  const c = course(), b = buildObj(), spec = round.spec || {};
+  const c = course(), bo = buildObj(), spec = round.spec || {};
   for (const [i, k] of Object.entries(picks)){
-    const p = b[k]; if (!p) continue;
-    const x = playRound(c, {bh: p, fh: p, ap: p, c1: p}, spec.seed, {pressure: spec.pressure || 0, lift: careerLift()});
+    const pro = bo[k]; if (!pro) continue;
+    const x = playRound(c, Object.assign({}, bo, {c1: pro}), spec.seed, {pressure: spec.pressure || 0, lift: careerLift()});
     round.holes[+i] = Object.assign(x.holes[+i], {clutch: k});
   }
   let run = 0; for (const h of round.holes){ run += h.rel; h.running = run; }
@@ -4617,11 +4629,12 @@ function clutchApply(round, picks){
 function clutchAsk(i, token){
   return new Promise(res => {
     const box = document.getElementById("clutch"); if (!box) return res(true);
-    const used = Object.values(clutchSaved()), b = buildObj(), h = layoutCourse(course())[i];
+    const used = Object.values(clutchSaved()), bo = buildObj(), h = state.round.holes[i];
+    const forPar = h.putt.forPar, ft = forPar ? h.parFeet : h.feet;
     box.hidden = false;
-    box.innerHTML = `<p class="cl-h"><b>Clutch hole ${i + 1}</b><span>Par ${h.par} · ${fmtFt(h.ft)} · ${h.shot}</span></p>
-      <p class="cl-sub">Who plays it? Each pro once.</p>
-      <div class="cl-picks">${SLOTS.map(k => `<button class="cl-pick s-${k}" id="clutch-${k}" data-act="clutch" data-slot="${k}" ${used.includes(k) ? "disabled" : ""}><small>${SLOT_LABEL[k]}</small><b>${esc(b[k].me ? "My Player" : b[k].short)}</b></button>`).join("")}</div>`;
+    box.innerHTML = `<p class="cl-h"><b>Clutch putt, hole ${i + 1}</b><span>${forPar ? "For par" : "For birdie"} · ${ft} ft</span></p>
+      <p class="cl-sub">You're in the podium hunt. Who putts it? Each pro once.</p>
+      <div class="cl-picks">${SLOTS.map(k => `<button class="cl-pick s-${k}" id="clutch-${k}" data-act="clutch" data-slot="${k}" ${used.includes(k) ? "disabled" : ""}><small>${SLOT_LABEL[k]}</small><b>${esc(bo[k].me ? "My Player" : bo[k].short)}</b></button>`).join("")}</div>`;
     clutchWait = {i, res, token};
     try { box.scrollIntoView({block: "nearest", behavior: REDUCED ? "auto" : "smooth"}); } catch (e) {}
   });
@@ -4653,7 +4666,7 @@ async function playFrom(step){
     if (token !== playToken) return;
     state.step = i;
     const cur = document.getElementById("lc-" + i); if (cur) cur.classList.add("now");
-    if (clutchOn() && i >= CLUTCH_FROM && !(i in clutchSaved()) && !(await clutchAsk(i, token))) return;
+    if (clutchLive(i) && !(await clutchAsk(i, token))) return;
     if (!(await wait(LOAD_MS * (i === 0 ? .6 : i >= BIG_FROM - 1 ? 3 : 1), token))) return;   // the last holes land slower
     loadHole(state.round.holes[i]);
     updateRoundCard(i + 1);
