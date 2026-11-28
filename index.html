@@ -2,7 +2,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="robots" content="noindex,nofollow">
-<!-- 18 Down test build: branch test-combined, commit 6f9fe02 -->
+<!-- 18 Down test build: branch test-combined, commit d625d7a -->
 <title>18 Down</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&family=Shrikhand&display=swap">
@@ -2570,16 +2570,21 @@ function teamBoost(build){
   }
   return out;
 }
+/* Team lift (Kade, 2026-11-28: "a rating multiplier to the whole team so the higher your rating the better they do").
+   opts.lift is in skill points: every throw plays as if the thrower had that many more BH/FH points, and every putt gets
+   LIFT_PUTT make-rate points per lift point. Negative lifts drag the team down. Career events set it from My Player's rating. */
+const LIFT_PUTT = 0.5;
 function playRound(course, build, seed, opts){
   build = teamBoost(build);
   const pressure = (opts && opts.pressure) || 0;
+  const lift = (opts && opts.lift) || 0;
   const holes = layoutCourse(course);
   const tough = TOUGH[course.diff - 1];
   const form = normal(mulberry32(seed));  // the same day applies to all 18 holes
   const sw = {bh: swing(build.bh), fh: swing(build.fh), c1: swing(build.c1), c2: swing(build.c2)};
   const nv = {bh: nerves(build.bh, pressure), fh: nerves(build.fh, pressure), c1: nerves(build.c1, pressure), c2: nerves(build.c2, pressure)};
-  const c1Pct = puttChance(build.c1.c1, FIELD_C1, form * 1.12 * sw.c1 + rateZ(build.c1) * RATE_EDGE * 14 - nv.c1 * NERVE_PTS);
-  const c2Pct = puttChance(build.c2.c2, FIELD_C2, form * 1.6 * sw.c2 + rateZ(build.c2) * RATE_EDGE * 10 - nv.c2 * NERVE_PTS);
+  const c1Pct = puttChance(build.c1.c1, FIELD_C1, form * 1.12 * sw.c1 + rateZ(build.c1) * RATE_EDGE * 14 - nv.c1 * NERVE_PTS + lift * LIFT_PUTT);
+  const c2Pct = puttChance(build.c2.c2, FIELD_C2, form * 1.6 * sw.c2 + rateZ(build.c2) * RATE_EDGE * 10 - nv.c2 * NERVE_PTS + lift * LIFT_PUTT);
   const out = [];
   let total = 0;
   for (const h of holes){
@@ -2592,7 +2597,7 @@ function playRound(course, build, seed, opts){
     const k = h.shot === "FH" ? sw.fh : sw.bh;
     const tb = thrower.teeBase || null, mid = (thrower.bh + thrower.fh) / 2;
     const rating = tb ? mid + TEE_SPLIT * ((h.shot === "FH" ? thrower.fh : thrower.bh) - mid) : (h.shot === "FH" ? thrower.fh : thrower.bh);
-    const q = curve(rating) + rateZ(thrower) * RATE_EDGE + form * 0.176 * k + holeNoise * 0.14 * k - tough - h.d * 0.4 - (h.shot === "FH" ? nv.fh : nv.bh) * 0.045;
+    const q = curve(rating) + rateZ(thrower) * RATE_EDGE + form * 0.176 * k + holeNoise * 0.14 * k - tough - h.d * 0.4 - (h.shot === "FH" ? nv.fh : nv.bh) * 0.045 + lift / 17;
     // real-stat seasons: their own rates already include their rating, measured on average tour courses
     const qRef = tb ? curve(mid) + rateZ(thrower) * RATE_EDGE - TOUGH[2] : 0;
     let lie = rollKey(teeWeights(q, course, h, k, call && call.tee, tb, qRef), uTee);
@@ -2857,10 +2862,10 @@ function payoutFor(t, place, tiedCount){
 }
 /* One playoff hole: the chosen pro plays it alone, every role his own. */
 function playoffHoleIndex(course, n){ return (17 + n) % 18; }
-function playoffScore(course, pro, key, n, who){
+function playoffScore(course, pro, key, n, who, lift){
   const b = {bh: pro, fh: pro, c1: pro, c2: pro};
   const idx = playoffHoleIndex(course, n);
-  const r = playRound(course, b, tourneySeed(key, 100 + n, who), {pressure: 2});
+  const r = playRound(course, b, tourneySeed(key, 100 + n, who), {pressure: 2, lift: lift || 0});
   return {strokes: r.holes[idx].par + r.holes[idx].rel, hole: r.holes[idx]};
 }
 
@@ -2868,24 +2873,26 @@ function playoffScore(course, pro, key, n, who){
    You earn your way up, like the real tour: Mini, C-tier, B-tier, A-tier, Jomez Series, DGPT, DGPT+, Major, DGPT Playoffs,
    DGPT Championship, Worlds. Each event is a tournament against its own field. Finish high enough (the "up" place) to
    earn your way into the next one; every tier you've earned stays open to play again.
-   - Mini, C-tier and B-tier fields are fictional local players, simulated from a rating (see localSeason). Their ranges
-     were raised on 2026-11-28 (Kade: "I progressed very quickly") so a My Player at the tier's rating finishes top 3
-     about 45% of the time at Mini, 35% at C-tier, 25% at B-tier and 20% at A-tier.
+   - Mini, C-tier and B-tier fields are fictional local players, simulated from a rating (see localSeason). Fields and "up" places were tuned on 2026-11-28 (Kade:
+     "at least a few tries to beat each tier ... about 2 at C-tier and like 20 at Worlds"). Simulated with My Player at the
+     tier's rating and his team lift (careerLift in ui.js), the tries it takes to move up average about: Mini 1.5, C 2, B 3,
+     A 4, Jomez 5, DGPT 5-6, DGPT+ 8-12, Major 8-10, Playoffs 10-12, Championship 14, Worlds 15-18 (a win). 30 rating
+     points above the tier's rating roughly halves it.
    - A-tier mixes locals with the lowest-rated current-year pros; from the Jomez Series up the fields are real
      current-year pros, deeper into the ratings list the higher you climb.
    - Your draft is capped: spins only include seasons rated at or under the tier's cap, so the pros you can draft get
      better as you climb. Legends become draftable at the Playoffs (cap 1058) and GOATs only at Worlds (no cap). */
 const LADDER = [
-  {id: "mini",    rate: 900,  name: "Mini",              rounds: 1, field: 23, first: 150,   local: [960, 1010], cap: 1014, up: 3, home: true},
-  {id: "c",       rate: 915,  name: "C-Tier",            rounds: 2, field: 35, first: 500,   local: [970, 1012], cap: 1018, up: 3, home: true},
-  {id: "b",       rate: 935,  name: "B-Tier",            rounds: 2, field: 47, first: 1500,  local: [985, 1020], cap: 1022, up: 3, home: true},
-  {id: "a",       rate: 960,  name: "A-Tier",            rounds: 3, field: 59, first: 4000,  local: [995, 1022], pros: [100, 140], proShare: .4, cap: 1028, up: 3},
-  {id: "jomez",   rate: 985,  name: "Jomez Series",      rounds: 3, field: 53, first: 8000,  depth: [70, 140], cap: 1038, up: 5},
+  {id: "mini",    rate: 900,  name: "Mini",              rounds: 1, field: 23, first: 150,   local: [906, 956],  cap: 1014, up: 3, home: true},
+  {id: "c",       rate: 915,  name: "C-Tier",            rounds: 2, field: 35, first: 500,   local: [940, 982],  cap: 1018, up: 3, home: true},
+  {id: "b",       rate: 935,  name: "B-Tier",            rounds: 2, field: 47, first: 1500,  local: [965, 1000], cap: 1022, up: 3, home: true},
+  {id: "a",       rate: 960,  name: "A-Tier",            rounds: 3, field: 59, first: 4000,  local: [940, 975],  pros: [100, 140], proShare: .2, cap: 1028, up: 5},
+  {id: "jomez",   rate: 985,  name: "Jomez Series",      rounds: 3, field: 53, first: 8000,  depth: [70, 140], cap: 1038, up: 7},
   {id: "dgpt",    rate: 1010, name: "DGPT",              rounds: 3, field: 71, first: 16000, depth: [30, 120], cap: 1042, up: 5},
-  {id: "dgptp",   rate: 1015, name: "DGPT+",             rounds: 4, field: 71, first: 20000, depth: [10, 100], cap: 1048, up: 5},
-  {id: "major",   rate: 1020, name: "Major",             rounds: 4, field: 71, first: 40000, depth: [0, 80], cap: 1052, up: 10},
-  {id: "playoff", rate: 1025, name: "DGPT Playoffs",     rounds: 3, field: 39, first: 30000, depth: [0, 48], cap: 1058, up: 5},
-  {id: "champ",   rate: 1025, name: "DGPT Championship", rounds: 4, field: 23, first: 50000, depth: [0, 30], cap: 1058, up: 3},
+  {id: "dgptp",   rate: 1015, name: "DGPT+",             rounds: 4, field: 71, first: 20000, depth: [15, 105], cap: 1048, up: 4},
+  {id: "major",   rate: 1020, name: "Major",             rounds: 4, field: 71, first: 40000, depth: [0, 80], cap: 1052, up: 8},
+  {id: "playoff", rate: 1025, name: "DGPT Playoffs",     rounds: 3, field: 39, first: 30000, depth: [0, 48], cap: 1058, up: 3},
+  {id: "champ",   rate: 1025, name: "DGPT Championship", rounds: 4, field: 23, first: 50000, depth: [0, 30], cap: 1058, up: 2},
   {id: "worlds",  rate: 1030, name: "Worlds",            rounds: 5, field: 89, first: 60000, depth: [0, 95], up: 1},
 ];
 /* rate: the My Player rating it takes to enter (Kade, 2026-11-28: "about 1010 rated to play a DGPT event and about 1030
@@ -4504,8 +4511,21 @@ function slotForm(holes){
   return f;
 }
 /* A round: the sim plays it out from the seed (Kade, 2026-11-27: no round plan, no Sim button, just the sim). */
+/* Career events: My Player's rating lifts (or drags) the whole team. LIFT_MID is neutral; every 10 rating points
+   is LIFT_PER skill points for every pro on the team. Ranked and daily rounds don't use it. */
+const LIFT_MID = 1000, LIFT_PER = 1;
+function careerLift(){
+  if (!(state.mode === "tourney" && typeof ladderTierOf === "function" && ladderTierOf(state.dateKey)) || isRanked()) return 0;
+  const me = (state.tour && state.tour.me) || meForMode();
+  return ((me.pdga || meRating(meLoad())) - LIFT_MID) / 10 * LIFT_PER;
+}
+/* The event intro says what your rating does to the team. */
+function teamLiftFact(){
+  const r = meRating(meLoad()), l = Math.round((r - LIFT_MID) / 10 * LIFT_PER * 10) / 10;
+  return ["trophy", `${r} rating: ${l >= 0 ? "+" : "−"}${Math.abs(l)} team`, `Your ${r} rating ${l >= 0 ? "lifts" : "drags"} the whole team: ${l >= 0 ? "+" : "−"}${Math.abs(l)} skill`];
+}
 function roundPlay(seed, pressure){
-  const r = playRound(course(), buildObj(), seed, {pressure});
+  const r = playRound(course(), buildObj(), seed, {pressure, lift: careerLift()});
   r.spec = {seed, pressure}; return r;
 }
 const BIG_FROM = 16;   // the last three holes land slower
@@ -4836,7 +4856,7 @@ function viewTour(){
         <div><b>${ctx.pay.length}</b><span>Places paid</span></div>
       </div>
       <div class="paylist">${ctx.pay.slice(0, 5).map((p, i) => `<span><small>${fmtPlace(i + 1)}</small>${fmtMoney(p)}</span>`).join("")}</div>
-      ${iconFacts([["same", "Same spins", "Everyone gets the same spins and the same luck today"], ["hidden", "Tiers only", "Hard mode: ratings hidden, tiers only"], ["once", "One team", "Play all " + t.rounds + " rounds with one team"], ["nerves", "Nerves", "Lower-rated pros get nervous on the chase and lead cards"], ["playoff", "Playoff", "A tie for first goes to a sudden-death playoff"]])}
+      ${iconFacts([["same", "Same spins", "Everyone gets the same spins and the same luck today"], ["hidden", "Tiers only", "Hard mode: ratings hidden, tiers only"], ["once", "One team", t.rounds > 1 ? "Play all " + t.rounds + " rounds with one team" : "One round, one team"], ladderTierOf(state.dateKey) ? teamLiftFact() : null, ["nerves", "Nerves", "Lower-rated pros get nervous on the chase and lead cards"], ["playoff", "Playoff", "A tie for first goes to a sudden-death playoff"]])}
       <div class="tour-modes">
         ${ladderTierOf(state.dateKey) ? `<button class="btn primary full" id="start-career" data-act="startDraft" data-ranked="0"><b>Start the draft</b><small>${t.cap ? `Pros rated up to ${t.cap}` : "Every pro is in play"} · finish top ${t.up} to move up</small></button>` : `<button class="btn primary full" id="start-draft" data-act="startDraft" data-ranked="1"><b>Ranked</b><small>${ico("same")} ${ico("dice")}×${DAILY_RESPINS}</small></button>
         <button class="btn full" id="start-career" data-act="startDraft" data-ranked="0"><b>Career</b><small>${ico("prize")} Your My Player</small></button>`}
@@ -4922,7 +4942,7 @@ function playPlayoffHole(slot){
   const po = state.tour.playoff;
   const c = course();
   const pro = buildObj()[slot];
-  const mine = playoffScore(c, pro, state.dateKey, po.n, "you");
+  const mine = playoffScore(c, pro, state.dateKey, po.n, "you", careerLift());
   const opps = po.alive.map(name => {
     const f = ctx.field.find(x => x.name === name);
     return {name, s: playoffScore(c, f.build.bh, state.dateKey, po.n, name).strokes};
