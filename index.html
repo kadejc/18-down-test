@@ -2,7 +2,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="robots" content="noindex,nofollow">
-<!-- 18 Down test build: branch test-combined, commit 5513e5a -->
+<!-- 18 Down test build: branch test-combined, commit 0f47590 -->
 <script>
 /* Test-site guard (Kade, 2026-11-28). deploy.sh puts this at the top of every test build; it is not part of the game.
    1. Offline: the test build plays by different rules than the live game, so it must never write to Hayden's live
@@ -1526,6 +1526,8 @@ html, body { margin: 0; }
 .skill .sk-buy .btn small { font-size: 11px; font-weight: 600; text-transform: none; letter-spacing: 0; }
 .sk-free { margin: 8px 0; font-size: 13px; font-weight: 700; }
 .sk-free.on { color: var(--gold, #ffd23f); }
+
+.venue .venue-pay { display: block; font-weight: 700; }
 </style>
 <main id="app"></main>
 <script type="application/json" id="edits">{}</script>
@@ -2983,20 +2985,20 @@ function playoffScore(course, pro, key, n, who, lift){
    earn your way into the next one; every tier you've earned stays open to play again.
    - Mini, C-tier and B-tier fields are fictional local players, simulated from a rating (see localSeason). Fields and "up" places were tuned on 2026-11-28 (Kade:
      "at least a few tries to beat each tier ... about 2 at C-tier and like 20 at Worlds"). Simulated with My Player at the
-     tier's rating and his team lift (careerLift in ui.js), the tries it takes to move up average about: Mini 1.5,
-     C 2, B 2.5-3, A 4-5, Jomez 5-7, DGPT 5-6, DGPT+ 8-11, Major 10, Playoffs 9-12, Championship 15, Worlds 12-15 (a win).
-     30 rating points above the tier's rating cuts it to about a third. Purses (raised 2026-11-28) and Pro Shop tier prices
-     (cut to a third) are set so a tier's average net winnings cover the next rating step in about 1.5 to 2 times its tries
-     at Mini to B-tier; daily money makes up the rest higher up.
+     tier's rating and his team lift (careerLift in ui.js), with C/B/A fields at their random sizes, the tries it takes to
+     move up average about: Mini 1.5, C 2, B 2.5-3, A 4, Jomez 5-7, DGPT 5-11, DGPT+ 8, Major 9-10, Playoffs 9-12,
+     Championship 14-15, Worlds 15-21 (a win). 30 rating points above the tier's rating cuts it to about a third.
+     Money (real entry fees and purses, see PURSE): at the tier's rating a typical event nets about Mini +$47, C +$25,
+     B +$200, and loses $300-$1,100 from A-tier through the Playoffs once travel is paid, like most real touring pros.
    - A-tier mixes locals with the lowest-rated current-year pros; from the Jomez Series up the fields are real
      current-year pros, deeper into the ratings list the higher you climb.
    - Your draft is capped: spins only include seasons rated at or under the tier's cap, so the pros you can draft get
      better as you climb. Legends become draftable at the Playoffs (cap 1058) and GOATs only at Worlds (no cap). */
 const LADDER = [
   {id: "mini",    rate: 900,  name: "Mini",              rounds: 1, field: 23, first: 120,   maxFirst: 120, local: [908, 958],  cap: 1014, up: 3, home: true},
-  {id: "c",       rate: 915,  name: "C-Tier",            rounds: 2, field: 35, first: 3500,  local: [948, 990],  cap: 1018, up: 3, home: true},
-  {id: "b",       rate: 935,  name: "B-Tier",            rounds: 2, field: 47, first: 7000,  local: [966, 1001], cap: 1022, up: 3, home: true},
-  {id: "a",       rate: 960,  name: "A-Tier",            rounds: 3, field: 59, first: 10000, local: [940, 975],  pros: [100, 140], proShare: .2, cap: 1028, up: 6},
+  {id: "c",       rate: 915,  name: "C-Tier",            rounds: 2, field: 35, first: 3500,  local: [958, 1000], cap: 1018, up: 3, home: true},
+  {id: "b",       rate: 935,  name: "B-Tier",            rounds: 2, field: 47, first: 7000,  local: [972, 1007], cap: 1022, up: 3, home: true},
+  {id: "a",       rate: 960,  name: "A-Tier",            rounds: 3, field: 59, first: 10000, local: [962, 997],  pros: [100, 140], proShare: .2, cap: 1028, up: 6},
   {id: "jomez",   rate: 985,  name: "Jomez Series",      rounds: 3, field: 53, first: 20000, depth: [70, 140], cap: 1038, up: 7},
   {id: "dgpt",    rate: 1010, name: "DGPT",              rounds: 3, field: 71, first: 25000, depth: [30, 120], cap: 1042, up: 5},
   {id: "dgptp",   rate: 1015, name: "DGPT+",             rounds: 4, field: 71, first: 30000, depth: [15, 105], cap: 1048, up: 4},
@@ -3021,14 +3023,16 @@ function hubGoalHTML(lvl){
   return `<div class="hub-goal" aria-label="${esc(goal.name)} needs a ${goal.rate} rating, you're ${r}"><small><b>${esc(goal.name)}</b> · ${goal.rate - r} rating to go</small><i><b style="width:${Math.round(pct * 100)}%"></b></i></div>`;
 }
 /* What an event pays for 1st and what it costs to play (entry, plus travel from home: a range over the venues). */
+function nextEvent(t, venue){ const L = ladderLoad(), cur = L.current && ladderTierOf(L.current) === t ? L.current : null; return careerTier(t, cur || ladderKey((L.played || 0) + 1, t.id, venue)); }
 function careerStakes(t){
-  const home = meLoad().home || "";
-  const first = careerTier(t, ladderKey(0, t.id, t.home ? home : "")).first;
-  if (t.home) return {first, cost: tripCost(t, home).total, costText: tripCost(t, home).total ? fmtMoney(tripCost(t, home).total) : "Free"};
-  const cs = venueOptions(t.id).map(c => tripCost(t, c.id).total); const lo = Math.min(...cs), hi = Math.max(...cs);
-  return {first, cost: lo, costText: !cs.length ? fmtMoney(ENTRY[t.id] || 0) : lo === hi ? fmtMoney(lo) : fmtMoney(lo) + "–" + fmtMoney(hi)};
+  const home = meLoad().home || "", span = (a, f) => { const lo = Math.min(...a), hi = Math.max(...a); return lo === hi ? f(lo) : f(lo) + "–" + f(hi); };
+  const vs = t.home ? [home] : venueOptions(t.id).map(c => c.id);
+  if (!vs.length) return {first: t.first, cost: ENTRY[t.id] || 0, costText: fmtMoney(ENTRY[t.id] || 0), firstText: fmtMoney(t.first), players: ""};
+  const evs = vs.map(v => nextEvent(t, v)), cs = vs.map(v => tripCost(t, v).total);
+  return {first: Math.max(...evs.map(e => e.first)), firstText: span(evs.map(e => e.first), fmtMoney), players: span(evs.map(e => e.field + 1), String),
+    cost: Math.min(...cs), costText: Math.max(...cs) ? span(cs, fmtMoney) : "Free"};
 }
-function stakesHTML(t){ const k = careerStakes(t); return `<small class="rung-stakes"><span>1st <b class="tnum">${fmtMoney(k.first)}</b></span><span>Cost <b class="tnum">${k.costText}</b></span></small>`; }
+function stakesHTML(t){ const k = careerStakes(t); return `<small class="rung-stakes"><span>1st <b class="tnum">${k.firstText}</b></span><span>Cost <b class="tnum">${k.costText}</b></span>${k.players ? `<span><b class="tnum">${k.players}</b> players</span>` : ""}</small>`; }
 const LADDER_BY_ID = Object.fromEntries(LADDER.map((t, i) => [t.id, Object.assign(t, {level: i})]));
 
 /* Progress: highest tier earned, best finish per tier, titles, and the event in progress. */
@@ -3141,7 +3145,29 @@ function ladderResult(key, place){
    Fans: every finish earns some, more for better places and bigger events, x1.5 in your home state.
    Sponsors: local shops first, then real disc brands, sized by how many 2026 pros in the game each one sponsors.
    Offers come with enough fans and a high enough tier; a deal lasts DEAL_EVENTS events. */
-const ENTRY = {mini: 10, c: 40, b: 75, a: 150, jomez: 300, dgpt: 500, dgptp: 750, major: 1000, playoff: 0, champ: 0, worlds: 500};
+/* Entry fees (Kade, 2026-11-28: Mini $10, C $60, B $100, A $150, Jomez $225, DGPT $300, DGPT+ $350, Playoffs $400,
+   Championship $450, Worlds $500, "look at ... entry for the pro tour events ... to adjust entry"). Set to the real 2026
+   MPO fee where the tour has one (Disc Golf Fanatic's DGPT payout comparisons): Elite Series $350, Elite+ $350, Majors
+   $375, Playoffs $400, DGPT Championship $500 (2025), Pro Worlds $400. Travel comes on top (tripCost). */
+const ENTRY = {mini: 10, c: 60, b: 100, a: 150, jomez: 225, dgpt: 350, dgptp: 350, major: 375, playoff: 400, champ: 500, worlds: 400};
+/* Purses, MPO only (Kade, 2026-11-28).
+   C, B and A tiers follow the PDGA Competition Manual 5.04/5.05 (2026): the pro purse is the net entry (entry minus the
+   PDGA per-player fee: C $3, B $4, A $5) times 85% at C-tier and 100% at B and A, plus the required added cash (C none,
+   B $750, A $3,000). Each event's field is a random size (FIELD_RANGE). The Jomez Series has no real counterpart, so it
+   runs on A-tier rules.
+   Pro tour events pay what the real 2026 events paid per player (pro purse / players, Disc Golf Fanatic), times our
+   field: Elite Series average of the 2026 Elite Series events $551, Elite+ $672, Majors (USDGC, Champions Cup, European
+   Open) $955, Playoffs (MVP, Green Mountain) $993, DGPT Championship (2025) $4,948, Pro Worlds $1,000.
+   40% of the field is paid (the PDGA minimum), on the game's payout curve (payTable); 1st is what that curve gives. */
+const PURSE = {
+  c: {fee: 3, back: .85, added: 0}, b: {fee: 4, back: 1, added: 750}, a: {fee: 5, back: 1, added: 3000}, jomez: {fee: 5, back: 1, added: 3000},
+  dgpt: {perPlayer: 551}, dgptp: {perPlayer: 672}, major: {perPlayer: 955}, playoff: {perPlayer: 993}, champ: {perPlayer: 4948}, worlds: {perPlayer: 1000},
+};
+const FIELD_RANGE = {c: [12, 30], b: [20, 45], a: [35, 72]};   // players, you included: smaller at C, bigger higher up
+const LOCAL_DAY = 15;   // a home-state event: gas and food for each round day, no hotel
+function eventField(t, key){ const r = FIELD_RANGE[t.id]; return r ? Math.round(r[0] + (r[1] - r[0]) * mulberry32(hashStr("fieldsize|" + key))()) - 1 : t.field; }
+function eventPurse(t, players){ const P = PURSE[t.id]; if (!P) return null; return Math.round(P.perPlayer ? P.perPlayer * players : players * (ENTRY[t.id] - P.fee) * P.back + P.added); }
+function firstFromPurse(t, purse){ const shape = payTable(Object.assign({}, t, {first: 10000})).reduce((a, b) => a + b, 0) / 10000; return Math.round(purse / shape / 5) * 5; }
 const FANS = {mini: 25, c: 60, b: 150, a: 400, jomez: 900, dgpt: 1800, dgptp: 3000, major: 6000, playoff: 5000, champ: 8000, worlds: 15000};
 const GEO = {AR: [34.9, -92.4], IA: [42.0, -93.5], KS: [38.5, -98.4], KY: [37.5, -85.3], LA: [31.0, -92.0], MA: [42.3, -71.8],
   MI: [43.3, -84.5], NC: [35.5, -79.4], SC: [33.9, -80.9], TX: [31.0, -97.5], VA: [37.5, -78.8], VT: [44.0, -72.7],
@@ -3159,9 +3185,17 @@ function sceneStars(x){ return 1 + Math.round(x * 4); }
 function sceneMods(st){ const c = sceneOf(st), x = c == null ? .5 : c; return {cal: x, shift: Math.round((x - .5) * 20), fans: .7 + .7 * x, purse: .8 + .45 * x}; }
 /* The tier as played at a given event: home tiers take the home scene's locals and purse. */
 function careerTier(lt, key){
-  if (!lt.home) return lt;
-  const v = keyVenue(key), m = sceneMods(v || (meLoad().home || ""));
-  return Object.assign({}, lt, {local: [lt.local[0] + m.shift, lt.local[1] + m.shift], first: Math.min(lt.maxFirst || Infinity, Math.round(lt.first * m.purse / 5) * 5)});   // maxFirst: the Mini never pays over $120 (Kade, 2026-11-28)
+  let t = lt;
+  if (lt.home){
+    const v = keyVenue(key), m = sceneMods(v || (meLoad().home || ""));
+    t = Object.assign({}, lt, {local: [lt.local[0] + m.shift, lt.local[1] + m.shift], first: Math.min(lt.maxFirst || Infinity, Math.round(lt.first * m.purse / 5) * 5)});   // maxFirst: the Mini never pays over $120 (Kade, 2026-11-28)
+  }
+  const field = eventField(lt, key), purse = eventPurse(lt, field + 1);
+  if (field !== t.field || purse != null){
+    t = Object.assign({}, t, {field});
+    if (purse != null) Object.assign(t, {purse, first: firstFromPurse(t, purse)});
+  }
+  return t;
 }
 function careerCourse(lt, key){
   const v = keyVenue(key);
@@ -3188,7 +3222,11 @@ function milesBetween(a, b){
 /* Mini costs $10 (Kade, 2026-11-28); a brand-new career's first event is free, since a new player starts with $0. */
 function tripCost(t, venue){
   const entry = (ladderLoad().played || 0) === 0 ? 0 : ENTRY[t.id] || 0;
-  if (t.home) return {entry, travel: 0, covered: 0, total: entry, miles: 0};
+  if (t.home){
+    if (!entry) return {entry, travel: 0, covered: 0, total: 0, miles: 0};   // the first event of a new career is free
+    const travel = LOCAL_DAY * t.rounds, L0 = ladderLoad(), cov = L0.sponsor ? Math.round(travel * DEALS[L0.sponsor.lvl].cover / 5) * 5 : 0;
+    return {entry, travel, covered: cov, total: entry + travel - cov, miles: 0};
+  }
   const c = COURSES.find(x => x.id === venue), to = c ? placeOf(c) : "", from = meLoad().home || "KS";
   const miles = to === from ? 120 : GEO[to] && GEO[from] ? milesBetween(GEO[from], GEO[to]) : 900;
   const nights = t.rounds + 1;
@@ -3282,9 +3320,9 @@ function sponsorHTML(){
 /* The venue picker for a tour tier. */
 function venueHTML(t){
   const bal = meBalance(meLoad());
-  return `<div class="venues"><p class="venue-first">1st pays <b class="tnum">${fmtMoney(careerStakes(t).first)}</b></p>${venueOptions(t.id).map(c => { const k = tripCost(t, c.id), can = bal >= k.total;
+  return `<div class="venues">${venueOptions(t.id).map(c => { const k = tripCost(t, c.id), can = bal >= k.total, ev = nextEvent(t, c.id);
     return `<button class="venue" data-act="careerVenue" data-id="${t.id}" data-venue="${esc(c.id)}" ${can ? "" : "disabled"}>
-      <span><b>${esc(c.name)}</b><small>${esc(c.place)}${k.miles && !OVERSEAS.has(k.to) ? ` · ${k.miles.toLocaleString("en-US")} mi` : ""}</small></span>
+      <span><b>${esc(c.name)}</b><small>${esc(c.place)}${k.miles && !OVERSEAS.has(k.to) ? ` · ${k.miles.toLocaleString("en-US")} mi` : ""}</small><small class="venue-pay">1st ${fmtMoney(ev.first)} · ${ev.field + 1} players</small></span>
       <span class="venue-cost"><b class="tnum">${fmtMoney(k.total)}</b><small>${can ? (k.covered ? `sponsor paid ${fmtMoney(k.covered)}` : `entry ${fmtMoney(k.entry)}`) : "can't afford"}</small></span></button>`; }).join("")}</div>`;
 }
 /* Prestige: once you've won Worlds you can restart the career from Mini with more talent (see meLv in ui.js) and new
@@ -3326,7 +3364,7 @@ function viewLadder(){
       const open = t.level <= L.level, next = t.level === L.level, best = L.best[t.id], wins = (L.wins || {})[t.id] || 0;
       const need = t.level === LADDER.length - 1 ? "Win it to be world champion" : `Top ${t.up} earns ${LADDER[t.level + 1].name}`;
       return `<li class="rung${open ? " open" : ""}${next ? " next" : ""}">
-        <div class="rung-main"><b>${esc(t.name)}</b><small>${t.rounds} round${t.rounds > 1 ? "s" : ""} · ${t.field + 1} players${t.cap ? ` · draft up to ${t.cap}` : ""}</small>${stakesHTML(t)}
+        <div class="rung-main"><b>${esc(t.name)}</b><small>${t.rounds} round${t.rounds > 1 ? "s" : ""}${t.cap ? ` · draft up to ${t.cap}` : ""}</small>${stakesHTML(t)}
           <small class="rung-need">${open && careerShort(t) && cur !== t ? `<span class="rung-rate">Needs ${t.rate} rating</span>` : open ? need : "Locked"}${best ? ` · best ${fmtPlace(best)}` : ""}${wins ? ` · ${wins} win${wins > 1 ? "s" : ""}` : ""}</small></div>
         ${open ? `<button class="btn small${next ? " primary" : ""}" data-act="careerEvent" data-id="${t.id}" ${(cur && cur !== t) || (cur !== t && careerShort(t)) ? "disabled" : ""}>${cur === t ? "Resume" : t.home ? (tripCost(t, meLoad().home || "").total ? `Play · ${fmtMoney(tripCost(t, meLoad().home || "").total)}` : "Play · Free") : ui.pickTier === t.id ? "Close" : "Venues"}</button>` : `<span class="rung-lock" aria-label="Locked">${ico("hidden")}</span>`}
       ${ui.pickTier === t.id && open && !cur ? venueHTML(t) : ""}
@@ -4973,7 +5011,7 @@ function tourneyCtx(key){
   const lt = typeof ladderTierOf === "function" && ladderTierOf(key);   // a career event: its own tier and field
   const t = lt ? careerTier(lt, key) : tourneyFor(key);   // home tiers: the home scene's locals and purse
   const c = lt ? careerCourse(lt, key) : dailyCourse(COURSES, key);   // career keys aren't dates
-  const field = lt ? ladderField(lt, key) : tourneyField(SEASONS, key, t);
+  const field = lt ? ladderField(Object.assign({}, lt, {field: t.field}), key) : tourneyField(SEASONS, key, t);
   const rows = playField(c, field, key, t.rounds);
   const ctx = {key, t, c, field, rows, pay: payTable(t)};
   tCache.set(key, ctx);
