@@ -2,7 +2,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="robots" content="noindex,nofollow">
-<!-- 18 Down test build: branch test-combined, commit 88ad810 -->
+<!-- 18 Down test build: branch test-combined, commit 25fdda0 -->
 <script>
 /* Test-site guard (Kade, 2026-11-28). deploy.sh puts this at the top of every test build; it is not part of the game.
    1. Offline: the test build plays by different rules than the live game, so it must never write to Hayden's live
@@ -2987,7 +2987,7 @@ function playoffScore(course, pro, key, n, who, lift){
    - Your draft is capped: spins only include seasons rated at or under the tier's cap, so the pros you can draft get
      better as you climb. Legends become draftable at the Playoffs (cap 1058) and GOATs only at Worlds (no cap). */
 const LADDER = [
-  {id: "mini",    rate: 900,  name: "Mini",              rounds: 1, field: 23, first: 1500,  local: [908, 958],  cap: 1014, up: 3, home: true},
+  {id: "mini",    rate: 900,  name: "Mini",              rounds: 1, field: 23, first: 120,   maxFirst: 120, local: [908, 958],  cap: 1014, up: 3, home: true},
   {id: "c",       rate: 915,  name: "C-Tier",            rounds: 2, field: 35, first: 3500,  local: [948, 990],  cap: 1018, up: 3, home: true},
   {id: "b",       rate: 935,  name: "B-Tier",            rounds: 2, field: 47, first: 7000,  local: [966, 1001], cap: 1022, up: 3, home: true},
   {id: "a",       rate: 960,  name: "A-Tier",            rounds: 3, field: 59, first: 10000, local: [940, 975],  pros: [100, 140], proShare: .2, cap: 1028, up: 6},
@@ -3155,7 +3155,7 @@ function sceneMods(st){ const c = sceneOf(st), x = c == null ? .5 : c; return {c
 function careerTier(lt, key){
   if (!lt.home) return lt;
   const v = keyVenue(key), m = sceneMods(v || (meLoad().home || ""));
-  return Object.assign({}, lt, {local: [lt.local[0] + m.shift, lt.local[1] + m.shift], first: Math.round(lt.first * m.purse / 5) * 5});
+  return Object.assign({}, lt, {local: [lt.local[0] + m.shift, lt.local[1] + m.shift], first: Math.min(lt.maxFirst || Infinity, Math.round(lt.first * m.purse / 5) * 5)});   // maxFirst: the Mini never pays over $120 (Kade, 2026-11-28)
 }
 function careerCourse(lt, key){
   const v = keyVenue(key);
