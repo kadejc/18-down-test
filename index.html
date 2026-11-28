@@ -2,7 +2,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="robots" content="noindex,nofollow">
-<!-- 18 Down test build: branch test-combined, commit 3d4e9fa -->
+<!-- 18 Down test build: branch test-combined, commit a30675f -->
 <title>18 Down</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&family=Shrikhand&display=swap">
@@ -1475,6 +1475,17 @@ html, body { margin: 0; }
 .cl-pick b { font-size: 13px; line-height: 1.1; overflow-wrap: anywhere; }
 .cl-pick:disabled { opacity: .35; box-shadow: none; cursor: default; }
 .cl-pick:not(:disabled):active { transform: translate(2px, 2px); box-shadow: none; }
+
+/* 1st prize and cost to play, on the ladder, the venues and the home card */
+.rung-stakes { display: flex; gap: 12px; margin-top: 2px; }
+.rung-stakes b { color: var(--chalk, #f3efe0); }
+.venue-first { margin: 0 0 6px; font-size: 13px; }
+.hub-hero .rung-stakes { grid-column: 1 / -1; font-size: 13px; }
+.hub-goal { grid-column: 1 / -1; display: grid; gap: 4px; font-size: 13px; }
+.hub-goal i { display: block; height: 6px; border-radius: 3px; background: rgba(0,0,0,.25); overflow: hidden; }
+.hub-goal i b { display: block; height: 100%; background: var(--gold, #ffd23f); }
+/* live place on the final round's back nine */
+.ld-place { margin: 2px 0 0; font-weight: 700; font-size: 14px; color: var(--gold, #ffd23f); }
 </style>
 <main id="app"></main>
 <script type="application/json" id="edits">{}</script>
@@ -2956,7 +2967,28 @@ const LADDER = [
 ];
 /* rate: the My Player rating it takes to enter (Kade, 2026-11-28: "about 1010 rated to play a DGPT event and about 1030
    to have the ability to win Worlds"). Earning a tier opens it; your rating lets you in. My Player plays every career event. */
-function careerShort(t){ const r = meRating(meLoad()); return t && t.rate && r < t.rate ? t.rate - r : 0; }
+/* Once you've had the rating for a tier, it stays open even if form drops you under it (Kade, 2026-11-28). */
+function careerShort(t){
+  const r = meRating(meLoad()); if (!t || !t.rate || r >= t.rate) return 0;
+  const L = ladderLoad(); return L.rated && L.rated[t.id] ? 0 : t.rate - r;
+}
+/* The home card's goal: the rating for the tier you've earned but can't enter yet, or else for the next tier. */
+function hubGoalHTML(lvl){
+  const r = meRating(meLoad()), i = lvl.level;
+  const goal = careerShort(lvl) ? lvl : LADDER[i + 1];
+  if (!goal || !goal.rate || r >= goal.rate) return "";
+  const from = LADDER[Math.max(0, goal.level - 1)].rate || 900, pct = Math.max(0, Math.min(1, (r - from) / Math.max(1, goal.rate - from)));
+  return `<div class="hub-goal" aria-label="${esc(goal.name)} needs a ${goal.rate} rating, you're ${r}"><small><b>${esc(goal.name)}</b> · ${goal.rate - r} rating to go</small><i><b style="width:${Math.round(pct * 100)}%"></b></i></div>`;
+}
+/* What an event pays for 1st and what it costs to play (entry, plus travel from home: a range over the venues). */
+function careerStakes(t){
+  const home = meLoad().home || "";
+  const first = careerTier(t, ladderKey(0, t.id, t.home ? home : "")).first;
+  if (t.home) return {first, cost: tripCost(t, home).total, costText: tripCost(t, home).total ? fmtMoney(tripCost(t, home).total) : "Free"};
+  const cs = venueOptions(t.id).map(c => tripCost(t, c.id).total); const lo = Math.min(...cs), hi = Math.max(...cs);
+  return {first, cost: lo, costText: !cs.length ? fmtMoney(ENTRY[t.id] || 0) : lo === hi ? fmtMoney(lo) : fmtMoney(lo) + "–" + fmtMoney(hi)};
+}
+function stakesHTML(t){ const k = careerStakes(t); return `<small class="rung-stakes"><span>1st <b class="tnum">${fmtMoney(k.first)}</b></span><span>Cost <b class="tnum">${k.costText}</b></span></small>`; }
 const LADDER_BY_ID = Object.fromEntries(LADDER.map((t, i) => [t.id, Object.assign(t, {level: i})]));
 
 /* Progress: highest tier earned, best finish per tier, titles, and the event in progress. */
@@ -3025,6 +3057,7 @@ function openCareerEvent(id, venue){
   let key = L.current && ladderTierOf(L.current) === t ? L.current : null;
   if (!key){
     if (careerShort(t)) return false;
+    if (t.rate){ const R = ladderLoad(); R.rated = Object.assign({}, R.rated, {[t.id]: true}); ladderSave(R); }
     if (!t.home && !venue) return false;   // pick a venue on the ladder first
     const v = t.home ? (meLoad().home || "") : venue, cost = tripCost(t, v);
     if (meBalance(meLoad()) < cost.total) return false;
@@ -3208,7 +3241,7 @@ function sponsorHTML(){
 /* The venue picker for a tour tier. */
 function venueHTML(t){
   const bal = meBalance(meLoad());
-  return `<div class="venues">${venueOptions(t.id).map(c => { const k = tripCost(t, c.id), can = bal >= k.total;
+  return `<div class="venues"><p class="venue-first">1st pays <b class="tnum">${fmtMoney(careerStakes(t).first)}</b></p>${venueOptions(t.id).map(c => { const k = tripCost(t, c.id), can = bal >= k.total;
     return `<button class="venue" data-act="careerVenue" data-id="${t.id}" data-venue="${esc(c.id)}" ${can ? "" : "disabled"}>
       <span><b>${esc(c.name)}</b><small>${esc(c.place)}${k.miles && !OVERSEAS.has(k.to) ? ` · ${k.miles.toLocaleString("en-US")} mi` : ""}</small></span>
       <span class="venue-cost"><b class="tnum">${fmtMoney(k.total)}</b><small>${can ? (k.covered ? `sponsor paid ${fmtMoney(k.covered)}` : `entry ${fmtMoney(k.entry)}`) : "can't afford"}</small></span></button>`; }).join("")}</div>`;
@@ -3252,7 +3285,7 @@ function viewLadder(){
       const open = t.level <= L.level, next = t.level === L.level, best = L.best[t.id], wins = (L.wins || {})[t.id] || 0;
       const need = t.level === LADDER.length - 1 ? "Win it to be world champion" : `Top ${t.up} earns ${LADDER[t.level + 1].name}`;
       return `<li class="rung${open ? " open" : ""}${next ? " next" : ""}">
-        <div class="rung-main"><b>${esc(t.name)}</b><small>${t.rounds} round${t.rounds > 1 ? "s" : ""} · ${t.field + 1} players · ${fmtMoney(t.first)} to win${t.cap ? ` · draft up to ${t.cap}` : ""}</small>
+        <div class="rung-main"><b>${esc(t.name)}</b><small>${t.rounds} round${t.rounds > 1 ? "s" : ""} · ${t.field + 1} players${t.cap ? ` · draft up to ${t.cap}` : ""}</small>${stakesHTML(t)}
           <small class="rung-need">${open && careerShort(t) && cur !== t ? `<span class="rung-rate">Needs ${t.rate} rating</span>` : open ? need : "Locked"}${best ? ` · best ${fmtPlace(best)}` : ""}${wins ? ` · ${wins} win${wins > 1 ? "s" : ""}` : ""}</small></div>
         ${open ? `<button class="btn small${next ? " primary" : ""}" data-act="careerEvent" data-id="${t.id}" ${(cur && cur !== t) || (cur !== t && careerShort(t)) ? "disabled" : ""}>${cur === t ? "Resume" : t.home ? (ENTRY[t.id] ? `Play · ${fmtMoney(ENTRY[t.id])}` : "Play") : ui.pickTier === t.id ? "Close" : "Venues"}</button>` : `<span class="rung-lock" aria-label="Locked">${ico("hidden")}</span>`}
       ${ui.pickTier === t.id && open && !cur ? venueHTML(t) : ""}
@@ -3652,7 +3685,7 @@ function puttSignHTML(run, lost){
 /* Six in a row (or a made reputt): pick a wheel and spin. Makes go back to 0 afterwards; a Reputt slice means the next putt is for the wheel. */
 async function puttWheel(kind){
   if (kind === "choose") kind = await wheelChoose(PUTT_WHEEL_AT + " in a row!");
-  const slice = await wheelSpin(kind, {sub: kind === "risk" ? "Two $10Ks, two −$5Ks and two reputts on here." : "", describe: s => {
+  const slice = await wheelSpin(kind, {sub: kind === "risk" ? "Two $3.5Ks, two −$1.5Ks and two reputts on here." : "", describe: s => {
     const me = meLoad(), amt = wheelAmount(s);
     me.bonusTotal = (me.bonusTotal || 0) + amt; if (me.bonus) me.bonus.paid = (me.bonus.paid || 0) + amt;
     me.bonus.run = 0; me.bonus.reputt = s === "Reputt"; meSave(me); refreshMoney();
@@ -4311,6 +4344,7 @@ function viewRound(){
     <section class="loader" aria-label="Round in progress">
       <p class="ld-title">${esc(title)}${tc && state.tour.pressure ? `<span>${state.tour.pressure === 2 ? "Lead card" : "Chase card"}</span>` : ""}</p>
       <div class="ld-total"><b class="total tnum" id="total">E</b><span class="thru" id="thru">Thru 0</span></div>
+      <p class="ld-place" id="ld-place" hidden></p>
       <div class="ld-prog" aria-hidden="true"><i id="ld-prog"></i></div>
       <p class="ld-nine">Front 9</p><div class="ld-grid">${[0, 1, 2, 3, 4, 5, 6, 7, 8].map(cell).join("")}</div>
       <p class="ld-nine">Back 9</p><div class="ld-grid">${[9, 10, 11, 12, 13, 14, 15, 16, 17].map(cell).join("")}</div>
@@ -4520,7 +4554,19 @@ async function playHole(h, token){
   sign.appendChild(stamp);
   return true;
 }
+/* The final round's back nine: where you'd finish if you parred in, against the field (they're in the clubhouse). */
+function livePlaceText(step){
+  if (state.mode !== "tourney" || !state.tour || step < 9) return "";
+  const ctx = tourneyCtx(state.dateKey); if (state.tour.scores.length !== ctx.t.rounds - 1) return "";
+  const mine = state.tour.scores.reduce((a, b) => a + b, 0) + (step ? state.round.holes[step - 1].running : 0);
+  const f = ctx.rows.map(r => r.total).sort((a, b) => a - b);
+  const place = 1 + f.filter(x => x < mine).length, tied = f.includes(mine);
+  const third = f[Math.min(2, f.length - 1)], lead = f[0] - mine;
+  const note = place === 1 ? (tied ? "tied for the lead" : `leading by ${lead}`) : place <= 3 ? (tied ? "tied on the podium" : "on the podium") : `${mine - third} back of 3rd`;
+  return `${fmtPlace(place, tied)} · ${note}`;
+}
 function updateRoundCard(step){
+  const lp = document.getElementById("ld-place"); if (lp){ const t = livePlaceText(step); lp.hidden = !t; lp.textContent = t; }
   const holes = state.round.holes.slice(0, step);
   const last = holes[holes.length - 1];
   const tot = document.getElementById("total"); if (!tot) return;
@@ -4845,10 +4891,10 @@ function viewResult(){
   const daily = state.mode === "daily";
   const title = daily ? "Classic, " + fmtDate(state.dateKey) + (state.replay ? " (replay)" : "") : state.mode === "picker" ? "Picker" : "Mini";
   const cPrize = classicPrize(r.total), cNext = classicNext(r.total), cPaid = cPrize && state.classicPay !== 0;
-  const pay = daily ? {label: "Classic prize", amt: cPaid ? cPrize : 0, note: !cPrize ? "Shoot 10 down for $500, up to $20,000 for 18 down (pays once a day)."
+  const pay = daily ? {label: "Classic prize", amt: cPaid ? cPrize : 0, note: !cPrize ? "Shoot 10 down for $150, up to $7,000 for 18 down (pays once a day)."
       : state.classicPay === 0 ? fmtTotal(r.total) + " would pay " + fmtMoney(cPrize) + ", but today’s Classic prize is already paid. This one is for bragging rights."
       : fmtTotal(r.total) + " pays " + fmtMoney(cPrize) + "." + (cNext ? " " + cNext.d + " down pays " + fmtMoney(cNext.amt) + "." : " The top prize.")}
-    : state.mode === "free" && state.miniPay ? {label: "Mini payout", amt: state.miniPay.pay, note: state.miniPay.want ? "The more under par, the bigger the payout: $2,000 for 18 down." : "Get under par to get paid."} : null;
+    : state.mode === "free" && state.miniPay ? {label: "Mini payout", amt: state.miniPay.pay, note: state.miniPay.want ? "The more under par, the bigger the payout: $700 for 18 down." : "Get under par to get paid."} : null;
   const cell = h => `<div class="lc ${h.rel <= -2 ? "eagle" : h.rel === -1 ? "birdie" : h.rel === 0 ? "par" : h.rel === 1 ? "bogey" : "double"}" title="${esc(h.thrower.name + ": " + holeLabel(h))}"><small>${h.n}</small><b class="mk ${markClass(h.rel)}">${h.par + h.rel}</b>${typeof frAvatar === "function" ? frAvatar(proLook(h.thrower), 20) : ""}</div>`;
   return `<div class="wrap">
     <div class="bar"><span class="mark-wrap"><span class="mark">18 Down</span>${moneyChip()}</span><span class="where"><b>${esc(c.name)}</b>Par ${c.par}</span></div>
@@ -5179,8 +5225,9 @@ function viewEarnings(){
 const ME_TIERS = 50;   // each skill has tiers 0 to 50, one point per tier
 /* Tier 0 to 50: BH and FH go 50 to 100, C1X 50% to 100%, C2 10% to 40%. */
 const ME_SCALE = {bh: [50, 100], fh: [50, 100], ap: [50, 100], c1: [50, 100], c2: [10, 40]};   // c2: My Player's C2 make rate, from his putting tiers
-/* Putting pays by how many in a row: 1st $20, 2nd $50, 3rd $200, 4th $500, 5th $1,000, then $10,000 for the 6th and every one after. No daily limit. */
-const PUTT_LADDER = [20, 50, 200, 500, 1000, 10000];
+/* Putting pays by how many in a row: 1st $5, 2nd $15, 3rd $75, 4th $150, 5th $350, then the 6th spins the wheel. No daily limit.
+   (A third of what it was until 2026-11-28, when Pro Shop tiers dropped to a third: career purses are the main way up.) */
+const PUTT_LADDER = [5, 15, 75, 150, 350, 3500];
 const PUTT_WHEEL_AT = 6;   // the 6th make in a row spins a wheel instead of paying
 function puttPayFor(run){ return run >= PUTT_WHEEL_AT ? 0 : PUTT_LADDER[Math.min(run, PUTT_LADDER.length) - 1]; }
 /* The disc wall. Yellow is free; the rest are bought once and kept. `c` is the disc's main color, used wherever the disc is
@@ -5412,9 +5459,10 @@ function meLoad(){
 }
 function meSave(me){ storeSet("18down.me", JSON.stringify(me)); }
 function meBalance(me){ return (me.careerNet || 0) + career().total + (me.challengeTotal || 0) + (me.miniTotal || 0) + (me.classicTotal || 0) + (me.bonusTotal || 0) + (me.compTotal || 0) + (me.runnerTotal || 0) + (me.contestNet || 0) - (me.spent || 0); }
-/* Classic (the daily draft) pays on a ladder, once a day: $20,000 for 18 down or better, down to $500 for 10 down. */
-const CLASSIC_PRIZE = 20000, CLASSIC_BACK_DAYS = ["2026-11-13", "2026-11-14"];
-const CLASSIC_LADDER = {18: 20000, 17: 10000, 16: 5000, 15: 3000, 14: 2000, 13: 1500, 12: 1000, 11: 750, 10: 500};
+/* Classic (the daily draft) pays on a ladder, once a day: $7,000 for 18 down or better, down to $150 for 10 down (a third of
+   what it was until 2026-11-28). */
+const CLASSIC_PRIZE = 7000, CLASSIC_BACK_DAYS = ["2026-11-13", "2026-11-14"];
+const CLASSIC_LADDER = {18: 7000, 17: 3500, 16: 1700, 15: 1000, 14: 700, 13: 500, 12: 350, 11: 250, 10: 150};
 function classicPrize(total){ return total <= -18 ? CLASSIC_PRIZE : CLASSIC_LADDER[-total] || 0; }
 function classicNext(total){ for (let d = Math.max(10, 1 - total); d <= 18; d++) if (CLASSIC_LADDER[d] > classicPrize(total)) return {d, amt: CLASSIC_LADDER[d]}; return null; }
 function payClassic(total, day){
@@ -5426,8 +5474,9 @@ function payClassic(total, day){
   setTimeout(() => sfx("cash"), 500);
   return prize;
 }
-/* Mini pays by strokes under par, from $10 at 1 under to $2,000 for a perfect 18 down, with no daily limit. */
-const MINI_PAY = [0, 10, 25, 45, 70, 100, 140, 190, 250, 320, 400, 500, 650, 800, 1000, 1200, 1500, 1800, 2000];
+/* Mini pays by strokes under par, from $5 at 1 under to $700 for a perfect 18 down, with no daily limit (a third of what it was
+   until 2026-11-28). */
+const MINI_PAY = [0, 5, 10, 15, 25, 35, 45, 65, 85, 105, 135, 165, 215, 265, 335, 400, 500, 600, 700];
 const MINI_CAP = Infinity;   // no daily limit on Mini
 function miniPay(total){ return total < 0 ? MINI_PAY[Math.min(18, -total)] : 0; }
 function payMini(total){
@@ -5503,7 +5552,7 @@ function getSeason(id){
   return SEASON_BY_ID.get(id);
 }
 function lookStyle(me){ const L = lookFull(me.look); return `--me-cap:${L.cap};--me-shirt:${L.shirt};--me-pants:${L.pants};--me-skin:${L.skin};--me-disc:${L.disc}`; }
-/* Home-screen putting: $20 a make, $50 when the putt before it also went in, up to $10,000 a day. A miss resets the run. */
+/* Home-screen putting: pays by the run (PUTT_LADDER). A miss resets the run. */
 function eggBonus(made){
   if (made === undefined) made = true;
   const me = meLoad();
@@ -6353,10 +6402,10 @@ const WHEEL_SETS = {
   safe: {name: "Scared Money", slices: ["2K", "1K", "2K", "1K", "2K", "100", "2K", "1K", "2K", "1K", "2K", "1K", "2K", "100", "2K", "1K"]},
   roulette: {name: "Swinging Roulette Basket", slices: ["Go", "500", "Go", "Lose", "Go", "Lose", "Go", "Lose", "Go", "500", "Go", "Lose", "Go", "Lose", "Go", "Lose"]},
 };
-const WHEEL_VAL = {"10K": 10000, "5K": 5000, "2K": 2000, "1K": 1000, "100": 100, "-5K": -5000, "Go": 200, "500": 500, "Lose": "lose", "Reputt": "reputt"};
+const WHEEL_VAL = {"10K": 3500, "5K": 1500, "2K": 700, "1K": 350, "100": 50, "-5K": -1500, "Go": 200, "500": 500, "Lose": "lose", "Reputt": "reputt"};
 const WHEEL_COL = {"10K": "#ffd23f", "5K": "#ff8c3a", "2K": "#5ac46a", "1K": "#3aa8a0", "100": "#9aa3a8", "-5K": "#111214", "Reputt": "#8e5bd6", "Go": "#5ac46a", "500": "#ffd23f", "Lose": "#111214"};
 const WHEEL_TXT = {"-5K": "#ff2a1f", "Lose": "#ff2a1f", "Reputt": "#fff"};
-const WHEEL_LAB = {"10K": "$10K", "5K": "$5K", "2K": "$2K", "1K": "$1K", "100": "$100", "-5K": "−$5K", "Reputt": "REPUTT", "Go": "GO $200", "500": "$500", "Lose": "LOSE ALL"};
+const WHEEL_LAB = {"10K": "$3.5K", "5K": "$1.5K", "2K": "$700", "1K": "$350", "100": "$50", "-5K": "−$1.5K", "Reputt": "REPUTT", "Go": "GO $200", "500": "$500", "Lose": "LOSE ALL"};
 const WHEEL_BIG = new Set(["10K", "-5K", "Lose"]);
 let wheelN = 0;
 
@@ -6397,8 +6446,8 @@ function wheelOverlay(html, cls){
 function wheelChoose(title, rethrow){
   return new Promise(res => {
     const ov = wheelOverlay(`<h2>${esc(title)}</h2><p>Pick a wheel to spin.</p><div class="wh-pick">
-      <div class="wh-opt risk"><b>Risk It for the Biscuit</b>${wheelSVG("risk", 150, {rethrow})}<small>Up to $10,000<br>Could lose $5,000<br>2 ${rethrow ? "rethrow" : "reputt"} slices</small><button class="btn wh-go-r" id="wh-risk">Risk it</button></div>
-      <div class="wh-opt safe"><b>Scared Money</b>${wheelSVG("safe", 150)}<small>Up to $2,000<br>Can’t lose<br>&nbsp;</small><button class="btn wh-go-g" id="wh-safe">Play it safe</button></div></div>`);
+      <div class="wh-opt risk"><b>Risk It for the Biscuit</b>${wheelSVG("risk", 150, {rethrow})}<small>Up to $3,500<br>Could lose $1,500<br>2 ${rethrow ? "rethrow" : "reputt"} slices</small><button class="btn wh-go-r" id="wh-risk">Risk it</button></div>
+      <div class="wh-opt safe"><b>Scared Money</b>${wheelSVG("safe", 150)}<small>Up to $700<br>Can’t lose<br>&nbsp;</small><button class="btn wh-go-g" id="wh-safe">Play it safe</button></div></div>`);
     ov.querySelector("#wh-risk").onclick = () => { ov.remove(); res("risk"); };
     ov.querySelector("#wh-safe").onclick = () => { ov.remove(); res("safe"); };
     ov.querySelector("#wh-risk").focus();
@@ -6430,11 +6479,11 @@ function wheelSpin(kind, opts){
       // turn every label so it reads right side up where the wheel stopped
       ov.querySelectorAll(".wh-rot text").forEach(tx => { const am = +tx.dataset.am, x = tx.getAttribute("x"), y = tx.getAttribute("y"); const abs = (am + end) * Math.PI / 180; tx.setAttribute("transform", `rotate(${(am + (Math.cos(abs) < 0 ? 180 : 0)).toFixed(1)} ${x} ${y})`); });
       const out = opts.describe ? opts.describe(slice) : {text: WHEEL_LAB[slice], line: "", cls: ""};
-      ov.classList.add("landed", WHEEL_BIG.has(slice) ? (WHEEL_VAL[slice] === 10000 ? "big-win" : "big-bad") : "small", out.cls || "");
+      ov.classList.add("landed", WHEEL_BIG.has(slice) ? (slice === "10K" ? "big-win" : "big-bad") : "small", out.cls || "");
       ov.querySelector(".wh-res").textContent = out.text;
       ov.querySelector(".wh-line").textContent = out.line || "";
       const b = ov.querySelector("#wh-cont"); b.hidden = false; b.textContent = out.button || "Continue"; b.focus();
-      if (WHEEL_VAL[slice] === 10000 && typeof confetti === "function"){ confetti({gold: true, count: 240, power: 1.5, life: 3800}); setTimeout(() => confetti({gold: true, count: 140}), 500); }
+      if (slice === "10K" && typeof confetti === "function"){ confetti({gold: true, count: 240, power: 1.5, life: 3800}); setTimeout(() => confetti({gold: true, count: 140}), 500); }
       else if (typeof WHEEL_VAL[slice] === "number" && WHEEL_VAL[slice] > 0 && typeof confetti === "function") confetti({count: 70});
       b.onclick = () => { ov.remove(); res(slice); };
     };
@@ -6453,7 +6502,7 @@ function wheelResultText(slice, amt, rethrow){
   if (slice === "Reputt") return {text: rethrow ? "RETHROW!" : "REPUTT!", line: rethrow ? "One more throw. Reach 700 ft and you spin Risk It again; come up short and the ladder goes back to the start." : "One more putt. Make it and you spin again. Miss it and your makes go back to 0.", cls: "reputt", button: rethrow ? "Take the rethrow" : "Take the reputt"};
   if (amt < 0) return {text: "−" + fmtMoney(-amt), line: "Ouch. Balance " + fmtMoney(meBalance(meLoad())) + ".", cls: "neg"};
   if (WHEEL_VAL[slice] < 0) return {text: "−$0", line: "You were already at $0, so there was nothing to lose.", cls: "neg"};
-  return {text: "+" + fmtMoney(amt) + (amt >= 10000 ? "!" : ""), line: "Balance " + fmtMoney(meBalance(meLoad())) + ".", cls: "pos"};
+  return {text: "+" + fmtMoney(amt) + (amt >= WHEEL_VAL["10K"] ? "!" : ""), line: "Balance " + fmtMoney(meBalance(meLoad())) + ".", cls: "pos"};
 }
 
 /* ---------- Distance comp ----------
@@ -6492,7 +6541,7 @@ const COMP_EARLY = 14, COMP_LATE = 20;        // degrees left / right for a rele
 const COMP_MAXD = 682;         // ft: a perfect throw in calm air, the same for everyone
 const COMP_BEST_D = -18;       // the longest line is a big anhyzer, this many degrees past the middle line and right at the edge of turning over
 const COMP_ROLL = -30;         // bank past this while the disc is fast and it turns over for good
-const COMP_LADDER = [[400, 10], [450, 25], [500, 50], [550, 100], [600, 250], [650, 1000], [700, 10000]];   // feet, dollars: each on the throw right after the last
+const COMP_LADDER = [[400, 5], [450, 10], [500, 20], [550, 35], [600, 85], [650, 350], [700, 3500]];   // a third of the old stack (2026-11-28)   // feet, dollars: each on the throw right after the last
 
 function compWind(key){
   const r = mulberry32(hashStr("comp-wind:" + key));
@@ -6651,7 +6700,7 @@ function viewComp(){
       <div><b id="cs-stack" class="tnum">${me.compStackBest || 0} of ${COMP_LADDER.length}</b><span>Best stack</span></div>
       <div><b id="cs-paid" class="tnum">${fmtMoney(c.paid)}</b><span>Won today</span></div>
     </div>
-    <details class="rules"><summary>How it works</summary><ul><li>The stack: 400 ft pays $10, then 450, 500 … 650 on each next throw, up to $1,000. 700 spins the wheel.</li><li>Miss the next mark or go OB and the stack resets.</li><li>Everyone has the same arm: only your three taps count.</li><li>Hyzer sweeps left, anhyzer drifts right. A little anhyzer, thrown high, goes farthest.</li><li>Power peaks at the hit. Early goes left, late goes right.</li><li>Today’s wind: ${esc(compWindText(w))}. Headwind adds turn, tailwind takes it away.</li></ul></details>
+    <details class="rules"><summary>How it works</summary><ul><li>The stack: 400 ft pays $5, then 450, 500 … 650 on each next throw, up to $350. 700 spins the wheel.</li><li>Miss the next mark or go OB and the stack resets.</li><li>Everyone has the same arm: only your three taps count.</li><li>Hyzer sweeps left, anhyzer drifts right. A little anhyzer, thrown high, goes farthest.</li><li>Power peaks at the hit. Early goes left, late goes right.</li><li>Today’s wind: ${esc(compWindText(w))}. Headwind adds turn, tailwind takes it away.</li></ul></details>
     <div class="row"><button class="btn small" data-act="newRun">Home</button></div>
   </div>`;
 }
@@ -6790,7 +6839,7 @@ async function compWheel(kind){
   if (!comp || comp.ct) return;
   comp.wheel = true;
   if (kind === "choose") kind = await wheelChoose("700 Club!", true);
-  await wheelSpin(kind, {rethrow: true, sub: kind === "risk" ? "Two $10Ks, two −$5Ks and two rethrows on here." : "", describe: s => {
+  await wheelSpin(kind, {rethrow: true, sub: kind === "risk" ? "Two $3.5Ks, two −$1.5Ks and two rethrows on here." : "", describe: s => {
     const me = meLoad(), amt = wheelAmount(s), d = compDay(me);
     me.compTotal = (me.compTotal || 0) + amt; d.paid += amt; me.compStep = 0; me.compRethrow = s === "Reputt"; meSave(me); refreshMoney();
     const out = wheelResultText(s, amt, true);
@@ -9519,6 +9568,8 @@ function viewHome(){
     ${lvl ? `<section class="hub-hero slim" aria-label="Career">
       <button class="hub-go" id="hub-ladder" data-act="go" data-screen="ladder"><small>Career${P ? ` · ★${P}` : ""} · ${(L.fans || 0).toLocaleString("en-US")} fans</small><b>${esc(lvl.name)}</b><span>${esc(cur ? `${cur.name} in progress` : need)}</span></button>
       <button class="btn primary" id="hub-play" data-act="careerEvent" data-id="${(cur || lvl).id}">${cur ? "Resume" : lvl.home ? "Play" : "Venues"}</button>
+      ${typeof stakesHTML === "function" && !cur ? stakesHTML(lvl) : ""}
+      ${typeof hubGoalHTML === "function" ? hubGoalHTML(lvl) : ""}
       <ol class="hub-steps" aria-label="Rung ${lvl.level + 1} of ${LADDER.length}">${LADDER.map((t, i) => `<li class="${i < L.level ? "done" : i === L.level ? "now" : ""}" title="${esc(t.name)}"></li>`).join("")}</ol>
     </section>` : ""}
     <div class="park-box"><section class="park${PL.s < .82 ? " compact" : ""}" style="${lookStyle(me)};--pkr:${(360 / PL.H).toFixed(4)}" aria-label="The park. Pick where to go.">
@@ -9529,7 +9580,7 @@ function viewHome(){
       ${spot("area-board", "go", "s-board" + (n.tourneyOpen ? " live" : ""), "Tournaments", n.board, ' data-screen="bulletin"')}
       ${n.tourneyOpen ? `<span class="pin-pulse" aria-hidden="true" style="${SP.pin}"></span>` : ""}
       ${spot("me", "me", "s-shop", "Pro Shop", n.shop)}
-      ${CLASSIC_BACK_DAYS.includes(dailyKey(new Date())) ? `<button class="classic-back" id="classic-back" data-act="daily"><b>Classic Mode is Back!</b><small>Up to $20,000 for 18 down</small></button>` : ""}
+      ${CLASSIC_BACK_DAYS.includes(dailyKey(new Date())) ? `<button class="classic-back" id="classic-back" data-act="daily"><b>Classic Mode is Back!</b><small>Up to $7,000 for 18 down</small></button>` : ""}
       ${spot("friends", "go", "s-friends" + (ui.ctLive ? " live" : ""), "Friends", n.friends, ' data-screen="friends"')}
       ${ui.ctLive ? `<button class="ct-live" id="ct-live" style="${SP.live}" data-act="go" data-screen="friends" aria-label="A friends contest is live. Open Friends."><i aria-hidden="true"></i><i aria-hidden="true"></i><i aria-hidden="true"></i><b>Contest live</b></button>` : ""}
     </section></div>
@@ -9593,7 +9644,7 @@ function viewPutt(){
       <ol class="ladder-steps" id="pg-ladder">${puttLadderHTML(b.run || 0)}</ol>
       <p class="fine">Chance assumes perfect releases.</p>
     </section>
-    <p class="fine">Tap at full arm extension to putt.</p><details class="rules"><summary>How it works</summary><ul><li>Perfect release: 1 in 2. Sloppy: 1 in 50. The bubble shows early or late.</li><li>Streak pays $20, $50, $200, $500, $1,000, then the 6th make spins the wheel.</li><li>A miss resets to $20. No daily limit.</li></ul></details>
+    <p class="fine">Tap at full arm extension to putt.</p><details class="rules"><summary>How it works</summary><ul><li>Perfect release: 1 in 2. Sloppy: 1 in 50. The bubble shows early or late.</li><li>Streak pays $5, $15, $75, $150, $350, then the 6th make spins the wheel.</li><li>A miss resets to $5. No daily limit.</li></ul></details>
     <div class="row"><button class="btn small" data-act="newRun">Back to the park</button></div>
   </div>`;
 }
@@ -9643,7 +9694,7 @@ function viewBulletin(){
         <i class="tack" aria-hidden="true"></i>
         <span class="flyer-kicker">Pickup round</span>
         <b class="flyer-title">Mini</b>
-        <span class="flyer-status">${ico("hidden", "Ratings hidden")} <span class="tnum" title="Pays by strokes under par, up to $2,000 for 18 down">−18 $2,000</span></span>
+        <span class="flyer-status">${ico("hidden", "Ratings hidden")} <span class="tnum" title="Pays by strokes under par, up to $700 for 18 down">−18 $700</span></span>
       </button>
       <button class="flyer f-picker" id="pickerplay" data-act="teeoff" data-mode="picker">
         <i class="tack" aria-hidden="true"></i>
@@ -9985,7 +10036,7 @@ bootApp();
    Challenges: three a week, the same for everyone (picked from the week's date), $2,000 each, kept on this phone.
    League: your friends' daily Classic scores this week turned into points, using the leaderboard table
    (supabase/2026-11-26-daily-leaderboard.sql); you see a day's results once you've played that day yourself. */
-const CHALLENGE_PRIZE = 2000;
+const CHALLENGE_PRIZE = 700;   // a third of the old $2,000 (2026-11-28)
 
 function dayShift(key, days){ const d = new Date(key + "T12:00:00Z"); d.setUTCDate(d.getUTCDate() + days); return d.toISOString().slice(0, 10); }
 function weekStart(key){ const d = new Date(key + "T12:00:00Z"); return dayShift(key, -((d.getUTCDay() + 6) % 7)); }   // Monday
