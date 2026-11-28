@@ -2,7 +2,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="robots" content="noindex,nofollow">
-<!-- 18 Down test build: branch test-combined, commit a30675f -->
+<!-- 18 Down test build: branch test-combined, commit fcbda17 -->
 <title>18 Down</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&family=Shrikhand&display=swap">
@@ -1486,6 +1486,12 @@ html, body { margin: 0; }
 .hub-goal i b { display: block; height: 100%; background: var(--gold, #ffd23f); }
 /* live place on the final round's back nine */
 .ld-place { margin: 2px 0 0; font-weight: 700; font-size: 14px; color: var(--gold, #ffd23f); }
+
+/* Lessons, clinics and YouTube on each skill */
+.skill .sk-buy { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; margin-top: 8px; }
+.skill .sk-buy .btn { display: grid; gap: 1px; justify-items: center; padding: 6px 4px; min-height: 44px; }
+.skill .sk-buy .btn .tag { font-size: 11px; opacity: .85; }
+.skill .sk-buy .maxed { align-self: center; justify-self: center; }
 </style>
 <main id="app"></main>
 <script type="application/json" id="edits">{}</script>
@@ -5493,6 +5499,14 @@ function payMini(total){
    About $154,000 to max one skill and $615,000 for all four, roughly a year of daily play. */
 /* Each tier costs 6.75% more than the one before, starting at $175 (was $525 until 2026-11-28, when the career rating gates came in: career purses now pay for the climb).
    Going from 90 to 91 costs about what 50 to 60 does. */
+/* Clinics (Kade, 2026-11-28: "clinics should be cheaper"): a group session for CLINIC_SHARE of the next lesson's price,
+   +CLINIC_FORM form in that skill, once per skill per day. Form can slip again after bad events; a lesson's tier is yours
+   for good. YouTube: free, once a day, a wheel that moves one skill's form between -1 and +1, leaning a little toward +. */
+const CLINIC_SHARE = 0.4, CLINIC_FORM = 1;
+function clinicDay(me){ const day = dailyKey(new Date()); return me.clinic && me.clinic.day === day ? me.clinic : {day}; }
+function clinicCost(me, k){ return Math.max(5, Math.round(meCost(Math.min(ME_TIERS, me.levels[k] + 1)) * CLINIC_SHARE / 5) * 5); }
+function clinicOpen(me, k){ return !clinicDay(me)[k] && meForm(me, k) < FORM_MAX; }
+function videoOpen(me){ return me.video !== dailyKey(new Date()); }
 function meCost(tier){ return Math.max(5, Math.round(175 * Math.pow(1.0675, tier - 1) / 5) * 5); }
 let ME_RANGE = null;
 /* 0% is a weak tour pro; 100% matches the best real season in the game for that skill. */
@@ -5824,6 +5838,26 @@ app.addEventListener("click", ev => {
       ui.discBuy = null; render();
       if (typeof confetti === "function") confetti({count: d.price >= 50000 ? 160 : 70, gold: d.price >= 50000});
     } else { ui.discBuy = null; render(); }
+  } else if (act === "clinic"){
+    const me = meLoad(), k = el.dataset.slot, cost = clinicCost(me, k);
+    if (!clinicOpen(me, k) || meBalance(me) < cost) return;
+    me.spent = (me.spent || 0) + cost;
+    me.clinic = clinicDay(me); me.clinic[k] = true;
+    const g = formAdd(me, k, CLINIC_FORM);
+    meSave(me);
+    ui.notice = `Clinic done: ${SLOT_NAME[k]} +${g} form. Rating ${meRating(me)}.`;
+    render("clinic-" + k);
+  } else if (act === "video"){
+    const me0 = meLoad(), k = el.dataset.slot;
+    if (!videoOpen(me0)) return;
+    me0.video = dailyKey(new Date()); meSave(me0);
+    render();
+    wheelSpin("yt", {title: "YouTube: " + SLOT_NAME[k], sub: "Could help, could hurt. Leans a little toward help.", describe: s => {
+      const me = meLoad(), d = formAdd(me, k, WHEEL_VAL[s]); meSave(me);
+      return d > 0 ? {text: `+${d} form`, line: `${SLOT_NAME[k]} clicked. Rating ${meRating(me)}.`, cls: "pos"}
+        : d < 0 ? {text: `−${-d} form`, line: `Bad habit picked up. Rating ${meRating(me)}.`, cls: "neg"}
+        : {text: "No change", line: "Nothing new in that one.", cls: ""};
+    }}).then(() => render());
   } else if (act === "upgrade"){
     const me = meLoad(), k = el.dataset.slot, lv = me.levels[k];
     if (lv < ME_TIERS && meBalance(me) >= meCost(lv + 1)){
@@ -6398,14 +6432,16 @@ function clShadeHull(g, hull){
    Disc Runner: hit the chains of the Swinging Roulette Basket and you spin its wheel.
    The wheel is an overlay over whatever game is running; it returns the slice it landed on. */
 const WHEEL_SETS = {
+  // YouTube video (Kade, 2026-11-28): free, once a day, could help or hurt a skill's form, leaning a little toward help
+  yt: {name: "YouTube video", slices: ["Y+1", "Y-.5", "Y+.5", "Y0", "Y+.5", "Y-1", "Y+1", "Y-.5", "Y+.5", "Y0", "Y+.5", "Y-.5", "Y+1", "Y-1", "Y0", "Y-.5"]},
   risk: {name: "Risk It for the Biscuit", slices: ["10K", "2K", "5K", "Reputt", "2K", "-5K", "5K", "2K", "10K", "2K", "5K", "Reputt", "2K", "-5K", "5K", "2K"]},
   safe: {name: "Scared Money", slices: ["2K", "1K", "2K", "1K", "2K", "100", "2K", "1K", "2K", "1K", "2K", "1K", "2K", "100", "2K", "1K"]},
   roulette: {name: "Swinging Roulette Basket", slices: ["Go", "500", "Go", "Lose", "Go", "Lose", "Go", "Lose", "Go", "500", "Go", "Lose", "Go", "Lose", "Go", "Lose"]},
 };
-const WHEEL_VAL = {"10K": 3500, "5K": 1500, "2K": 700, "1K": 350, "100": 50, "-5K": -1500, "Go": 200, "500": 500, "Lose": "lose", "Reputt": "reputt"};
-const WHEEL_COL = {"10K": "#ffd23f", "5K": "#ff8c3a", "2K": "#5ac46a", "1K": "#3aa8a0", "100": "#9aa3a8", "-5K": "#111214", "Reputt": "#8e5bd6", "Go": "#5ac46a", "500": "#ffd23f", "Lose": "#111214"};
+const WHEEL_VAL = {"Y+1": 1, "Y+.5": .5, "Y0": 0, "Y-.5": -.5, "Y-1": -1, "10K": 3500, "5K": 1500, "2K": 700, "1K": 350, "100": 50, "-5K": -1500, "Go": 200, "500": 500, "Lose": "lose", "Reputt": "reputt"};
+const WHEEL_COL = {"Y+1": "#5ac46a", "Y+.5": "#3aa8a0", "Y0": "#9aa3a8", "Y-.5": "#ff8c3a", "Y-1": "#e0352b", "10K": "#ffd23f", "5K": "#ff8c3a", "2K": "#5ac46a", "1K": "#3aa8a0", "100": "#9aa3a8", "-5K": "#111214", "Reputt": "#8e5bd6", "Go": "#5ac46a", "500": "#ffd23f", "Lose": "#111214"};
 const WHEEL_TXT = {"-5K": "#ff2a1f", "Lose": "#ff2a1f", "Reputt": "#fff"};
-const WHEEL_LAB = {"10K": "$3.5K", "5K": "$1.5K", "2K": "$700", "1K": "$350", "100": "$50", "-5K": "−$1.5K", "Reputt": "REPUTT", "Go": "GO $200", "500": "$500", "Lose": "LOSE ALL"};
+const WHEEL_LAB = {"Y+1": "+1", "Y+.5": "+0.5", "Y0": "SAME", "Y-.5": "−0.5", "Y-1": "−1", "10K": "$3.5K", "5K": "$1.5K", "2K": "$700", "1K": "$350", "100": "$50", "-5K": "−$1.5K", "Reputt": "REPUTT", "Go": "GO $200", "500": "$500", "Lose": "LOSE ALL"};
 const WHEEL_BIG = new Set(["10K", "-5K", "Lose"]);
 let wheelN = 0;
 
@@ -9710,7 +9746,7 @@ function viewBulletin(){
 }
 
 /* ---------- Pro shop (My Player) ---------- */
-const SHOP_TABS = [["skills", "Skills"], ["gear", "Gear"], ["discs", "Discs"], ["receipt", "Receipt"]];
+const SHOP_TABS = [["skills", "Lessons"], ["gear", "Gear"], ["discs", "Discs"], ["receipt", "Receipt"]];
 const SHOP_POSE = {a: 270, ha: 270, hip: [0, 50, 0], spine: [0, 27, 0], FR: [-6, 0, 0], FL: [6, 0, 0],
   R: {h: [-17, 48, -6], bend: [-1, -.3, 0]}, L: {h: [15, 47, -4], bend: [1, -.3, 0]}, face: [0, 0, -1], pivot: 0, pivotR: 0, disc: true};
 function viewMe(){
@@ -9729,17 +9765,21 @@ function viewMe(){
     return [...new Set(left.map(i => DISCS[i].price))].sort((a, b) => a - b).map(price => `<div class="dw-row"><span class="dw-tag">${fmtMoney(price)}</span><div class="dw-discs">${left.filter(i => DISCS[i].price === price).map(discBtn).join("")}</div></div>`).join(""); };
   if (tab === "skills") panel = `
       <div class="me-id"><p class="eyebrow">Player rating</p><b class="me-rating tnum" id="me-rating">${meRating(me)}</b>
-        <small>+1 per tier · higher is steadier</small></div>
+        <small>+1 per tier and per form point · higher is steadier</small></div>
       <div class="skills">${SLOTS.map(k => {
         const lv = me.levels[k], maxed = lv >= ME_TIERS, cost = maxed ? 0 : meCost(lv + 1);
         return `<div class="skill">
           <div class="skill-top"><b>${SLOT_NAME[k]}</b><span class="tnum">${meFmt(k, meStat(me, k))}${maxed ? "" : ` <small>→ ${meFmt(k, meStat(Object.assign({}, me, {levels: Object.assign({}, me.levels, {[k]: lv + 1})}), k))}</small>`}</span></div>
           <div class="meter" role="meter" aria-valuemin="0" aria-valuemax="${ME_TIERS}" aria-valuenow="${lv}" aria-label="${SLOT_NAME[k]} tier ${lv} of ${ME_TIERS}"><i style="width:${lv / ME_TIERS * 100}%"></i></div>
           <div class="skill-bot"><span>Tier <b class="skill-lv tnum">${lv}</b> of ${ME_TIERS}${meForm(me, k) ? ` <small class="form-chip ${meForm(me, k) > 0 ? "form-up" : "form-down"}" title="Form, from practice and events">${meForm(me, k) > 0 ? "+" : ""}${meForm(me, k)} form</small>` : ""}</span>
-            ${maxed ? `<span class="maxed">Maxed</span>` : `<button class="btn small ${bal >= cost ? "primary" : ""}" id="up-${k}" data-act="upgrade" data-slot="${k}" ${bal >= cost ? "" : "disabled"}><span class="tag">${fmtMoney(cost)}</span> Buy</button>`}</div>
+          </div>
+          <div class="sk-buy">
+            <button class="btn small" id="video-${k}" data-act="video" data-slot="${k}" ${videoOpen(me) ? "" : "disabled"}>YouTube<span class="tag">${videoOpen(me) ? "Free" : "Tomorrow"}</span></button>
+            <button class="btn small" id="clinic-${k}" data-act="clinic" data-slot="${k}" ${clinicOpen(me, k) && bal >= clinicCost(me, k) ? "" : "disabled"}>Clinic<span class="tag">${clinicOpen(me, k) ? fmtMoney(clinicCost(me, k)) : "Tomorrow"}</span></button>
+            ${maxed ? `<span class="maxed">Maxed</span>` : `<button class="btn small ${bal >= cost ? "primary" : ""}" id="up-${k}" data-act="upgrade" data-slot="${k}" ${bal >= cost ? "" : "disabled"}>Lesson<span class="tag">${fmtMoney(cost)}</span></button>`}</div>
         </div>`;
       }).join("")}</div>
-      <details class="rules"><summary>How it works</summary><ul><li>Tier 0: BH 50, FH 50, Scramble 50, Putting 50% (C2 10%). Tier 50: 100, 100, 100, 100% (C2 40%).</li><li>Scramble plays your second shots on par 4s and 5s and saves par from the rough.</li><li>Each tier costs 6.75% more than the last.</li><li>Career: each tier needs a My Player rating to enter (DGPT 1010, Worlds 1030), and My Player plays every event.</li><li>Backhand powers Distance Comp. Forehand steers Disc Runner.</li><li>Form: practice adds up to +1 a day per skill (Putting Green for Putting, Distance Comp for BH, Disc Runner for FH and Scramble). Career finishes add or take it away. −10 to +15.</li></ul></details>`;
+      <details class="rules"><summary>How it works</summary><ul><li>Tier 0: BH 50, FH 50, Scramble 50, Putting 50% (C2 10%). Tier 50: 100, 100, 100, 100% (C2 40%).</li><li>Scramble plays your second shots on par 4s and 5s and saves par from the rough.</li><li>Lesson: +1 tier, yours for good. Each costs 6.75% more than the last.</li><li>Clinic: +1 form for 40% of the next lesson, once a skill per day. Form can slip after bad events.</li><li>YouTube: free once a day. Spin for −1 to +1 form; it leans a little toward better.</li><li>Career: each tier needs a My Player rating to enter (DGPT 1010, Worlds 1030), and My Player plays every event.</li><li>Backhand powers Distance Comp. Forehand steers Disc Runner.</li><li>Form: practice adds up to +1 a day per skill (Putting Green for Putting, Distance Comp for BH, Disc Runner for FH and Scramble). Career finishes add or take it away. −10 to +15.</li></ul></details>`;
   else if (tab === "gear") panel = `
       <label class="me-name"><span>Name</span><input id="me-name" maxlength="20" autocomplete="off" placeholder="My Player" value="${esc(me.name || "")}" data-act-input="me-name"></label>
       <div class="looks">${swatches(["skin"])}</div>
