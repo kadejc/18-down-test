@@ -2,7 +2,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="robots" content="noindex,nofollow">
-<!-- 18 Down test build: branch test-combined, commit 88cf88c -->
+<!-- 18 Down test build: branch test-combined, commit 980dfd5 -->
 <script>
 /* Test-site guard (Kade, 2026-11-28). deploy.sh puts this at the top of every test build; it is not part of the game.
    1. Offline: the test build plays by different rules than the live game, so it must never write to Hayden's live
@@ -5252,7 +5252,7 @@ function finishTourney(){
   addToCareer({key: state.dateKey, tier: ctx.t.name, course: ctx.c.name, place: t.place, tied: t.tied, of: ctx.t.field + 1, total: me.total, pay: t.pay});
   if (firstFinish && typeof ladderResult === "function" && ladderTierOf(state.dateKey)){ const lr = ladderResult(state.dateKey, t.place); t.up = lr && lr.up ? lr.up.name : null; t.cr = lr ? {fans: lr.fans, spons: lr.spons, sold: lr.sold, merch: lr.merch} : null;
     const mk = SLOTS.find(k => state.picks[k] === "me");
-    if (mk && t.cr && !t.ranked){ const m0 = meLoad(), d = formAdd(m0, mk, formFromEvent(t.place, ctx.t.field + 1)); meSave(m0); t.cr.form = {k: mk, d}; }
+    if (mk && t.cr && !t.ranked){ const m0 = meLoad(), d = formAdd(m0, mk, formFromEvent(t.place, ctx.t.field + 1, (ladderTierOf(state.dateKey) || {}).id)); meSave(m0); t.cr.form = {k: mk, d}; }
     tSave(); }
   if (firstFinish && cardBefore && typeof cardCheck === "function") cardCheck(cardBefore);
   ui.copied = false; ui.shareFail = false;
@@ -5635,10 +5635,16 @@ function meTrain(k, amt){
   if (me.train[k] >= TRAIN_DAY && typeof careerToast === "function") careerToast(`${FORM_SHORT[k]} practice done today: +${TRAIN_DAY} form`);
   return g;
 }
-/* A career event's finish, as form: a win +2, top 10% +1.5, top quarter +1, top half +0.3, worse -0.5, bottom quarter -1.5. */
-function formFromEvent(place, of){
+/* A career event's finish, as form for the skill My Player played (Kade, 2026-11-28: "playing poorly makes you worse with a
+   multiplier based upon caliber of event. Bias towards positive skill"). Base: a win +2, top 5% +1, top 15% +0.5, top 35%
+   +0.2, top 60% -0.2, worse -0.6. Bigger events swing harder both ways: times FORM_CALIBER for the tier (Mini 0.5x up to
+   Worlds 3x). Simulated at each tier's entry rating it averages about +0.03 to +0.5 form an event at most tiers, with
+   form going down after 30-50% of events from C-tier up; Jomez and the Championship come out slightly negative there. */
+const FORM_CALIBER = {mini: .5, c: .75, b: 1, a: 1.25, jomez: 1.5, dgpt: 1.75, dgptp: 2, major: 2.25, playoff: 2.5, champ: 2.75, worlds: 3};
+function formFromEvent(place, of, tierId){
   const p = (place - 1) / Math.max(1, (of || 2) - 1);
-  return place === 1 ? 2 : p <= .1 ? 1.5 : p <= .25 ? 1 : p <= .5 ? .3 : p <= .75 ? -.5 : -1.5;
+  const base = place === 1 ? 2 : p <= .05 ? 1 : p <= .15 ? .5 : p <= .35 ? .2 : p <= .6 ? -.2 : -.6;
+  return Math.round(base * (FORM_CALIBER[tierId] || 1) * 10) / 10;
 }
 function prestigeLocked(it){ return (it && it.pr || 0) > mePrestige(meLoad()); }
 function meStat(me, k){ const [lo, hi] = ME_SCALE[k]; const v = lo + (hi - lo) * meLv(me, k === "c2" ? "c1" : k) / ME_TIERS; return Math.round(v * 10) / 10; }
@@ -9869,7 +9875,7 @@ function viewMe(){
           }).join("")}</div>
         </div>`;
       }).join("")}</div>
-      <details class="rules"><summary>How it works</summary><ul><li>Tier 0: BH 50, FH 50, Scramble 50, Putting 50% (C2 10%). Tier 50: 100, 100, 100, 100% (C2 40%).</li><li>Scramble plays your second shots on par 4s and 5s and saves par from the rough.</li><li>One free spin a day on any wheel, and one extra spin for coins.</li><li>Lesson wheel: +1 to +2 tiers (+2 on 1 slice in 4), yours for good. Costs the next tier's price, 6.75% more each tier.</li><li>Clinic wheel: 0 to +2 form, about +1 on average, for 40% of a lesson.</li><li>YouTube wheel: −1 to +1 form, leaning a little toward better, for 10% of a lesson.</li><li>Form can slip after bad events; tiers can't.</li><li>Career: each tier needs a My Player rating to enter (DGPT 1010, Worlds 1030), and My Player plays every event.</li><li>Backhand powers Distance Comp. Forehand steers Disc Runner.</li><li>Form: practice adds up to +1 a day per skill (Putting Green for Putting, Distance Comp for BH, Disc Runner for FH and Scramble). Career finishes add or take it away. −10 to +15.</li></ul></details>`;
+      <details class="rules"><summary>How it works</summary><ul><li>Tier 0: BH 50, FH 50, Scramble 50, Putting 50% (C2 10%). Tier 50: 100, 100, 100, 100% (C2 40%).</li><li>Scramble plays your second shots on par 4s and 5s and saves par from the rough.</li><li>One free spin a day on any wheel, and one extra spin for coins.</li><li>Lesson wheel: +1 to +2 tiers (+2 on 1 slice in 4), yours for good. Costs the next tier's price, 6.75% more each tier.</li><li>Clinic wheel: 0 to +2 form, about +1 on average, for 40% of a lesson.</li><li>YouTube wheel: −1 to +1 form, leaning a little toward better, for 10% of a lesson.</li><li>Form can slip after bad events; tiers can't.</li><li>Career: each tier needs a My Player rating to enter (DGPT 1010, Worlds 1030), and My Player plays every event.</li><li>Backhand powers Distance Comp. Forehand steers Disc Runner.</li><li>Form: practice adds up to +1 a day per skill (Putting Green for Putting, Distance Comp for BH, Disc Runner for FH and Scramble). Career finishes add or take it away: a win +2, top 15% +0.5, bottom 40% −0.6, times 0.5 at a Mini up to 3 at Worlds. −10 to +15.</li></ul></details>`;
   else if (tab === "gear") panel = `
       <label class="me-name"><span>Name</span><input id="me-name" maxlength="20" autocomplete="off" placeholder="My Player" value="${esc(me.name || "")}" data-act-input="me-name"></label>
       <div class="looks">${swatches(["skin"])}</div>
