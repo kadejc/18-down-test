@@ -2,7 +2,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="robots" content="noindex,nofollow">
-<!-- 18 Down test build: branch test-combined, commit 25fdda0 -->
+<!-- 18 Down test build: branch test-combined, commit 92c3ec3 -->
 <script>
 /* Test-site guard (Kade, 2026-11-28). deploy.sh puts this at the top of every test build; it is not part of the game.
    1. Offline: the test build plays by different rules than the live game, so it must never write to Hayden's live
@@ -1520,6 +1520,12 @@ html, body { margin: 0; }
 .skill .sk-buy .btn { display: grid; gap: 1px; justify-items: center; padding: 6px 4px; min-height: 44px; }
 .skill .sk-buy .btn .tag { font-size: 11px; opacity: .85; }
 .skill .sk-buy .maxed { align-self: center; justify-self: center; }
+
+/* Skill wheels: name, what it can give, price */
+.skill .sk-buy .btn b { font-size: 13px; }
+.skill .sk-buy .btn small { font-size: 11px; font-weight: 600; text-transform: none; letter-spacing: 0; }
+.sk-free { margin: 8px 0; font-size: 13px; font-weight: 700; }
+.sk-free.on { color: var(--gold, #ffd23f); }
 </style>
 <main id="app"></main>
 <script type="application/json" id="edits">{}</script>
@@ -5528,14 +5534,20 @@ function payMini(total){
    About $154,000 to max one skill and $615,000 for all four, roughly a year of daily play. */
 /* Each tier costs 6.75% more than the one before, starting at $175 (was $525 until 2026-11-28, when the career rating gates came in: career purses now pay for the climb).
    Going from 90 to 91 costs about what 50 to 60 does. */
-/* Clinics (Kade, 2026-11-28: "clinics should be cheaper"): a group session for CLINIC_SHARE of the next lesson's price,
-   +CLINIC_FORM form in that skill, once per skill per day. Form can slip again after bad events; a lesson's tier is yours
-   for good. YouTube: free, once a day, a wheel that moves one skill's form between -1 and +1, leaning a little toward +. */
-const CLINIC_SHARE = 0.4, CLINIC_FORM = 1;
-function clinicDay(me){ const day = dailyKey(new Date()); return me.clinic && me.clinic.day === day ? me.clinic : {day}; }
-function clinicCost(me, k){ return Math.max(5, Math.round(meCost(Math.min(ME_TIERS, me.levels[k] + 1)) * CLINIC_SHARE / 5) * 5); }
-function clinicOpen(me, k){ return !clinicDay(me)[k] && meForm(me, k) < FORM_MAX; }
-function videoOpen(me){ return me.video !== dailyKey(new Date()); }
+/* Skill wheels (Kade, 2026-11-28: "make them all ranges and wheels that you can spin once per day (1 of the 3 wheels per
+   day). You can pay coins for more spins"). Each skill has three wheels; the button says what each can give:
+     Lesson   +1 to +2 tiers (12 slices +1, 4 slices +2), yours for good; a spin costs the next tier's price.
+     Clinic   0 to +2 form (about +0.9 on average); a spin costs 40% of that.
+     YouTube  -1 to +1 form (7 slices better, 6 worse, 3 the same); a spin costs 10% of that.
+   One spin a day is free, on any wheel of any skill. Form can slip again after bad events; tiers can't. */
+const SKILL_WHEELS = {
+  yt:     {name: "YouTube", share: .1, range: "−1 to +1 form"},
+  clinic: {name: "Clinic",  share: .4, range: "0 to +2 form"},
+  lesson: {name: "Lesson",  share: 1,  range: "+1 to +2 tiers"},
+};
+function wheelFree(me){ return me.freeSpin !== dailyKey(new Date()); }
+function wheelCost(me, kind, k){ return Math.max(5, Math.round(meCost(Math.min(ME_TIERS, me.levels[k] + 1)) * SKILL_WHEELS[kind].share / 5) * 5); }
+function wheelOpen(me, kind, k){ return kind === "lesson" ? me.levels[k] < ME_TIERS : kind === "clinic" ? meForm(me, k) < FORM_MAX : true; }
 function meCost(tier){ return Math.max(5, Math.round(175 * Math.pow(1.0675, tier - 1) / 5) * 5); }
 let ME_RANGE = null;
 /* 0% is a weak tour pro; 100% matches the best real season in the game for that skill. */
@@ -5867,35 +5879,25 @@ app.addEventListener("click", ev => {
       ui.discBuy = null; render();
       if (typeof confetti === "function") confetti({count: d.price >= 50000 ? 160 : 70, gold: d.price >= 50000});
     } else { ui.discBuy = null; render(); }
-  } else if (act === "clinic"){
-    const me = meLoad(), k = el.dataset.slot, cost = clinicCost(me, k);
-    if (!clinicOpen(me, k) || meBalance(me) < cost) return;
-    me.spent = (me.spent || 0) + cost;
-    me.clinic = clinicDay(me); me.clinic[k] = true;
-    const g = formAdd(me, k, CLINIC_FORM);
-    meSave(me);
-    ui.notice = `Clinic done: ${SLOT_NAME[k]} +${g} form. Rating ${meRating(me)}.`;
-    render("clinic-" + k);
-  } else if (act === "video"){
-    const me0 = meLoad(), k = el.dataset.slot;
-    if (!videoOpen(me0)) return;
-    me0.video = dailyKey(new Date()); meSave(me0);
-    render();
-    wheelSpin("yt", {title: "YouTube: " + SLOT_NAME[k], sub: "Could help, could hurt. Leans a little toward help.", describe: s => {
-      const me = meLoad(), d = formAdd(me, k, WHEEL_VAL[s]); meSave(me);
+  } else if (act === "skillWheel"){
+    const me0 = meLoad(), k = el.dataset.slot, kind = el.dataset.kind, W = SKILL_WHEELS[kind];
+    if (!W || !wheelOpen(me0, kind, k)) return;
+    const free = wheelFree(me0), cost = free ? 0 : wheelCost(me0, kind, k);
+    if (meBalance(me0) < cost) return;
+    if (free) me0.freeSpin = dailyKey(new Date()); else me0.spent = (me0.spent || 0) + cost;
+    meSave(me0); render();
+    wheelSpin(kind, {title: `${W.name}: ${SLOT_NAME[k]}`, sub: `${W.range} · ${free ? "today's free spin" : fmtMoney(cost)}`, describe: s => {
+      const me = meLoad(), v = WHEEL_VAL[s];
+      if (kind === "lesson"){
+        const was = me.levels[k]; me.levels[k] = Math.min(ME_TIERS, was + v); meSave(me);
+        const g = me.levels[k] - was;
+        return {text: `+${g} tier${g === 1 ? "" : "s"}`, line: `${SLOT_NAME[k]} is now ${meFmt(k, meStat(me, k))}. Rating ${meRating(me)}.`, cls: "pos"};
+      }
+      const d = formAdd(me, k, v); meSave(me);
       return d > 0 ? {text: `+${d} form`, line: `${SLOT_NAME[k]} clicked. Rating ${meRating(me)}.`, cls: "pos"}
         : d < 0 ? {text: `−${-d} form`, line: `Bad habit picked up. Rating ${meRating(me)}.`, cls: "neg"}
-        : {text: "No change", line: "Nothing new in that one.", cls: ""};
+        : {text: "No change", line: "Nothing new this time.", cls: ""};
     }}).then(() => render());
-  } else if (act === "upgrade"){
-    const me = meLoad(), k = el.dataset.slot, lv = me.levels[k];
-    if (lv < ME_TIERS && meBalance(me) >= meCost(lv + 1)){
-      me.spent = (me.spent || 0) + meCost(lv + 1);
-      me.levels[k] = lv + 1;
-      meSave(me);
-      ui.notice = `${SLOT_NAME[k]} is now ${fmtSlot(k, meStat(me, k))}. Rating ${meRating(me)}.`;
-    }
-    render("up-" + k);
   } else if (act === "meOnly"){
     ui.meOnly = !ui.meOnly;
     storeSet("18down.meonly", ui.meOnly ? "1" : "0");
@@ -6461,16 +6463,19 @@ function clShadeHull(g, hull){
    Disc Runner: hit the chains of the Swinging Roulette Basket and you spin its wheel.
    The wheel is an overlay over whatever game is running; it returns the slice it landed on. */
 const WHEEL_SETS = {
+  // Pro Shop skill wheels (Kade, 2026-11-28): Lesson +1 to +2 tiers (4 of 16 slices +2), Clinic 0 to +2 form (about +0.9)
+  lesson: {name: "Lesson", slices: ["L1", "L1", "L1", "L2", "L1", "L1", "L1", "L1", "L2", "L1", "L1", "L1", "L2", "L1", "L1", "L2"]},
+  clinic: {name: "Clinic", slices: ["C1", "C.5", "C0", "C1", "C1.5", "C.5", "C1", "C2", "C0", "C.5", "C1", "C1.5", "C.5", "C1", "C0", "C2"]},
   // YouTube video (Kade, 2026-11-28): free, once a day, could help or hurt a skill's form, leaning a little toward help
   yt: {name: "YouTube video", slices: ["Y+1", "Y-.5", "Y+.5", "Y0", "Y+.5", "Y-1", "Y+1", "Y-.5", "Y+.5", "Y0", "Y+.5", "Y-.5", "Y+1", "Y-1", "Y0", "Y-.5"]},
   risk: {name: "Risk It for the Biscuit", slices: ["10K", "2K", "5K", "Reputt", "2K", "-5K", "5K", "2K", "10K", "2K", "5K", "Reputt", "2K", "-5K", "5K", "2K"]},
   safe: {name: "Scared Money", slices: ["2K", "1K", "2K", "1K", "2K", "100", "2K", "1K", "2K", "1K", "2K", "1K", "2K", "100", "2K", "1K"]},
   roulette: {name: "Swinging Roulette Basket", slices: ["Go", "500", "Go", "Lose", "Go", "Lose", "Go", "Lose", "Go", "500", "Go", "Lose", "Go", "Lose", "Go", "Lose"]},
 };
-const WHEEL_VAL = {"Y+1": 1, "Y+.5": .5, "Y0": 0, "Y-.5": -.5, "Y-1": -1, "10K": 3500, "5K": 1500, "2K": 700, "1K": 350, "100": 50, "-5K": -1500, "Go": 200, "500": 500, "Lose": "lose", "Reputt": "reputt"};
-const WHEEL_COL = {"Y+1": "#5ac46a", "Y+.5": "#3aa8a0", "Y0": "#9aa3a8", "Y-.5": "#ff8c3a", "Y-1": "#e0352b", "10K": "#ffd23f", "5K": "#ff8c3a", "2K": "#5ac46a", "1K": "#3aa8a0", "100": "#9aa3a8", "-5K": "#111214", "Reputt": "#8e5bd6", "Go": "#5ac46a", "500": "#ffd23f", "Lose": "#111214"};
+const WHEEL_VAL = {"L1": 1, "L2": 2, "C0": 0, "C.5": .5, "C1": 1, "C1.5": 1.5, "C2": 2, "Y+1": 1, "Y+.5": .5, "Y0": 0, "Y-.5": -.5, "Y-1": -1, "10K": 3500, "5K": 1500, "2K": 700, "1K": 350, "100": 50, "-5K": -1500, "Go": 200, "500": 500, "Lose": "lose", "Reputt": "reputt"};
+const WHEEL_COL = {"L1": "#3aa8a0", "L2": "#ffd23f", "C0": "#9aa3a8", "C.5": "#3aa8a0", "C1": "#5ac46a", "C1.5": "#8fd16a", "C2": "#ffd23f", "Y+1": "#5ac46a", "Y+.5": "#3aa8a0", "Y0": "#9aa3a8", "Y-.5": "#ff8c3a", "Y-1": "#e0352b", "10K": "#ffd23f", "5K": "#ff8c3a", "2K": "#5ac46a", "1K": "#3aa8a0", "100": "#9aa3a8", "-5K": "#111214", "Reputt": "#8e5bd6", "Go": "#5ac46a", "500": "#ffd23f", "Lose": "#111214"};
 const WHEEL_TXT = {"-5K": "#ff2a1f", "Lose": "#ff2a1f", "Reputt": "#fff"};
-const WHEEL_LAB = {"Y+1": "+1", "Y+.5": "+0.5", "Y0": "SAME", "Y-.5": "−0.5", "Y-1": "−1", "10K": "$3.5K", "5K": "$1.5K", "2K": "$700", "1K": "$350", "100": "$50", "-5K": "−$1.5K", "Reputt": "REPUTT", "Go": "GO $200", "500": "$500", "Lose": "LOSE ALL"};
+const WHEEL_LAB = {"L1": "+1 TIER", "L2": "+2 TIERS", "C0": "+0", "C.5": "+0.5", "C1": "+1", "C1.5": "+1.5", "C2": "+2", "Y+1": "+1", "Y+.5": "+0.5", "Y0": "SAME", "Y-.5": "−0.5", "Y-1": "−1", "10K": "$3.5K", "5K": "$1.5K", "2K": "$700", "1K": "$350", "100": "$50", "-5K": "−$1.5K", "Reputt": "REPUTT", "Go": "GO $200", "500": "$500", "Lose": "LOSE ALL"};
 const WHEEL_BIG = new Set(["10K", "-5K", "Lose"]);
 let wheelN = 0;
 
@@ -9779,7 +9784,7 @@ const SHOP_TABS = [["skills", "Lessons"], ["gear", "Gear"], ["discs", "Discs"], 
 const SHOP_POSE = {a: 270, ha: 270, hip: [0, 50, 0], spine: [0, 27, 0], FR: [-6, 0, 0], FL: [6, 0, 0],
   R: {h: [-17, 48, -6], bend: [-1, -.3, 0]}, L: {h: [15, 47, -4], bend: [1, -.3, 0]}, face: [0, 0, -1], pivot: 0, pivotR: 0, disc: true};
 function viewMe(){
-  const me = meLoad(), bal = meBalance(me), car = career(), tab = ui.shopTab || "skills";
+  const me = meLoad(), bal = meBalance(me), car = career(), tab = ui.shopTab || "skills", free = wheelFree(me);
   const day = dailyKey(new Date()), paidToday = me.bonus.day === day && typeof me.bonus.paid === "number" ? me.bonus.paid : 0;
   const hot = (cls, t, label) => `<button class="hot ${cls}" data-act="shopTab" data-tab="${t}" aria-label="${label}"></button>`;
   const swatches = parts => parts.map(part => `<div class="look-row"><span>${part === "pants" ? "Shorts" : LOOK_NAME[part]}</span><div class="swatches">${LOOKS[part].map((c, i) => `<button class="swatch ${me.look[part] === i ? "on" : ""}" style="background:${c}" data-act="look" data-part="${part}" data-i="${i}" aria-label="${part === "pants" ? "Shorts" : LOOK_NAME[part]} color ${i + 1}" aria-pressed="${me.look[part] === i}"></button>`).join("")}</div></div>`).join("");
@@ -9795,6 +9800,7 @@ function viewMe(){
   if (tab === "skills") panel = `
       <div class="me-id"><p class="eyebrow">Player rating</p><b class="me-rating tnum" id="me-rating">${meRating(me)}</b>
         <small>+1 per tier and per form point · higher is steadier</small></div>
+      <p class="sk-free ${free ? "on" : ""}">${free ? "Today's free spin is ready: any wheel, any skill." : "Free spin used today. More spins cost coins."}</p>
       <div class="skills">${SLOTS.map(k => {
         const lv = me.levels[k], maxed = lv >= ME_TIERS, cost = maxed ? 0 : meCost(lv + 1);
         return `<div class="skill">
@@ -9802,13 +9808,13 @@ function viewMe(){
           <div class="meter" role="meter" aria-valuemin="0" aria-valuemax="${ME_TIERS}" aria-valuenow="${lv}" aria-label="${SLOT_NAME[k]} tier ${lv} of ${ME_TIERS}"><i style="width:${lv / ME_TIERS * 100}%"></i></div>
           <div class="skill-bot"><span>Tier <b class="skill-lv tnum">${lv}</b> of ${ME_TIERS}${meForm(me, k) ? ` <small class="form-chip ${meForm(me, k) > 0 ? "form-up" : "form-down"}" title="Form, from practice and events">${meForm(me, k) > 0 ? "+" : ""}${meForm(me, k)} form</small>` : ""}</span>
           </div>
-          <div class="sk-buy">
-            <button class="btn small" id="video-${k}" data-act="video" data-slot="${k}" ${videoOpen(me) ? "" : "disabled"}>YouTube<span class="tag">${videoOpen(me) ? "Free" : "Tomorrow"}</span></button>
-            <button class="btn small" id="clinic-${k}" data-act="clinic" data-slot="${k}" ${clinicOpen(me, k) && bal >= clinicCost(me, k) ? "" : "disabled"}>Clinic<span class="tag">${clinicOpen(me, k) ? fmtMoney(clinicCost(me, k)) : "Tomorrow"}</span></button>
-            ${maxed ? `<span class="maxed">Maxed</span>` : `<button class="btn small ${bal >= cost ? "primary" : ""}" id="up-${k}" data-act="upgrade" data-slot="${k}" ${bal >= cost ? "" : "disabled"}>Lesson<span class="tag">${fmtMoney(cost)}</span></button>`}</div>
+          <div class="sk-buy">${Object.keys(SKILL_WHEELS).map(kind => {
+            const W = SKILL_WHEELS[kind], open = wheelOpen(me, kind, k), price = wheelCost(me, kind, k), can = open && (free || bal >= price);
+            return `<button class="btn small${kind === "lesson" && can ? " primary" : ""}" id="${kind}-${k}" data-act="skillWheel" data-kind="${kind}" data-slot="${k}" ${can ? "" : "disabled"}><b>${W.name}</b><small>${W.range}</small><span class="tag">${!open ? (kind === "lesson" ? "Maxed" : "Form maxed") : free ? "Free today" : fmtMoney(price)}</span></button>`;
+          }).join("")}</div>
         </div>`;
       }).join("")}</div>
-      <details class="rules"><summary>How it works</summary><ul><li>Tier 0: BH 50, FH 50, Scramble 50, Putting 50% (C2 10%). Tier 50: 100, 100, 100, 100% (C2 40%).</li><li>Scramble plays your second shots on par 4s and 5s and saves par from the rough.</li><li>Lesson: +1 tier, yours for good. Each costs 6.75% more than the last.</li><li>Clinic: +1 form for 40% of the next lesson, once a skill per day. Form can slip after bad events.</li><li>YouTube: free once a day. Spin for −1 to +1 form; it leans a little toward better.</li><li>Career: each tier needs a My Player rating to enter (DGPT 1010, Worlds 1030), and My Player plays every event.</li><li>Backhand powers Distance Comp. Forehand steers Disc Runner.</li><li>Form: practice adds up to +1 a day per skill (Putting Green for Putting, Distance Comp for BH, Disc Runner for FH and Scramble). Career finishes add or take it away. −10 to +15.</li></ul></details>`;
+      <details class="rules"><summary>How it works</summary><ul><li>Tier 0: BH 50, FH 50, Scramble 50, Putting 50% (C2 10%). Tier 50: 100, 100, 100, 100% (C2 40%).</li><li>Scramble plays your second shots on par 4s and 5s and saves par from the rough.</li><li>One free spin a day on any wheel. More spins cost coins.</li><li>Lesson wheel: +1 to +2 tiers (+2 on 1 slice in 4), yours for good. Costs the next tier's price, 6.75% more each tier.</li><li>Clinic wheel: 0 to +2 form, about +1 on average, for 40% of a lesson.</li><li>YouTube wheel: −1 to +1 form, leaning a little toward better, for 10% of a lesson.</li><li>Form can slip after bad events; tiers can't.</li><li>Career: each tier needs a My Player rating to enter (DGPT 1010, Worlds 1030), and My Player plays every event.</li><li>Backhand powers Distance Comp. Forehand steers Disc Runner.</li><li>Form: practice adds up to +1 a day per skill (Putting Green for Putting, Distance Comp for BH, Disc Runner for FH and Scramble). Career finishes add or take it away. −10 to +15.</li></ul></details>`;
   else if (tab === "gear") panel = `
       <label class="me-name"><span>Name</span><input id="me-name" maxlength="20" autocomplete="off" placeholder="My Player" value="${esc(me.name || "")}" data-act-input="me-name"></label>
       <div class="looks">${swatches(["skin"])}</div>
