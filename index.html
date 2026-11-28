@@ -2,7 +2,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="robots" content="noindex,nofollow">
-<!-- 18 Down test build: branch test-combined, commit 0e72d9f -->
+<!-- 18 Down test build: branch test-combined, commit 19e3137 -->
 <title>18 Down</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&family=Shrikhand&display=swap">
@@ -2285,8 +2285,8 @@ function sponsorUW(name, year){ const c = UW_CONTRACTS.find(c => c[0] === name &
    saves par from the rough, Putting makes every putt, inside and outside the circle, from the putter's own C1X and C2
    rates. The putting slot keeps its old key, c1, so saved teams and My Player's putting tiers carry over. */
 const SLOTS = ["bh","fh","ap","c1"];
-const SLOT_LABEL = {bh:"BH", fh:"FH", ap:"APP", c1:"PUTT"};
-const SLOT_NAME = {bh:"Backhand", fh:"Forehand", ap:"Approach", c1:"Putting"};
+const SLOT_LABEL = {bh:"BH", fh:"FH", ap:"SCR", c1:"PUTT"};
+const SLOT_NAME = {bh:"Backhand", fh:"Forehand", ap:"Scramble", c1:"Putting"};
 /* Saved teams from before Approach: the old C2 putter becomes the approach pick. */
 function fixPicks(p){
   if (!p || typeof p !== "object") return p;
@@ -2295,7 +2295,7 @@ function fixPicks(p){
   return p;
 }
 function fixSlot(k){ return k === "c2" ? "ap" : k; }
-/* Approach: scramble rate weighted heaviest, then backhand and forehand (Kade, 2026-11-28: "use the scramble weighted
+/* The Scramble pick (shown as Scramble/SCR; key "ap"; Kade, 2026-11-28: "we could also just call it the scramble stat"): scramble rate weighted heaviest, then backhand and forehand (Kade, 2026-11-28: "use the scramble weighted
    heaviest, with the fh and bh all creating the approach stat"). Scramble is StatMando's par-save rate, which only
    2024-26 seasons have; it's put on the BH/FH scale (same mean and spread among those seasons) and weighted AP_W.scr.
    Seasons without it get the average of their BH and FH, marked as an estimate. */
@@ -3800,7 +3800,7 @@ function viewCourse(){
         <div class="trait"><span>OB risk</span>${dots(c.ob)}</div>
         <div class="trait"><span>Difficulty</span>${dots(c.diff)}</div>
       </div>
-      <ol class="order" aria-label="Draft order: backhand, forehand, approach, putter. Each pro once.">${SLOTS.map(k => `<li class="s-${k}">${SLOT_LABEL[k]}</li>`).join("")}</ol>
+      <ol class="order" aria-label="Draft order: backhand, forehand, scramble, putter. Each pro once.">${SLOTS.map(k => `<li class="s-${k}">${SLOT_LABEL[k]}</li>`).join("")}</ol>
       <button class="btn primary full" id="start-draft" data-act="startDraft">Start the draft</button>
     </div>
   </div>`;
@@ -3829,7 +3829,7 @@ function slotHint(k, c){
   const fh = layout.filter(h => h.shot === "FH").length;
   if (k === "bh") return (18 - fh) + " holes";
   if (k === "fh") return fh + " holes";
-  if (k === "ap") return layout.filter(h => h.par > 3).length + " par 4s & 5s";
+  if (k === "ap"){ const n = layout.filter(h => h.par > 3).length; return n ? n + " par 4s & 5s, par saves" : "Par saves"; }
   return "Every putt";
 }
 function buildPanel(c, b, spinning){
@@ -3938,10 +3938,10 @@ function pickerPoolHTML(){
   }).join("")}</div>`;
 }
 /* Each slot has its own color and plain-English name so it's always clear what you're drafting for. */
-const SLOT_FULL = {bh: "Backhand", fh: "Forehand", ap: "Approach", c1: "Putting"};
+const SLOT_FULL = {bh: "Backhand", fh: "Forehand", ap: "Scramble", c1: "Putting"};
 function hardKey(){ return `<span class="tier-key" title="Ratings hidden until the round ends">${ico("hidden", "Ratings hidden")}</span>`; }
 const SLOT_WHAT = {bh: "Throws your tee shots on backhand holes", fh: "Throws your tee shots on forehand holes", ap: "Plays your second shots on par 4s and 5s and saves par from the rough", c1: "Makes all your putts, inside and outside the circle"};
-const SLOT_CELL = {bh: "Backhand", fh: "Forehand", ap: "Approach", c1: "Putting"};
+const SLOT_CELL = {bh: "Backhand", fh: "Forehand", ap: "Scramble", c1: "Putting"};
 function done0(){ return SLOTS.every(k => state.picks[k]); }
 function slotBanner(){
   if (done0()) return "";
@@ -4703,7 +4703,7 @@ function shareText(){
     return `18 Down daily tournament, ${fmtDate(state.dateKey)}\n${ctx.t.name} at ${ctx.c.name}\n${fmtPlace(T.place, T.tied)} of ${ctx.t.field + 1}, ${fmtTotal(me.total)} (${me.scores.map(fmtTotal).join(", ")})${T.playoff ? (T.playoff.result === "won" ? ", won in a playoff" : ", lost in a playoff") : ""}\n${T.pay ? "Won " + fmtMoney(T.pay) : "Missed the cash"}`;
   }
   if (state.mode === "daily") return `18 Down Classic, ${fmtDate(state.dateKey)}: ${fmtTotal(state.round.total)} at ${c.name}\n${row(0,9)}\n${row(9,18)}`;
-  return `18 Down${hm}: ${fmtTotal(state.round.total)} at ${c.name}\n${row(0,9)}\n${row(9,18)}\nBH ${b.bh.short}, FH ${b.fh.short}\nAPP ${b.ap.short}, PUTT ${b.c1.short}`;
+  return `18 Down${hm}: ${fmtTotal(state.round.total)} at ${c.name}\n${row(0,9)}\n${row(9,18)}\nBH ${b.bh.short}, FH ${b.fh.short}\nSCR ${b.ap.short}, PUTT ${b.c1.short}`;
 }
 function fmtStrokes(v){ const r = Math.round(Math.abs(v) * 10) / 10; return r === 0 ? "0.0" : (v > 0 ? "+" : "−") + r.toFixed(1); }
 function fmtAvg(v){ const r = Math.round(Math.abs(v) * 10) / 10; return r === 0 ? "even" : (v < 0 ? "−" : "+") + r.toFixed(1); }
@@ -5382,7 +5382,7 @@ function mePrestige(me){ return (me && me.prestige) || 0; }
    up to TRAIN_DAY a day per skill; career events add or take it away by your finish (formFromEvent), for the skill
    My Player played. Ranked tournaments ignore it. */
 const FORM_MIN = -10, FORM_MAX = 15, TRAIN_DAY = 1;
-const FORM_SHORT = {bh: "BH", fh: "FH", ap: "APP", c1: "PUTT", c2: "APP"};
+const FORM_SHORT = {bh: "BH", fh: "FH", ap: "SCR", c1: "PUTT", c2: "SCR"};
 function meForm(me, k){ return (me && me.form && me.form[k]) || 0; }
 function meLv(me, k){ return Math.max(0, Math.min(ME_TIERS, (me.levels[k] || 0) + PRESTIGE_TIERS * mePrestige(me) + meForm(me, k))); }
 function formAdd(me, k, d){
@@ -5517,7 +5517,7 @@ function viewRatings(){
     <div class="ce-list">${makeCourses(COURSE_ROWS, ed).map(c => courseEditor(c, ed)).join("")}</div>`}
     <details class="rules"><summary>How a round is scored</summary><ul>
       <li>Each hole is backhand or forehand. That rating, the hole and a daily form roll pick the tee result: parked, C1, C2, no look or OB.</li>
-      <li>Your putter makes every putt, C1 and C2, from his own C1X and C2 rates. Your approacher plays the second shot on par 4s and 5s and saves par from outside C2 and after OB.</li>
+      <li>Your putter makes every putt, C1 and C2, from his own C1X and C2 rates. Your scrambler plays the second shot on par 4s and 5s and saves par from outside C2 and after OB.</li>
       <li>Upshots use a fixed tour-level baseline.</li>
       <li>Long holes leave more C2 looks. OB notes add OB risk.</li>
       <li>Putting counts ${PUTT_WEIGHT}× its gap from the field (${FIELD_C1}% C1X, ${FIELD_C2}% C2).</li>
@@ -9604,7 +9604,7 @@ function viewMe(){
             ${maxed ? `<span class="maxed">Maxed</span>` : `<button class="btn small ${bal >= cost ? "primary" : ""}" id="up-${k}" data-act="upgrade" data-slot="${k}" ${bal >= cost ? "" : "disabled"}><span class="tag">${fmtMoney(cost)}</span> Buy</button>`}</div>
         </div>`;
       }).join("")}</div>
-      <details class="rules"><summary>How it works</summary><ul><li>Tier 0: BH 50, FH 50, Approach 50, Putting 50% (C2 10%). Tier 50: 100, 100, 100, 100% (C2 40%).</li><li>Approach plays your second shots on par 4s and 5s and saves par from the rough.</li><li>Each tier costs 6.75% more than the last.</li><li>Career: each tier needs a My Player rating to enter (DGPT 1010, Worlds 1030), and My Player plays every event.</li><li>Backhand powers Distance Comp. Forehand steers Disc Runner.</li><li>Form: practice adds up to +1 a day per skill (Putting Green for C1X and C2, Distance Comp for BH, Disc Runner for FH). Career finishes add or take it away. −10 to +15.</li></ul></details>`;
+      <details class="rules"><summary>How it works</summary><ul><li>Tier 0: BH 50, FH 50, Scramble 50, Putting 50% (C2 10%). Tier 50: 100, 100, 100, 100% (C2 40%).</li><li>Scramble plays your second shots on par 4s and 5s and saves par from the rough.</li><li>Each tier costs 6.75% more than the last.</li><li>Career: each tier needs a My Player rating to enter (DGPT 1010, Worlds 1030), and My Player plays every event.</li><li>Backhand powers Distance Comp. Forehand steers Disc Runner.</li><li>Form: practice adds up to +1 a day per skill (Putting Green for C1X and C2, Distance Comp for BH, Disc Runner for FH). Career finishes add or take it away. −10 to +15.</li></ul></details>`;
   else if (tab === "gear") panel = `
       <label class="me-name"><span>Name</span><input id="me-name" maxlength="20" autocomplete="off" placeholder="My Player" value="${esc(me.name || "")}" data-act-input="me-name"></label>
       <div class="looks">${swatches(["skin"])}</div>
