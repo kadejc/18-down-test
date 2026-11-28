@@ -14,6 +14,8 @@ BRANCH="$(git -C "$SRC" rev-parse --abbrev-ref HEAD)"
   printf '<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">\n'
   printf '<meta name="robots" content="noindex,nofollow">\n'
   printf '<!-- 18 Down test build: branch %s, commit %s -->\n' "$BRANCH" "$REF"
+  # test-guard.js: no writes to the live database, and a one-time progress reset (see the file)
+  printf '<script>\n'; cat "$HERE/test-guard.js"; printf '</script>\n'
   cat "$SRC/18-down.html"
 } > "$HERE/index.html"
 cd "$HERE"
