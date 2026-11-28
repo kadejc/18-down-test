@@ -2,7 +2,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="robots" content="noindex,nofollow">
-<!-- 18 Down test build: branch test-combined, commit c0c7553 -->
+<!-- 18 Down test build: branch test-combined, commit 6f9fe02 -->
 <title>18 Down</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&family=Shrikhand&display=swap">
@@ -1459,6 +1459,9 @@ html, body { margin: 0; }
 /* Spot-only pick buttons: the label is the whole button */
 .pk-row .cell { min-height: 38px; }
 .pk-row .cell > small, .pk-row .cell[class*=" s-"] > small { font-size: 15px !important; font-weight: 700; opacity: 1; letter-spacing: .04em; }
+
+/* Career: the rating a tier needs */
+.rung-rate { color: var(--gold, #ffd23f); font-weight: 700; }
 </style>
 <main id="app"></main>
 <script type="application/json" id="edits">{}</script>
@@ -2865,24 +2868,29 @@ function playoffScore(course, pro, key, n, who){
    You earn your way up, like the real tour: Mini, C-tier, B-tier, A-tier, Jomez Series, DGPT, DGPT+, Major, DGPT Playoffs,
    DGPT Championship, Worlds. Each event is a tournament against its own field. Finish high enough (the "up" place) to
    earn your way into the next one; every tier you've earned stays open to play again.
-   - Mini, C-tier and B-tier fields are fictional local players, simulated from a rating (see localSeason).
+   - Mini, C-tier and B-tier fields are fictional local players, simulated from a rating (see localSeason). Their ranges
+     were raised on 2026-11-28 (Kade: "I progressed very quickly") so a My Player at the tier's rating finishes top 3
+     about 45% of the time at Mini, 35% at C-tier, 25% at B-tier and 20% at A-tier.
    - A-tier mixes locals with the lowest-rated current-year pros; from the Jomez Series up the fields are real
      current-year pros, deeper into the ratings list the higher you climb.
    - Your draft is capped: spins only include seasons rated at or under the tier's cap, so the pros you can draft get
      better as you climb. Legends become draftable at the Playoffs (cap 1058) and GOATs only at Worlds (no cap). */
 const LADDER = [
-  {id: "mini",    name: "Mini",              rounds: 1, field: 23, first: 150,   local: [935, 995],  cap: 1014, up: 3, home: true},
-  {id: "c",       name: "C-Tier",            rounds: 2, field: 35, first: 500,   local: [955, 1005], cap: 1018, up: 3, home: true},
-  {id: "b",       name: "B-Tier",            rounds: 2, field: 47, first: 1500,  local: [975, 1015], cap: 1022, up: 3, home: true},
-  {id: "a",       name: "A-Tier",            rounds: 3, field: 59, first: 4000,  local: [985, 1015], pros: [100, 140], proShare: .4, cap: 1028, up: 3},
-  {id: "jomez",   name: "Jomez Series",      rounds: 3, field: 53, first: 8000,  depth: [70, 140], cap: 1038, up: 5},
-  {id: "dgpt",    name: "DGPT",              rounds: 3, field: 71, first: 16000, depth: [30, 120], cap: 1042, up: 5},
-  {id: "dgptp",   name: "DGPT+",             rounds: 4, field: 71, first: 20000, depth: [10, 100], cap: 1048, up: 5},
-  {id: "major",   name: "Major",             rounds: 4, field: 71, first: 40000, depth: [0, 80], cap: 1052, up: 10},
-  {id: "playoff", name: "DGPT Playoffs",     rounds: 3, field: 39, first: 30000, depth: [0, 48], cap: 1058, up: 5},
-  {id: "champ",   name: "DGPT Championship", rounds: 4, field: 23, first: 50000, depth: [0, 30], cap: 1058, up: 3},
-  {id: "worlds",  name: "Worlds",            rounds: 5, field: 89, first: 60000, depth: [0, 95], up: 1},
+  {id: "mini",    rate: 900,  name: "Mini",              rounds: 1, field: 23, first: 150,   local: [960, 1010], cap: 1014, up: 3, home: true},
+  {id: "c",       rate: 915,  name: "C-Tier",            rounds: 2, field: 35, first: 500,   local: [970, 1012], cap: 1018, up: 3, home: true},
+  {id: "b",       rate: 935,  name: "B-Tier",            rounds: 2, field: 47, first: 1500,  local: [985, 1020], cap: 1022, up: 3, home: true},
+  {id: "a",       rate: 960,  name: "A-Tier",            rounds: 3, field: 59, first: 4000,  local: [995, 1022], pros: [100, 140], proShare: .4, cap: 1028, up: 3},
+  {id: "jomez",   rate: 985,  name: "Jomez Series",      rounds: 3, field: 53, first: 8000,  depth: [70, 140], cap: 1038, up: 5},
+  {id: "dgpt",    rate: 1010, name: "DGPT",              rounds: 3, field: 71, first: 16000, depth: [30, 120], cap: 1042, up: 5},
+  {id: "dgptp",   rate: 1015, name: "DGPT+",             rounds: 4, field: 71, first: 20000, depth: [10, 100], cap: 1048, up: 5},
+  {id: "major",   rate: 1020, name: "Major",             rounds: 4, field: 71, first: 40000, depth: [0, 80], cap: 1052, up: 10},
+  {id: "playoff", rate: 1025, name: "DGPT Playoffs",     rounds: 3, field: 39, first: 30000, depth: [0, 48], cap: 1058, up: 5},
+  {id: "champ",   rate: 1025, name: "DGPT Championship", rounds: 4, field: 23, first: 50000, depth: [0, 30], cap: 1058, up: 3},
+  {id: "worlds",  rate: 1030, name: "Worlds",            rounds: 5, field: 89, first: 60000, depth: [0, 95], up: 1},
 ];
+/* rate: the My Player rating it takes to enter (Kade, 2026-11-28: "about 1010 rated to play a DGPT event and about 1030
+   to have the ability to win Worlds"). Earning a tier opens it; your rating lets you in. My Player plays every career event. */
+function careerShort(t){ const r = meRating(meLoad()); return t && t.rate && r < t.rate ? t.rate - r : 0; }
 const LADDER_BY_ID = Object.fromEntries(LADDER.map((t, i) => [t.id, Object.assign(t, {level: i})]));
 
 /* Progress: highest tier earned, best finish per tier, titles, and the event in progress. */
@@ -2950,6 +2958,7 @@ function openCareerEvent(id, venue){
   if (!t || t.level > L.level) return false;
   let key = L.current && ladderTierOf(L.current) === t ? L.current : null;
   if (!key){
+    if (careerShort(t)) return false;
     if (!t.home && !venue) return false;   // pick a venue on the ladder first
     const v = t.home ? (meLoad().home || "") : venue, cost = tripCost(t, v);
     if (meBalance(meLoad()) < cost.total) return false;
@@ -3168,7 +3177,7 @@ function viewLadder(){
   const titles = Object.values(L.wins || {}).reduce((a, b) => a + b, 0);
   return `<div class="wrap">
     <div class="bar has-home"><span class="mark-wrap"><span class="mark">18 Down</span>${moneyChip()}</span><span class="where"><b>Career</b>Earn your way up</span></div>
-    <div class="cl-head"><div><small>Level${mePrestige(meLoad()) ? ` · ★${mePrestige(meLoad())}` : ""}</small><b>${esc(LADDER[L.level].name)}</b></div><div><small>Wins</small><b class="tnum">${titles}</b></div><div><small>Fans</small><b class="tnum">${(L.fans || 0).toLocaleString("en-US")}</b></div></div>
+    <div class="cl-head"><div><small>Level${mePrestige(meLoad()) ? ` · ★${mePrestige(meLoad())}` : ""}</small><b>${esc(LADDER[L.level].name)}</b></div><div><small>Rating</small><b class="tnum">${meRating(meLoad())}</b></div><div><small>Wins</small><b class="tnum">${titles}</b></div><div><small>Fans</small><b class="tnum">${(L.fans || 0).toLocaleString("en-US")}</b></div></div>
     ${homeAreaHTML()}
     ${sponsorHTML()}
     ${canPrestige() ? prestigeCard() : ""}
@@ -3178,8 +3187,8 @@ function viewLadder(){
       const need = t.level === LADDER.length - 1 ? "Win it to be world champion" : `Top ${t.up} earns ${LADDER[t.level + 1].name}`;
       return `<li class="rung${open ? " open" : ""}${next ? " next" : ""}">
         <div class="rung-main"><b>${esc(t.name)}</b><small>${t.rounds} round${t.rounds > 1 ? "s" : ""} · ${t.field + 1} players · ${fmtMoney(t.first)} to win${t.cap ? ` · draft up to ${t.cap}` : ""}</small>
-          <small class="rung-need">${open ? need : "Locked"}${best ? ` · best ${fmtPlace(best)}` : ""}${wins ? ` · ${wins} win${wins > 1 ? "s" : ""}` : ""}</small></div>
-        ${open ? `<button class="btn small${next ? " primary" : ""}" data-act="careerEvent" data-id="${t.id}" ${cur && cur !== t ? "disabled" : ""}>${cur === t ? "Resume" : t.home ? `Play · ${fmtMoney(ENTRY[t.id])}` : ui.pickTier === t.id ? "Close" : "Venues"}</button>` : `<span class="rung-lock" aria-label="Locked">${ico("hidden")}</span>`}
+          <small class="rung-need">${open && careerShort(t) && cur !== t ? `<span class="rung-rate">Needs ${t.rate} rating</span>` : open ? need : "Locked"}${best ? ` · best ${fmtPlace(best)}` : ""}${wins ? ` · ${wins} win${wins > 1 ? "s" : ""}` : ""}</small></div>
+        ${open ? `<button class="btn small${next ? " primary" : ""}" data-act="careerEvent" data-id="${t.id}" ${(cur && cur !== t) || (cur !== t && careerShort(t)) ? "disabled" : ""}>${cur === t ? "Resume" : t.home ? `Play · ${fmtMoney(ENTRY[t.id])}` : ui.pickTier === t.id ? "Close" : "Venues"}</button>` : `<span class="rung-lock" aria-label="Locked">${ico("hidden")}</span>`}
       ${ui.pickTier === t.id && open && !cur ? venueHTML(t) : ""}
       </li>`; }).join("")}</ol>
     <div class="row"><button class="btn small" data-act="go" data-screen="bulletin">Back to Tournaments</button></div>
@@ -5389,7 +5398,7 @@ function meSlotHTML(){
     <h2 class="section-h">Where does ${esc(s.name)} play?</h2>
     ${isRanked() && !mini ? iconFacts([["same", "Standard", "Everyone's My Player is the same standard player"]]) : ""}
     <div class="me-slot-picks">${SLOTS.map(k => `<button class="cell" id="me-${k}" data-act="meSlot" data-slot="${k}"><small>${SLOT_LABEL[k]}</small><b>${fmtSlot(k, s[k])}</b></button>`).join("")}</div>
-    ${mini || careerEv ? `<button class="btn small full" id="me-skip" data-act="meSkip">No My Player ${careerEv ? "this event" : "this round"}</button>` : ""}</div>`;
+    ${mini ? `<button class="btn small full" id="me-skip" data-act="meSkip">No My Player this round</button>` : ""}</div>`;
 }
 
 /* ---------- Ratings ---------- */
@@ -5639,6 +5648,7 @@ app.addEventListener("click", ev => {
     if (note) note.textContent = (ui.meOnly ? "Only My Player’s shots play out. Everyone else’s shots flash by." : "Turn it on to watch only My Player’s shots.") + " Rounds can’t be skipped.";
     if (!ui.meOnly) SPEED = 1;
   } else if (act === "meSkip"){
+    if (ladderTierOf(state.dateKey)) return;   // career events always have My Player
     state.meDecided = true;
     render("spin");
   } else if (act === "meSlot"){
@@ -5663,6 +5673,7 @@ app.addEventListener("click", ev => {
     const me = meLoad(); me.home = el.dataset.st || null; meSave(me); render();
   } else if (act === "careerEvent"){
     const t = LADDER_BY_ID[el.dataset.id], L = ladderLoad(), resume = L.current && ladderTierOf(L.current) === t;
+    if (!resume && careerShort(t)){ careerToast(`${t.name} needs a ${t.rate} rating. You're ${meRating(meLoad())}.`); return; }
     if (resume || (t && t.home)){
       if (!openCareerEvent(el.dataset.id)){ careerToast(`Need ${fmtMoney(ENTRY[t.id])} to enter`); }
     } else { ui.pickTier = ui.pickTier === el.dataset.id && state.screen === "ladder" ? null : el.dataset.id; state.screen = "ladder"; render(); }
@@ -9521,7 +9532,7 @@ function viewMe(){
             ${maxed ? `<span class="maxed">Maxed</span>` : `<button class="btn small ${bal >= cost ? "primary" : ""}" id="up-${k}" data-act="upgrade" data-slot="${k}" ${bal >= cost ? "" : "disabled"}><span class="tag">${fmtMoney(cost)}</span> Buy</button>`}</div>
         </div>`;
       }).join("")}</div>
-      <details class="rules"><summary>How it works</summary><ul><li>Tier 0: BH 50, FH 50, C1X 50%, C2 10%. Tier 50: 100, 100, 100%, 40%.</li><li>Each tier costs 6.75% more than the last.</li><li>Backhand powers Distance Comp. Forehand steers Disc Runner.</li><li>Form: practice adds up to +1 a day per skill (Putting Green for C1X and C2, Distance Comp for BH, Disc Runner for FH). Career finishes add or take it away. −10 to +15.</li></ul></details>`;
+      <details class="rules"><summary>How it works</summary><ul><li>Tier 0: BH 50, FH 50, C1X 50%, C2 10%. Tier 50: 100, 100, 100%, 40%.</li><li>Each tier costs 6.75% more than the last.</li><li>Career: each tier needs a My Player rating to enter (DGPT 1010, Worlds 1030), and My Player plays every event.</li><li>Backhand powers Distance Comp. Forehand steers Disc Runner.</li><li>Form: practice adds up to +1 a day per skill (Putting Green for C1X and C2, Distance Comp for BH, Disc Runner for FH). Career finishes add or take it away. −10 to +15.</li></ul></details>`;
   else if (tab === "gear") panel = `
       <label class="me-name"><span>Name</span><input id="me-name" maxlength="20" autocomplete="off" placeholder="My Player" value="${esc(me.name || "")}" data-act-input="me-name"></label>
       <div class="looks">${swatches(["skin"])}</div>
