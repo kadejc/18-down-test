@@ -2,7 +2,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="robots" content="noindex,nofollow">
-<!-- 18 Down test build: branch test-combined, commit 9d053d4 -->
+<!-- 18 Down test build: branch test-combined, commit 88cf88c -->
 <script>
 /* Test-site guard (Kade, 2026-11-28). deploy.sh puts this at the top of every test build; it is not part of the game.
    1. Offline: the test build plays by different rules than the live game, so it must never write to Hayden's live
@@ -1528,6 +1528,9 @@ html, body { margin: 0; }
 .sk-free.on { color: var(--gold, #ffd23f); }
 
 .venue .venue-pay { display: block; font-weight: 700; }
+
+.rung-stakes .cost-split { font-style: normal; opacity: .85; }
+.rung-stakes { flex-wrap: wrap; }
 </style>
 <main id="app"></main>
 <script type="application/json" id="edits">{}</script>
@@ -3029,11 +3032,14 @@ function careerStakes(t){
   const home = meLoad().home || "", span = (a, f) => { const lo = Math.min(...a), hi = Math.max(...a); return lo === hi ? f(lo) : f(lo) + "–" + f(hi); };
   const vs = t.home ? [home] : venueOptions(t.id).map(c => c.id);
   if (!vs.length) return {first: t.first, cost: ENTRY[t.id] || 0, costText: fmtMoney(ENTRY[t.id] || 0), firstText: fmtMoney(t.first), players: ""};
-  const evs = vs.map(v => nextEvent(t, v)), cs = vs.map(v => tripCost(t, v).total);
+  const evs = vs.map(v => nextEvent(t, v)), ks = vs.map(v => tripCost(t, v)), cs = ks.map(k => k.total);
   return {first: Math.max(...evs.map(e => e.first)), firstText: span(evs.map(e => e.first), fmtMoney), players: span(evs.map(e => e.field + 1), String),
-    cost: Math.min(...cs), costText: Math.max(...cs) ? span(cs, fmtMoney) : "Free"};
+    cost: Math.min(...cs), costText: Math.max(...cs) ? span(cs, fmtMoney) : "Free",
+    splitText: Math.max(...cs) ? costSplit(span(ks.map(k => k.entry), fmtMoney), span(ks.map(k => k.travel), fmtMoney), Math.max(...ks.map(k => k.covered)) ? span(ks.map(k => k.covered), fmtMoney) : "") : ""};
 }
-function stakesHTML(t){ const k = careerStakes(t); return `<small class="rung-stakes"><span>1st <b class="tnum">${k.firstText}</b></span><span>Cost <b class="tnum">${k.costText}</b></span>${k.players ? `<span><b class="tnum">${k.players}</b> players</span>` : ""}</small>`; }
+/* Cost, spelled out (Kade, 2026-11-28: "for cost show entry + travel"): "$10 entry + $5 travel", minus what a sponsor pays. */
+function costSplit(entry, travel, covered){ return `${entry} entry + ${travel} travel${covered ? ` − ${covered} sponsor` : ""}`; }
+function stakesHTML(t){ const k = careerStakes(t); return `<small class="rung-stakes"><span>1st <b class="tnum">${k.firstText}</b></span><span>Cost <b class="tnum">${k.costText}</b>${k.splitText ? ` <i class="cost-split">(${k.splitText})</i>` : ""}</span>${k.players ? `<span><b class="tnum">${k.players}</b> players</span>` : ""}</small>`; }
 const LADDER_BY_ID = Object.fromEntries(LADDER.map((t, i) => [t.id, Object.assign(t, {level: i})]));
 
 /* Progress: highest tier earned, best finish per tier, titles, and the event in progress. */
@@ -3226,7 +3232,7 @@ function tripCost(t, venue){
   const entry = (ladderLoad().played || 0) === 0 ? 0 : ENTRY[t.id] || 0;
   if (t.home){
     if (!entry) return {entry, travel: 0, covered: 0, total: 0, miles: 0};   // the first event of a new career is free
-    const travel = t.id === "mini" ? MINI_GAS : LOCAL_DAY * t.rounds, L0 = ladderLoad(), cov = L0.sponsor && DEALS[L0.sponsor.lvl] ? Math.round((entry + travel) * DEALS[L0.sponsor.lvl].cover / 5) * 5 : 0;
+    const travel = t.id === "mini" ? MINI_GAS : LOCAL_DAY * t.rounds, L0 = ladderLoad(), cov = L0.sponsor && DEALS[L0.sponsor.lvl] ? Math.round((t.id === "mini" ? travel : entry + travel) * DEALS[L0.sponsor.lvl].cover / 5) * 5 : 0;   // a sponsor never takes the Mini under $10
     return {entry, travel, covered: cov, total: entry + travel - cov, miles: 0};
   }
   const c = COURSES.find(x => x.id === venue), to = c ? placeOf(c) : "", from = meLoad().home || "KS";
@@ -3330,7 +3336,7 @@ function venueHTML(t){
   return `<div class="venues">${venueOptions(t.id).map(c => { const k = tripCost(t, c.id), can = bal >= k.total, ev = nextEvent(t, c.id);
     return `<button class="venue" data-act="careerVenue" data-id="${t.id}" data-venue="${esc(c.id)}" ${can ? "" : "disabled"}>
       <span><b>${esc(c.name)}</b><small>${esc(c.place)}${k.miles && !OVERSEAS.has(k.to) ? ` · ${k.miles.toLocaleString("en-US")} mi` : ""}</small><small class="venue-pay">1st ${fmtMoney(ev.first)} · ${ev.field + 1} players</small></span>
-      <span class="venue-cost"><b class="tnum">${fmtMoney(k.total)}</b><small>${can ? (k.covered ? `sponsor paid ${fmtMoney(k.covered)}` : `entry ${fmtMoney(k.entry)}`) : "can't afford"}</small></span></button>`; }).join("")}</div>`;
+      <span class="venue-cost"><b class="tnum">${fmtMoney(k.total)}</b><small>${costSplit(fmtMoney(k.entry), fmtMoney(k.travel), k.covered ? fmtMoney(k.covered) : "")}</small>${can ? "" : `<small>can't afford</small>`}</span></button>`; }).join("")}</div>`;
 }
 /* Prestige: once you've won Worlds you can restart the career from Mini with more talent (see meLv in ui.js) and new
    Pro Shop items. Money, collection, achievements and what you've bought all stay. */
