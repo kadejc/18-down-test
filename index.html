@@ -2,7 +2,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="robots" content="noindex,nofollow">
-<!-- 18 Down test build: branch test-combined, commit 36eacbc -->
+<!-- 18 Down test build: branch test-combined, commit 9d053d4 -->
 <script>
 /* Test-site guard (Kade, 2026-11-28). deploy.sh puts this at the top of every test build; it is not part of the game.
    1. Offline: the test build plays by different rules than the live game, so it must never write to Hayden's live
@@ -3166,6 +3166,7 @@ const PURSE = {
 };
 const FIELD_RANGE = {c: [12, 30], b: [20, 45], a: [35, 72]};   // players, you included: smaller at C, bigger higher up
 const LOCAL_DAY = 15;   // a home-state event: gas and food for each round day, no hotel
+const MINI_GAS = 5;     // a Mini is a short drive: $10 entry + $5 = $15 all in (Kade, 2026-11-28: "Mini cost needs to be $10-15")
 function eventField(t, key){ const r = FIELD_RANGE[t.id]; return r ? Math.round(r[0] + (r[1] - r[0]) * mulberry32(hashStr("fieldsize|" + key))()) - 1 : t.field; }
 function eventPurse(t, players){ const P = PURSE[t.id]; if (!P) return null; return Math.round(P.perPlayer ? P.perPlayer * players : players * (ENTRY[t.id] - P.fee) * P.back + P.added); }
 function firstFromPurse(t, purse){ const shape = payTable(Object.assign({}, t, {first: 10000})).reduce((a, b) => a + b, 0) / 10000; return Math.round(purse / shape / 5) * 5; }
@@ -3225,7 +3226,7 @@ function tripCost(t, venue){
   const entry = (ladderLoad().played || 0) === 0 ? 0 : ENTRY[t.id] || 0;
   if (t.home){
     if (!entry) return {entry, travel: 0, covered: 0, total: 0, miles: 0};   // the first event of a new career is free
-    const travel = LOCAL_DAY * t.rounds, L0 = ladderLoad(), cov = L0.sponsor && DEALS[L0.sponsor.lvl] ? Math.round((entry + travel) * DEALS[L0.sponsor.lvl].cover / 5) * 5 : 0;
+    const travel = t.id === "mini" ? MINI_GAS : LOCAL_DAY * t.rounds, L0 = ladderLoad(), cov = L0.sponsor && DEALS[L0.sponsor.lvl] ? Math.round((entry + travel) * DEALS[L0.sponsor.lvl].cover / 5) * 5 : 0;
     return {entry, travel, covered: cov, total: entry + travel - cov, miles: 0};
   }
   const c = COURSES.find(x => x.id === venue), to = c ? placeOf(c) : "", from = meLoad().home || "KS";
