@@ -2,7 +2,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="robots" content="noindex,nofollow">
-<!-- 18 Down test build: branch test-combined, commit fcbda17 -->
+<!-- 18 Down test build: branch test-combined, commit 88ad810 -->
 <script>
 /* Test-site guard (Kade, 2026-11-28). deploy.sh puts this at the top of every test build; it is not part of the game.
    1. Offline: the test build plays by different rules than the live game, so it must never write to Hayden's live
@@ -3135,7 +3135,7 @@ function ladderResult(key, place){
    Fans: every finish earns some, more for better places and bigger events, x1.5 in your home state.
    Sponsors: local shops first, then real disc brands, sized by how many 2026 pros in the game each one sponsors.
    Offers come with enough fans and a high enough tier; a deal lasts DEAL_EVENTS events. */
-const ENTRY = {mini: 0, c: 40, b: 75, a: 150, jomez: 300, dgpt: 500, dgptp: 750, major: 1000, playoff: 0, champ: 0, worlds: 500};
+const ENTRY = {mini: 10, c: 40, b: 75, a: 150, jomez: 300, dgpt: 500, dgptp: 750, major: 1000, playoff: 0, champ: 0, worlds: 500};
 const FANS = {mini: 25, c: 60, b: 150, a: 400, jomez: 900, dgpt: 1800, dgptp: 3000, major: 6000, playoff: 5000, champ: 8000, worlds: 15000};
 const GEO = {AR: [34.9, -92.4], IA: [42.0, -93.5], KS: [38.5, -98.4], KY: [37.5, -85.3], LA: [31.0, -92.0], MA: [42.3, -71.8],
   MI: [43.3, -84.5], NC: [35.5, -79.4], SC: [33.9, -80.9], TX: [31.0, -97.5], VA: [37.5, -78.8], VT: [44.0, -72.7],
@@ -3179,8 +3179,9 @@ function milesBetween(a, b){
   return 2 * R * Math.asin(Math.sqrt(h));
 }
 /* Entry and travel for an event. Home tiers: entry only. */
+/* Mini costs $10 (Kade, 2026-11-28); a brand-new career's first event is free, since a new player starts with $0. */
 function tripCost(t, venue){
-  const entry = ENTRY[t.id] || 0;
+  const entry = (ladderLoad().played || 0) === 0 ? 0 : ENTRY[t.id] || 0;
   if (t.home) return {entry, travel: 0, covered: 0, total: entry, miles: 0};
   const c = COURSES.find(x => x.id === venue), to = c ? placeOf(c) : "", from = meLoad().home || "KS";
   const miles = to === from ? 120 : GEO[to] && GEO[from] ? milesBetween(GEO[from], GEO[to]) : 900;
@@ -3321,7 +3322,7 @@ function viewLadder(){
       return `<li class="rung${open ? " open" : ""}${next ? " next" : ""}">
         <div class="rung-main"><b>${esc(t.name)}</b><small>${t.rounds} round${t.rounds > 1 ? "s" : ""} · ${t.field + 1} players${t.cap ? ` · draft up to ${t.cap}` : ""}</small>${stakesHTML(t)}
           <small class="rung-need">${open && careerShort(t) && cur !== t ? `<span class="rung-rate">Needs ${t.rate} rating</span>` : open ? need : "Locked"}${best ? ` · best ${fmtPlace(best)}` : ""}${wins ? ` · ${wins} win${wins > 1 ? "s" : ""}` : ""}</small></div>
-        ${open ? `<button class="btn small${next ? " primary" : ""}" data-act="careerEvent" data-id="${t.id}" ${(cur && cur !== t) || (cur !== t && careerShort(t)) ? "disabled" : ""}>${cur === t ? "Resume" : t.home ? (ENTRY[t.id] ? `Play · ${fmtMoney(ENTRY[t.id])}` : "Play") : ui.pickTier === t.id ? "Close" : "Venues"}</button>` : `<span class="rung-lock" aria-label="Locked">${ico("hidden")}</span>`}
+        ${open ? `<button class="btn small${next ? " primary" : ""}" data-act="careerEvent" data-id="${t.id}" ${(cur && cur !== t) || (cur !== t && careerShort(t)) ? "disabled" : ""}>${cur === t ? "Resume" : t.home ? (tripCost(t, meLoad().home || "").total ? `Play · ${fmtMoney(tripCost(t, meLoad().home || "").total)}` : "Play · Free") : ui.pickTier === t.id ? "Close" : "Venues"}</button>` : `<span class="rung-lock" aria-label="Locked">${ico("hidden")}</span>`}
       ${ui.pickTier === t.id && open && !cur ? venueHTML(t) : ""}
       </li>`; }).join("")}</ol>
     <div class="row"><button class="btn small" data-act="go" data-screen="bulletin">Back to Tournaments</button></div>
@@ -5942,7 +5943,7 @@ app.addEventListener("click", ev => {
     const t = LADDER_BY_ID[el.dataset.id], L = ladderLoad(), resume = L.current && ladderTierOf(L.current) === t;
     if (!resume && careerShort(t)){ careerToast(`${t.name} needs a ${t.rate} rating. You're ${meRating(meLoad())}.`); return; }
     if (resume || (t && t.home)){
-      if (!openCareerEvent(el.dataset.id)){ careerToast(`Need ${fmtMoney(ENTRY[t.id])} to enter`); }
+      if (!openCareerEvent(el.dataset.id)){ careerToast(`Need ${fmtMoney(tripCost(t, meLoad().home || "").total)} to enter`); }
     } else { ui.pickTier = ui.pickTier === el.dataset.id && state.screen === "ladder" ? null : el.dataset.id; state.screen = "ladder"; render(); }
   } else if (act === "careerVenue"){
     ui.pickTier = null;
